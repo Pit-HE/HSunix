@@ -58,6 +58,11 @@ all:kernel
 qemu:
 	$(QEMU) $(QEMUOPTS) -S -gdb tcp::25000
 
+debug:
+	make all
+	make clean
+	make qemu
+
 clean:
 	rm -rf *.d *.o *.asm *.out *.sym initcode
 
