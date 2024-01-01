@@ -27,7 +27,7 @@ void *kalloc (void)
     p = kmFreeHeader.next;
     kmFreeHeader.next = p->next;
 
-    memset((void*)p, 0, PGSIZE);
+    memset((void*)p, 5, PGSIZE);
     return p;
 }
 
@@ -44,7 +44,7 @@ void kfree (void *pa)
         return;
 
     /* 格式化物理内存页 */
-    memset (pa, 0, PGSIZE);
+    memset (pa, 1, PGSIZE);
     p = (struct kmNode*)pa;
     
     /* 添加到空闲链表 */

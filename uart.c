@@ -64,7 +64,7 @@ void uartinit(void)
     WriteReg(FCR, FCR_FIFO_ENABLE | FCR_FIFO_CLEAR);
 
     // enable transmit and receive interrupts.
-    //WriteReg(IER, IER_TX_ENABLE | IER_RX_ENABLE);
+    WriteReg(IER, IER_TX_ENABLE | IER_RX_ENABLE);
 }
 
 static void uartstart(void)

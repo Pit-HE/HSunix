@@ -32,7 +32,6 @@ LDFLAGS = -z max-page-size=4096
 QEMUOPTS = -machine virt -bios none -kernel kernel -m 128M -smp $(CPUS) -nographic
 
 
-
 %.o:%.c
 	$(CC)${CFLAGS} $^ -c -o $@
 %.o:%.S

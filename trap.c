@@ -5,6 +5,8 @@
 #include "riscv.h"
 
 
+void kernelvec();
+
 
 void usertrap(void)
 {
@@ -14,6 +16,11 @@ void usertrap(void)
 void usertrapret(void)
 {
 
+}
+
+void trapinithart(void)
+{
+  w_stvec((uint64)kernelvec);
 }
 
 void kerneltrap(void)

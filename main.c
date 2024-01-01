@@ -7,18 +7,21 @@
 extern void tc_init (void);
 extern void tc_main (void);
 
+void error (void)
+{
+    while(1)
+    {
+        ;
+    }
+}
+
 void main (void)
 {
     uartinit();
     console_init();
     kinit();
-
-
-    char buf[] = "Hello World !\n";
-    // char rbuf[128];
-    // int  rlen = 0;
-
-    console_wCmd(buf, strlen(buf));
+    kvm_init();
+    kvm_enable();
 
     tc_init();
 
@@ -37,7 +40,7 @@ void main (void)
         // console_wChar("\n");
         // kfree(pa);
 
-        tc_main();
+        // tc_main();
     }
 }
 

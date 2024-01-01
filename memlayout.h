@@ -1,3 +1,7 @@
+
+/*
+**  用各个常量描述了内核中的内存布局
+*/
 // Physical memory layout
 
 // qemu -machine virt is set up like this,
@@ -6,8 +10,8 @@
 // 00001000 -- boot ROM, provided by qemu
 // 02000000 -- CLINT
 // 0C000000 -- PLIC
-// 10000000 -- uart0 
-// 10001000 -- virtio disk 
+// 10000000 -- uart0
+// 10001000 -- virtio disk
 // 80000000 -- boot ROM jumps here in machine mode
 //             -kernel loads the kernel here
 // unused RAM after 80000000.
@@ -21,6 +25,7 @@
 #define UART0 0x10000000L
 #define UART0_IRQ 10
 
+// virtio disk
 // virtio mmio interface
 #define VIRTIO0 0x10001000
 #define VIRTIO0_IRQ 1
@@ -51,6 +56,7 @@
 // in both user and kernel space.
 #define TRAMPOLINE (MAXVA - PGSIZE)
 
+/* 计算内核栈所分配的虚拟地址 */
 // map kernel stacks beneath the trampoline,
 // each surrounded by invalid guard pages.
 #define KSTACK(p) (TRAMPOLINE - ((p)+1)* 2*PGSIZE)

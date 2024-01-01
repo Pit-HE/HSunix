@@ -7,31 +7,9 @@
 #include "defs.h"
 
 
-pagetable_t     kernel_pagetable;
+pagetable_t     kernel_pgtab;
 extern char     etext[];
 extern char     trampoline[];
-
-/* 初始化内核页表 */
-void kvm_make (void)
-{
-    
-}
-
-
-/* 初始化虚拟内存管理模块 */
-void kvm_init (void)
-{
-    kernel_pagetable = kalloc();
-    memset(kernel_pagetable, 0, PGSIZE);
-}
-
-/* 使能内存管理单元 */
-void kvm_enable (void)
-{
-  sfence_vma();
-  w_satp(MAKE_SATP(kernel_pagetable));
-  sfence_vma();
-}
 
 /*
  *  解析指定页表中，虚拟地址 va 所对应的物理地址
@@ -42,63 +20,53 @@ void kvm_enable (void)
  */
 static pte_t *_mmu (pagetable_t pagetable, uint64 va, bool alloc)
 {
-    if(va >= MAXVA)
-        return NULL;
+    if (va >= MAXVA)
+        error();
 
-    /* 遍历虚拟地址中的三个页表项 */
-    for(int level = 2; level > 0; level--)
+    for (int level = 2; level > 0; level--)
     {
-        /* 解析虚拟地址所对应的页表条目 */
         pte_t *pte = &pagetable[PX(level, va)];
-
-        /* 当前页表条目能否使用 */
-        if(*pte & PTE_V)
+        if (*pte & PTE_V)
         {
-            /* 将页表条目转化为物理地址 */
             pagetable = (pagetable_t)PTE2PA(*pte);
-        }else{
-            /* 是否申请新的页表空间 */
-            if(!alloc || (pagetable = (pde_t*)kalloc()) == 0)
-                return NULL;
-
-            /* 清空页表内容 */
+        }
+        else
+        {
+            if (!alloc || (pagetable = (pde_t *)kalloc()) == 0)
+                return 0;
             memset(pagetable, 0, PGSIZE);
-
-            /* 创建新的页表 */
             *pte = PA2PTE(pagetable) | PTE_V;
         }
     }
-    /* 返回具体的页表条目 */
     return &pagetable[PX(0, va)];
 }
 
 /* 为指定地址与大小的虚拟内存与物理内存建立映射关系 */
-int mappages (pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int flag)
+static int mappages (pagetable_t pagetable, uint64 va, uint64 pa, uint64 size, int flag)
 {
     uint64  start, end;
     pte_t   *pte;
 
     if (size == 0)
-        return -1;
+        error();
     if ((pa % PGSIZE) != 0)
-        return -1;
+        error();
 
     start = PGROUNDDOWN(va);
     end   = PGROUNDDOWN(va + size - 1);
 
     while(1)
     {
-        pte = _mmu(pagetable, va, TRUE);
-        if (pte == NULL)
+        pte = _mmu(pagetable, start, TRUE);
+        if (pte == 0)
             return -1;
         if (*pte & PTE_V)
-            return -1;
+            error();
 
         *pte = PA2PTE(pa) | flag | PTE_V;
 
         if (start >= end)
             break;
-
         pa += PGSIZE;
         start += PGSIZE;
     }
@@ -106,7 +74,7 @@ int mappages (pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int flag
 }
 
 /* 释放页表本身占用的物理地址 */
-void freepages (pagetable_t pagetable)
+static void freepages (pagetable_t pagetable)
 {
     int     i;
     pte_t   pte;
@@ -130,6 +98,14 @@ void freepages (pagetable_t pagetable)
     kfree(pagetable);
 }
 /*******************************************************/
+
+/* 使能内存管理单元 */
+void kvm_enable (void)
+{
+  sfence_vma();
+  w_satp(MAKE_SATP(kernel_pgtab));
+  sfence_vma();
+}
 
 /* 获取虚拟地址对应的物理地址 */
 uint64 kvm_phyaddr (pagetable_t pagetable, uint64 va)
@@ -156,7 +132,8 @@ uint64 kvm_phyaddr (pagetable_t pagetable, uint64 va)
 /* 将指定大小的物理地址与虚拟地址建立映射关系 */
 void kvm_map (pagetable_t pagetable, uint64 va, uint64 pa, uint64 sz, int flag)
 {
-    mappages(pagetable, va, sz, pa, flag);
+    if (mappages(pagetable, va, pa, sz, flag) < 0)
+        error();
 }
 
 /* 释放范围的页表条目所映射的物理内存页 */
@@ -369,4 +346,30 @@ int copyin (pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
         srcva = va0 + PGSIZE;
     }
     return 0;
+}
+
+/* 初始化虚拟内存管理模块 */
+void kvm_init (void)
+{
+    kernel_pgtab = kalloc();
+    memset(kernel_pgtab, 0, PGSIZE);
+
+    // uart registers
+    mappages(kernel_pgtab, UART0, UART0, PGSIZE, PTE_R | PTE_W);
+
+    // virtio mmio disk interface
+    mappages(kernel_pgtab, VIRTIO0, VIRTIO0, PGSIZE, PTE_R | PTE_W);
+
+    // PLIC
+    mappages(kernel_pgtab, PLIC, PLIC, 0x400000, PTE_R | PTE_W);
+
+    // map kernel text executable and read-only.
+    mappages(kernel_pgtab, KERNBASE, KERNBASE, (uint64)etext-KERNBASE, PTE_R | PTE_X);
+
+    // map kernel data and the physical RAM we'll make use of.
+    mappages(kernel_pgtab, (uint64)etext, (uint64)etext, PHYSTOP-(uint64)etext, PTE_R | PTE_W);
+
+    // map the trampoline for trap entry/exit to
+    // the highest virtual address in the kernel.
+    mappages(kernel_pgtab, TRAMPOLINE, (uint64)trampoline, PGSIZE, PTE_R | PTE_X);
 }
