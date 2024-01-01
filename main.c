@@ -4,32 +4,40 @@
 #include "defs.h"
 #include "list.h"
 
+extern void tc_init (void);
+extern void tc_main (void);
 
 void main (void)
 {
     uartinit();
     console_init();
+    kinit();
 
-    char buf[] = "\nHello World !\n";
-    char rbuf[128];
-    int  rlen = 0;
 
-    console_write(buf, strlen(buf));
+    char buf[] = "Hello World !\n";
+    // char rbuf[128];
+    // int  rlen = 0;
 
-    int i;
+    console_wCmd(buf, strlen(buf));
 
+    tc_init();
+
+    // char *pa;
     while (1)
     {
-        for (i=0; i<10000; i++)
-        {
-            console_write("sh: ", 5);
-        
-            memset(rbuf, 0, rlen);
-            rlen = console_read(rbuf);
-            
-            if (rlen > 0)
-                console_write(rbuf, rlen);
-        }
+        console_wCmd("sh: ", 5);
+
+        // pa = kalloc();
+        // rlen = console_rCmd(rbuf);
+
+        // if (rlen > 0)
+        // {
+        //     console_wCmd(rbuf, rlen);
+        // }
+        // console_wChar("\n");
+        // kfree(pa);
+
+        tc_main();
     }
 }
 

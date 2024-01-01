@@ -19,7 +19,7 @@ obj +=$(patsubst %.S,%.o, ${s_src})
 obj +=$(patsubst %.c,%.o, ${c_src})
 
 
-CFLAGS  = -Wall -Werror -O -fno-omit-frame-pointer -ggdb -gdwarf-2
+CFLAGS  = -Wall -Werror -O0 -fno-omit-frame-pointer -ggdb -gdwarf-2
 CFLAGS += -MD
 CFLAGS += -mcmodel=medany
 CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
@@ -30,14 +30,6 @@ CFLAGS += -fno-pie -no-pie
 LDFLAGS = -z max-page-size=4096
 
 QEMUOPTS = -machine virt -bios none -kernel kernel -m 128M -smp $(CPUS) -nographic
-
-
-$(info )
-$(info )
-$(info "*******************************************************************")
-$(info "****c_src = $(c_src)")
-$(info "****s_src = $(s_src)")
-$(info "****obj = ${obj}")
 
 
 
@@ -52,15 +44,18 @@ kernel: $(obj) kernel.ld
 	$(OBJDUMP) -t kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > kernel.sym
 
 
+all:kernel 
 
-all:kernel
 
 qemu:
 	$(QEMU) $(QEMUOPTS) -S -gdb tcp::25000
 
-debug:
+compile:
 	make all
 	make clean
+
+debug:
+	make compile
 	make qemu
 
 clean:

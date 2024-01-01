@@ -1,3 +1,9 @@
+
+
+#define NULL        (void*)0
+#define TRUE        1
+#define FALSE       0
+
 typedef unsigned int   uint;
 typedef unsigned short ushort;
 typedef unsigned char  uchar;

@@ -7,12 +7,12 @@
 #include "defs.h"
 
 
-static void console_putc (int c)
-{
-    uartputc_sync(c);
-}
+#define console_getc    uartgetc_loop
+#define console_putc    uartputc_sync
 
-int console_write (char *src, int n)
+
+
+int console_wCmd (char *src, int n)
 {
     int i;
     char *xStr = src;
@@ -22,9 +22,13 @@ int console_write (char *src, int n)
         console_putc(*xStr);
     }
     return i;
-} 
+}
+void console_wChar (char *src)
+{
+    console_putc(*src);
+}
 
-int console_read (char *src)
+int console_rCmd (char *src)
 {
     int  len = 0;
     char chr = 0;
@@ -32,7 +36,7 @@ int console_read (char *src)
 
     while(1)
     {
-        chr = uartgetc_loop();
+        chr = console_getc();
         if (chr == '\r')
             chr = '\n';
 
@@ -44,10 +48,13 @@ int console_read (char *src)
     }
     return len;
 }
+int console_rChar (void)
+{
+    return console_getc();
+}
 
 void console_init (void)
 {
-
 }
 
 
