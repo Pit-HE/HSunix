@@ -8,7 +8,7 @@
 
 void tc_init (void)
 {
-    // kvm_init();
+    kvm_init();
 }
 
 
@@ -24,8 +24,6 @@ void tc_main (void)
     strcpy(buf, "hello World!\n");
 
     Spgatab = uvm_create();
-    // uvm_alloc(Spgatab, 0, 4096, PTE_R | PTE_W | PTE_U);
-    // buf = (char *)kvm_phyaddr(Spgatab, 0);
 
     uvm_copy(Spgatab, pgtab, 20, TRUE);
     buf = (char *)kvm_phyaddr(Spgatab, 0);

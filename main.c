@@ -1,4 +1,5 @@
 
+#include "memlayout.h"
 #include "types.h"
 #include "riscv.h"
 #include "defs.h"
@@ -7,7 +8,7 @@
 extern void tc_init (void);
 extern void tc_main (void);
 
-void error (void)
+void _error (void)
 {
     while(1)
     {
@@ -17,31 +18,36 @@ void error (void)
 
 void main (void)
 {
-    uartinit();
+    static uint flip;
     console_init();
-    kinit();
-    kvm_init();
-    kvm_enable();
+    // kinit();
+    // kvm_init();
+    // kvm_enable();
+    trap_init();
+    trap_inithart();
+    plic_init();
+    plic_inithart();
 
-    tc_init();
+    // tc_init();
 
-    // char *pa;
+    console_wString("sh: \r\n");
+
+    intr_on();
     while (1)
     {
-        console_wCmd("sh: ", 5);
-
-        // pa = kalloc();
-        // rlen = console_rCmd(rbuf);
-
-        // if (rlen > 0)
-        // {
-        //     console_wCmd(rbuf, rlen);
-        // }
-        // console_wChar("\n");
-        // kfree(pa);
-
+        extern uint ticks;
+        if (ticks >= (flip + 10))
+        {
+            flip = ticks;
+            // console_wString("sh: \r\n");
+        }
+        
         // tc_main();
     }
 }
 
-
+uint32 printcnt = 0;
+void printtest (void)
+{
+    printcnt ++;
+}

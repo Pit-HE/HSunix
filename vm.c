@@ -21,7 +21,7 @@ extern char     trampoline[];
 static pte_t *_mmu (pagetable_t pagetable, uint64 va, bool alloc)
 {
     if (va >= MAXVA)
-        error();
+        _error();
 
     for (int level = 2; level > 0; level--)
     {
@@ -48,9 +48,9 @@ static int mappages (pagetable_t pagetable, uint64 va, uint64 pa, uint64 size, i
     pte_t   *pte;
 
     if (size == 0)
-        error();
+        _error();
     if ((pa % PGSIZE) != 0)
-        error();
+        _error();
 
     start = PGROUNDDOWN(va);
     end   = PGROUNDDOWN(va + size - 1);
@@ -61,7 +61,7 @@ static int mappages (pagetable_t pagetable, uint64 va, uint64 pa, uint64 size, i
         if (pte == 0)
             return -1;
         if (*pte & PTE_V)
-            error();
+            _error();
 
         *pte = PA2PTE(pa) | flag | PTE_V;
 
@@ -133,7 +133,7 @@ uint64 kvm_phyaddr (pagetable_t pagetable, uint64 va)
 void kvm_map (pagetable_t pagetable, uint64 va, uint64 pa, uint64 sz, int flag)
 {
     if (mappages(pagetable, va, pa, sz, flag) < 0)
-        error();
+        _error();
 }
 
 /* 释放范围的页表条目所映射的物理内存页 */

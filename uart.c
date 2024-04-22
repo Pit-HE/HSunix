@@ -42,7 +42,7 @@ char uart_tx_buf[UART_TX_BUF_SIZE];
 uint64 uart_tx_w; // write next to uart_tx_buf[uart_tx_w % UART_TX_BUF_SIZE]
 uint64 uart_tx_r; // read next from uart_tx_buf[uart_tx_r % UART_TX_BUF_SIZE]
 
-void uartinit(void)
+void uart_init(void)
 {
     // disable interrupts.
     WriteReg(IER, 0x00);
@@ -119,14 +119,16 @@ int uartgetc_intr(void)
 
 
 /* uart interrupt handler */
-void uartintr(void)
+void uart_intrrupt(void)
 {
     while (1)
     {
         int c = uartgetc_intr();
         if (c == -1)
             break;
-        /* TODO: process uart recive char */
+
+        uartputc_sync(c);
+        console_ISR(c);
     }
 
     uartstart();

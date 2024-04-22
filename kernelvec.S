@@ -7,6 +7,7 @@
         # when kerneltrap() returns, restore registers, return.
         #
 .globl kerneltrap
+.globl printtest
 .globl kernelvec
 .align 4
 kernelvec:
@@ -90,6 +91,7 @@ kernelvec:
         #
         # machine-mode timer interrupt.
         #
+
 .globl timervec
 .align 4
 timervec:
