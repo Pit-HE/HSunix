@@ -10,7 +10,8 @@ extern char end[];
 
 struct kmNode
 {
-    struct kmNode *next;
+    uint64          blkNum;
+    struct kmNode   *next;
 };
 static struct kmNode kmFreeHeader;
 
@@ -26,6 +27,7 @@ void *kalloc (void)
     /* 从链表取出节点 */
     p = kmFreeHeader.next;
     kmFreeHeader.next = p->next;
+    kmFreeHeader.blkNum -= 1;
 
     memset((void*)p, 5, PGSIZE);
     return p;
@@ -50,6 +52,7 @@ void kfree (void *pa)
     /* 添加到空闲链表 */
     p->next = kmFreeHeader.next;
     kmFreeHeader.next = p;
+    kmFreeHeader.blkNum += 1;
 }
 
 /* 将可用内存格式化为固定大小的页 */
@@ -71,6 +74,7 @@ static void kmFormat (void *pa_start, void *pa_end)
 void kinit (void)
 {
     kmFreeHeader.next = NULL;
+    kmFreeHeader.blkNum = 0;
     kmFormat(end, (void*)PHYSTOP);
 }
 

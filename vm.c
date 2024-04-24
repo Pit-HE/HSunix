@@ -12,20 +12,24 @@ extern char     etext[];
 extern char     trampoline[];
 
 /*
- *  解析指定页表中，虚拟地址 va 所对应的物理地址
+ *  解析指定页表中，虚拟地址 vAddr 所对应的物理地址
  *
  *  pagetable：要解析的一级页表首地址
- *  va：要解析的虚拟地址
+ *  vAddr：要解析的虚拟地址
  *  alloc：是否要为空的页表条目申请新的内存空间
  */
-static pte_t *_mmu (pagetable_t pagetable, uint64 va, bool alloc)
+static pte_t *_mmu (pagetable_t pagetable, uint64 vAddr, bool alloc)
 {
-    if (va >= MAXVA)
+    pte_t *pte = NULL;
+
+    if (vAddr >= MAXVA)
         _error();
 
     for (int level = 2; level > 0; level--)
     {
-        pte_t *pte = &pagetable[PX(level, va)];
+        pte = &pagetable[PX(level, vAddr)];
+
+        /* Whether pte is available */
         if (*pte & PTE_V)
         {
             pagetable = (pagetable_t)PTE2PA(*pte);
@@ -38,22 +42,20 @@ static pte_t *_mmu (pagetable_t pagetable, uint64 va, bool alloc)
             *pte = PA2PTE(pagetable) | PTE_V;
         }
     }
-    return &pagetable[PX(0, va)];
+    return &pagetable[PX(0, vAddr)];
 }
 
 /* 为指定地址与大小的虚拟内存与物理内存建立映射关系 */
-static int mappages (pagetable_t pagetable, uint64 va, uint64 pa, uint64 size, int flag)
+static int mappages (pagetable_t pagetable, uint64 vAddr, uint64 pAddr, uint64 size, int flag)
 {
     uint64  start, end;
-    pte_t   *pte;
+    pte_t   *pte = NULL;
 
     if (size == 0)
         _error();
-    if ((pa % PGSIZE) != 0)
-        _error();
 
-    start = PGROUNDDOWN(va);
-    end   = PGROUNDDOWN(va + size - 1);
+    start = PGROUNDDOWN(vAddr);
+    end   = PGROUNDDOWN(vAddr + size - 1);
 
     while(1)
     {
@@ -63,11 +65,11 @@ static int mappages (pagetable_t pagetable, uint64 va, uint64 pa, uint64 size, i
         if (*pte & PTE_V)
             _error();
 
-        *pte = PA2PTE(pa) | flag | PTE_V;
+        *pte = PA2PTE(pAddr) | flag | PTE_V;
 
-        if (start >= end)
+        if (start == end)
             break;
-        pa += PGSIZE;
+        pAddr += PGSIZE;
         start += PGSIZE;
     }
     return 0;
@@ -98,26 +100,17 @@ static void freepages (pagetable_t pagetable)
     kfree(pagetable);
 }
 /*******************************************************/
-
-/* 使能内存管理单元 */
-void kvm_enable (void)
-{
-  sfence_vma();
-  w_satp(MAKE_SATP(kernel_pgtab));
-  sfence_vma();
-}
-
 /* 获取虚拟地址对应的物理地址 */
-uint64 kvm_phyaddr (pagetable_t pagetable, uint64 va)
+uint64 kvm_phyaddr (pagetable_t pagetable, uint64 vAddr)
 {
     pte_t   *pte;
 
     /* 虚拟地址的有效性检查 */
-    if (va > MAXVA)
+    if (vAddr > MAXVA)
         return 0;
     
     /* 获取第三级的页表条目 */
-    pte = _mmu(pagetable, va, FALSE);
+    pte = _mmu(pagetable, vAddr, FALSE);
 
     /* 页表条目的有效性检查 */
     if (! (*pte & PTE_V))
@@ -130,9 +123,9 @@ uint64 kvm_phyaddr (pagetable_t pagetable, uint64 va)
 }
 
 /* 将指定大小的物理地址与虚拟地址建立映射关系 */
-void kvm_map (pagetable_t pagetable, uint64 va, uint64 pa, uint64 sz, int flag)
+void kvm_map (pagetable_t pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag)
 {
-    if (mappages(pagetable, va, pa, sz, flag) < 0)
+    if (mappages(pagetable, vAddr, pAddr, sz, flag) < 0)
         _error();
 }
 
@@ -196,7 +189,7 @@ uint64 uvm_alloc (pagetable_t pagetable, uint64 oldaddr, uint64 newaddr, int fla
         memset(mem, 0, PGSIZE);
     
         /* 建立映射关系 */
-        if (mappages(pagetable, oldaddr, 4096, (uint64)mem, PTE_R|PTE_U|flag) != 0)
+        if (mappages(pagetable, oldaddr, (uint64)mem, 4096, PTE_R|PTE_U|flag) != 0)
         {
             /* 释放已申请的内存页 */
             kfree(mem);
@@ -237,7 +230,7 @@ void uvm_destroy (pagetable_t pagetable, uint64 sz)
 int uvm_copy (pagetable_t destPage, pagetable_t srcPage, uint64 sz, bool alloc)
 {
     uint64  i;
-    pte_t   *d_pte, *s_pte;
+    pte_t   *d_pte = NULL, *s_pte = NULL;
     uint64  d_pa, s_pa;
     uint    s_flags;
 
@@ -261,7 +254,7 @@ int uvm_copy (pagetable_t destPage, pagetable_t srcPage, uint64 sz, bool alloc)
             /* 完成内存页的数据拷贝 */
             memmove ((void*)d_pa, (void*)s_pa, PGSIZE);
             /* 为目标页表建立新的映射关系 */
-            if (mappages(destPage, i, PGSIZE, d_pa, s_flags) != 0)
+            if (mappages(destPage, i, d_pa, PGSIZE, s_flags) != 0)
             {
                 kfree((void*)d_pa);
                 goto error_cpy;
@@ -278,7 +271,7 @@ int uvm_copy (pagetable_t destPage, pagetable_t srcPage, uint64 sz, bool alloc)
             /* 完成内存页的数据拷贝 */
             memmove ((void*)d_pa, (void*)s_pa, PGSIZE);
             /* 为目标页表建立新的映射关系 */
-            if (mappages(destPage, i, PGSIZE, d_pa, s_flags) != 0)
+            if (mappages(destPage, i, d_pa, PGSIZE, s_flags) != 0)
                 goto error_cpy;
         }
     }
@@ -372,4 +365,8 @@ void kvm_init (void)
     // map the trampoline for trap entry/exit to
     // the highest virtual address in the kernel.
     mappages(kernel_pgtab, TRAMPOLINE, (uint64)trampoline, PGSIZE, PTE_R | PTE_X);
+
+    sfence_vma();
+    w_satp(MAKE_SATP(kernel_pgtab));
+    sfence_vma();
 }

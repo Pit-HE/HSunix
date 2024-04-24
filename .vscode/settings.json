@@ -6,7 +6,9 @@
     "memlayout.h": "c",
     "types.h": "c",
     "param.h": "c",
-    "proc.h": "c"
+    "proc.h": "c",
+    "list.h": "c",
+    "cstdio": "c"
   },
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",

@@ -37,9 +37,8 @@ void  kinit  (void);
 
 /** vm **/
 void    kvm_init (void);
-void    kvm_enable (void);
 uint64  kvm_phyaddr (pagetable_t pagetable, uint64 va);
-void    kvm_map (pagetable_t pagetable, uint64 va, uint64 pa, uint64 sz, int flag);
+void    kvm_map (pagetable_t pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag);
 void    uvm_unmap (pagetable_t pagetable, uint64 va, uint64 npages, bool free);
 pagetable_t uvm_create (void);
 uint64  uvm_alloc (pagetable_t pagetable, uint64 oldaddr, uint64 newaddr, int flag);
@@ -75,5 +74,9 @@ void plic_complete (int irq);
 
 /** syscall **/
 void syscall(void);
+
+/** printf **/
+void kprintf (char*, ...);
+
 
 #endif

@@ -7,7 +7,6 @@
         # when kerneltrap() returns, restore registers, return.
         #
 .globl kerneltrap
-.globl printtest
 .globl kernelvec
 .align 4
 kernelvec:

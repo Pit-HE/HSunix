@@ -8,15 +8,6 @@
 
 
 
-struct cpu *mycpu (void)
-{
-    return 0;
-}
-struct proc *myproc (void)
-{
-    return 0;
-}
-
 uint32 yieldCnt = 0;
 void yield(void)
 {
@@ -26,6 +17,15 @@ int cpuid (void)
 {
     return r_tp();
 }
+struct cpu *mycpu (void)
+{
+    return 0;
+}
+struct proc *myproc (void)
+{
+    return 0;
+}
+
 int kill(int pid)
 {
     return 0;

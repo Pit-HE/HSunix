@@ -18,21 +18,18 @@ void _error (void)
 
 void main (void)
 {
-    static uint flip;
     console_init();
-    // kinit();
-    // kvm_init();
-    // kvm_enable();
+    kinit();
+    kvm_init();
     trap_init();
     trap_inithart();
     plic_init();
     plic_inithart();
 
-    // tc_init();
-
-    console_wString("sh: \r\n");
-
+    kprintf("sh: \r\n");
     intr_on();
+
+    static uint flip;
     while (1)
     {
         extern uint ticks;
@@ -42,12 +39,7 @@ void main (void)
             // console_wString("sh: \r\n");
         }
         
-        // tc_main();
+        tc_main();
     }
 }
 
-uint32 printcnt = 0;
-void printtest (void)
-{
-    printcnt ++;
-}
