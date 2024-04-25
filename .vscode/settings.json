@@ -8,7 +8,10 @@
     "param.h": "c",
     "proc.h": "c",
     "list.h": "c",
-    "cstdio": "c"
+    "cstdio": "c",
+    "error.h": "c",
+    "compare": "c",
+    "type_traits": "c"
   },
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",

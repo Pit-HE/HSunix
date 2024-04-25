@@ -23,7 +23,7 @@ static pte_t *_mmu (pagetable_t pagetable, uint64 vAddr, bool alloc)
     pte_t *pte = NULL;
 
     if (vAddr >= MAXVA)
-        _error();
+        kError(errVirtualAddress);
 
     for (int level = 2; level > 0; level--)
     {
@@ -52,7 +52,7 @@ static int mappages (pagetable_t pagetable, uint64 vAddr, uint64 pAddr, uint64 s
     pte_t   *pte = NULL;
 
     if (size == 0)
-        _error();
+        kError(errInvalidAddressSize);
 
     start = PGROUNDDOWN(vAddr);
     end   = PGROUNDDOWN(vAddr + size - 1);
@@ -63,7 +63,7 @@ static int mappages (pagetable_t pagetable, uint64 vAddr, uint64 pAddr, uint64 s
         if (pte == 0)
             return -1;
         if (*pte & PTE_V)
-            _error();
+            kError(errInvalidPteState);
 
         *pte = PA2PTE(pAddr) | flag | PTE_V;
 
@@ -126,7 +126,7 @@ uint64 kvm_phyaddr (pagetable_t pagetable, uint64 vAddr)
 void kvm_map (pagetable_t pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag)
 {
     if (mappages(pagetable, vAddr, pAddr, sz, flag) < 0)
-        _error();
+        kError(errViritualAddressMap);
 }
 
 /* 释放范围的页表条目所映射的物理内存页 */
@@ -366,6 +366,7 @@ void kvm_init (void)
     // the highest virtual address in the kernel.
     mappages(kernel_pgtab, TRAMPOLINE, (uint64)trampoline, PGSIZE, PTE_R | PTE_X);
 
+    // Open vritual protect
     sfence_vma();
     w_satp(MAKE_SATP(kernel_pgtab));
     sfence_vma();

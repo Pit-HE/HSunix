@@ -1,48 +1,164 @@
 
-#include "types.h"
+#include "defs.h"
 #include "param.h"
 #include "memlayout.h"
-#include "riscv.h"
-#include "defs.h"
-#include "proc.h"
 
 
 
-uint32 yieldCnt = 0;
-void yield(void)
+/**********************************************/
+static uint64           kPidToken = 1;
+static CpuCB_t          kCpusList[NCPU];
+static list_entry_t     kProcList;
+static list_entry_t     kReadyList;
+static list_entry_t     kSleepList;
+
+/**********************************************/
+CpuCB_t *getCpuCB (void)
 {
-    yieldCnt++;
+    return &kCpusList[getCpuID()];
 }
-int cpuid (void)
+ProcCB_t *getProcCB (void)
 {
-    return r_tp();
+    return getCpuCB()->proc;
 }
-struct cpu *mycpu (void)
+int allocPid (void)
+{
+    return (kPidToken++);
+}
+ProcCB_t *allocProcCB (void)
+{
+    return NULL;
+}
+int freeProcCB (ProcCB_t *obj)
 {
     return 0;
 }
-struct proc *myproc (void)
+void proc_init (void)
 {
-    return 0;
+    list_init(&kProcList);
+    list_init(&kReadyList);
+    list_init(&kSleepList);
 }
 
-int kill(int pid)
+void scheduler (void)
+{
+    CpuCB_t         *cpu = getCpuCB();
+    ProcCB_t        *pcb;
+    list_entry_t    *ptr, *qtr;
+
+    while(1)
+    {
+        intr_on();
+
+        /* search all ready member of list */
+        list_for_each_safe (ptr, qtr, &kReadyList)
+        {
+            pcb = list_container_of(ptr, ProcCB_t, list);
+            if (pcb->state == READY)
+            {
+                kDISABLE_INTERRUPT();
+                pcb->state = RUNNING;
+                cpu->proc = pcb;
+                kENABLE_INTERRUPT();
+
+                switch_to(&cpu->context, &pcb->context);
+
+                cpu->proc = NULL;
+            }
+        }
+    }
+}
+
+
+void kswitch (void)
+{
+    int         state;
+    CpuCB_t     *cpu = getCpuCB();
+    ProcCB_t    *pcb = getProcCB();
+
+    if (cpu->intrOffNest != 0)
+        kError(errInterruptNumNest);
+    if (pcb->state == RUNNING)
+        kError(errProcessState);
+    if (intr_get())
+        kError(errInterruptState);
+
+    state = cpu->intrOldState;
+    switch_to(&pcb->context, &cpu->context);
+    cpu->intrOldState = state;
+}
+void yield (void)
+{
+    kDISABLE_INTERRUPT();
+    getProcCB()->state = READY;
+    kENABLE_INTERRUPT();
+
+    kswitch();
+}
+void sleep (void *obj)
+{
+    ProcCB_t *pcb = NULL;
+
+    pcb = getProcCB();
+
+    kDISABLE_INTERRUPT();
+    pcb->sleepObj = obj;
+    pcb->state = SLEEPING;
+    list_del(&pcb->list);
+    list_add(&kSleepList, &pcb->list);
+    kENABLE_INTERRUPT();
+
+    kswitch();
+
+    pcb->sleepObj = NULL;
+}
+void wakeup (void *obj)
+{
+    ProcCB_t        *pcb = NULL;
+    list_entry_t    *ptr, *qtr;
+
+    list_for_each_safe(ptr, qtr, &kSleepList)
+    {
+        pcb = list_container_of(ptr, ProcCB_t, list);
+        if (pcb->sleepObj == obj)
+        {
+            kDISABLE_INTERRUPT();
+            pcb->state = READY;
+            list_del(&pcb->list);
+            list_add(&kReadyList, &pcb->list);
+            kENABLE_INTERRUPT();
+        }
+    }
+}
+int create (ProcCB_t *pcb, char *stack, void (*func)(void))
+{
+    pcb->state = READY;
+    pcb->pid = allocPid();
+    pcb->context.ra = (uint64)func;
+    pcb->context.sp = (uint64)stack;
+
+    list_init(&pcb->list);
+    list_add(&kProcList,  &pcb->list);
+    list_add(&kReadyList, &pcb->list);
+    return 0;
+}
+int fork (void)
 {
     return 0;
 }
-void setkilled(struct proc *p)
+void exit (int status)
 {
 
 }
-int getkilled(struct proc *p)
+int kill (int pid)
 {
     return 0;
 }
-int fork(void)
-{
-    return 0;
-}
-void exit(int status)
+void setKillState (ProcCB_t *p)
 {
 
+}
+int getKillState (ProcCB_t *p)
+{
+    return 0;
 }

@@ -7,7 +7,7 @@
 #include "proc.h"
 
 /****************************************/
-uint ticks;
+uint Systicks;
 /****************************************/
 int dev_interrupt (void);
 /****************************************/
@@ -36,21 +36,21 @@ void trap_inithart(void)
 void trap_userfunc(void)
 {
     uint devnum = 0;
-    struct proc *p = myproc();
+    ProcCB_t *p = getProcCB();
 
     /* 判断 trap 是否来自用户模式 */
     if ((r_sstatus() & SSTATUS_SPP) != 0)
-      _error();
+      kError(errTrapStatus);
 
     w_stvec((uint64)kernelvec);
-    p->trapframe->epc = r_sepc();
+    p->trapFrame->epc = r_sepc();
 
     /***** 系统调用 *****/
     if (r_scause() == 8)
     {
-        if (getkilled(p))
+        if (getKillState(p))
           exit(-1);
-        p->trapframe->epc += 4;
+        p->trapFrame->epc += 4;
         intr_on();
         syscall();
     }
@@ -60,11 +60,11 @@ void trap_userfunc(void)
         devnum = dev_interrupt();
         /* 发生非法故障，杀死当前进程 */
         if (devnum == 0)
-            setkilled(p);
+            setKillState(p);
     }
 
     /* 中断发生后的处理 */
-    if (getkilled(p))
+    if (getKillState(p))
         exit(-1);
     if (devnum == 2)
         yield();
@@ -77,7 +77,7 @@ void trap_userfunc(void)
 void trap_retuser(void)
 {
     unsigned long x;
-    struct proc *p = myproc();
+    ProcCB_t *p = getProcCB();
 
     intr_off();
 
@@ -85,13 +85,13 @@ void trap_retuser(void)
     w_stvec((uint64)(TRAMPOLINE + (uservec - trampoline)));
 
     /* 页表寄存器 */
-    p->trapframe->kernel_satp = r_satp();
+    p->trapFrame->kernel_satp = r_satp();
     /* 重置进程栈地址 */
-    p->trapframe->kernel_sp = p->kstack + PGSIZE;
+    p->trapFrame->kernel_sp = p->stack + PGSIZE;
     /* 设置用户进程中断入口(给 uservec 读取) */
-    p->trapframe->kernel_trap = (uint64)trap_userfunc;
+    p->trapFrame->kernel_trap = (uint64)trap_userfunc;
     /* 记录当前的 cpu ID */
-    p->trapframe->kernel_hartid = r_tp();
+    p->trapFrame->kernel_hartid = r_tp();
 
     /* 设置用户模式的信息 */
     x = r_sstatus();
@@ -100,10 +100,10 @@ void trap_retuser(void)
     w_sstatus(x);
 
     /* 恢复 trap_userfunc 中保存的 epc 寄存器 */
-    w_sepc(p->trapframe->epc);
+    w_sepc(p->trapFrame->epc);
 
     /* 获取当前进程用户空间的页表地址 */
-    uint64 satp = MAKE_SATP(p->pagetable);
+    uint64 satp = MAKE_SATP(p->pageTab);
 
     /* 跳转到汇编的用户空间返回代码 */
     uint64 trampoline_userret = TRAMPOLINE + (userret - trampoline);
@@ -124,19 +124,19 @@ void kerneltrap(void)
 
     /* 有效性检查 */
     if ((sstatus & SSTATUS_SPP)==0)
-      _error();
+      kError(errTrapStatus);
     if (intr_get() != 0)
-      _error();
+      kError(errInterruptEnable);
 
     /* 处理外设中断与软件中断 */
     devnum = dev_interrupt();
     if (devnum == 0)
     {
-        _error();
+        kError(errInterruptState);
     }
 
     /* 是否为定时器中断 */
-    if (devnum == 2 && myproc() != 0 && myproc()->state == RUNNING)
+    if (devnum == 2 && getProcCB() != 0 && getProcCB()->state == RUNNING)
       yield();
 
     // 恢复存储的寄存器
@@ -177,10 +177,10 @@ int dev_interrupt (void)
     /***** 软件中断 *****/
     else if (scause == 0x8000000000000001L)
     {
-        if (cpuid() == 0)
+        if (getCpuID() == 0)
         {
-            ticks++;
-            // wakeup(&ticks);
+            Systicks++;
+            wakeup(&Systicks);
         }
 
         w_sip(r_sip() & ~2);

@@ -12,7 +12,7 @@ OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
 
 
-s_src = entry.S trampoline.S kernelvec.S
+s_src = entry.S trampoline.S kernelvec.S switch.S
 c_src = $(wildcard *.c)
 obj :=
 obj +=$(patsubst %.S,%.o, ${s_src})

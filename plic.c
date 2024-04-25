@@ -14,20 +14,20 @@ void plic_init (void)
 void plic_inithart (void)
 {
     /* Enable uart interrupt */
-    *(uint32*)(PLIC_SENABLE(cpuid())) = (1 << UART0_IRQ);
+    *(uint32*)(PLIC_SENABLE(getCpuID())) = (1 << UART0_IRQ);
 
     /* Open core interrupt priority zero */
-    *(uint32*)(PLIC_SPRIORITY(cpuid())) = 0;
+    *(uint32*)(PLIC_SPRIORITY(getCpuID())) = 0;
 }
 
 int plic_claim (void)
 {
     /* Get current interrupt number */
-    return *(uint32*)PLIC_SCLAIM(cpuid());
+    return *(uint32*)PLIC_SCLAIM(getCpuID());
 }
 
 void plic_complete (int irq)
 {
     /* Clear current interrupt number */
-    *(uint32*)PLIC_SCLAIM(cpuid()) = irq;
+    *(uint32*)PLIC_SCLAIM(getCpuID()) = irq;
 }

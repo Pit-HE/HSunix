@@ -14,11 +14,9 @@
  * directly rather than using the generic single-entry routines.
  * */
 
-struct list_entry {
+typedef struct list_entry {
     struct list_entry *prev, *next;
-};
-
-typedef struct list_entry list_entry_t;
+}list_entry_t;
 
 static inline void list_init(list_entry_t *elm) __attribute__((always_inline));
 static inline void list_add(list_entry_t *listelm, list_entry_t *elm) __attribute__((always_inline));
@@ -32,6 +30,33 @@ static inline list_entry_t *list_prev(list_entry_t *listelm) __attribute__((alwa
 
 static inline void __list_add(list_entry_t *elm, list_entry_t *prev, list_entry_t *next) __attribute__((always_inline));
 static inline void __list_del(list_entry_t *prev, list_entry_t *next) __attribute__((always_inline));
+
+/**
+ * list_container_of - return the start address of struct type
+ * ptr: known pointer address.
+ * type: The type of structure that needs to be obtained.
+ * member: The name of list_entry in the structure member.
+ */
+#define list_container_of(ptr, type, member) \
+    ((type *)((char *)(ptr) - (unsigned long)(&((type *)0)->member)))
+
+/**
+ * rt_list_for_each - iterate over a list
+ * @param pos the rt_list_t * to use as a loop cursor.
+ * @param head the head for your list.
+ */
+#define list_for_each(ptr, obj) \
+    for (ptr = (obj)->next; ptr != (obj); ptr = ptr->next)
+
+/**
+ * rt_list_for_each_safe - iterate over a list safe against removal of list entry
+ * @param pos the rt_list_t * to use as a loop cursor.
+ * @param n another rt_list_t * to use as temporary storage
+ * @param head the head for your list.
+ */
+#define list_for_each_safe(pos, n, head) \
+    for (pos = (head)->next, n = pos->next; pos != (head); \
+        pos = n, n = pos->next)
 
 /* *
  * list_init - initialize a new entry

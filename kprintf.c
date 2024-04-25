@@ -57,7 +57,7 @@ void kprintf (char *fmt, ...)
 
 
   if (fmt == 0)
-    _error();
+    kError(errParameterFormat);
 
   va_start(ap, fmt);
   for(i = 0; (c = fmt[i] & 0xff) != 0; i++)

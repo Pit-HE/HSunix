@@ -6,7 +6,7 @@
 
 
 
-void tc_main (void)
+void vm_main (void)
 {
     char *buf;
     pagetable_t pgtab, Spgatab;

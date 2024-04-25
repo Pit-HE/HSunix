@@ -1,0 +1,6 @@
+
+
+void kError (int code)
+{
+    
+}

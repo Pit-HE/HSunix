@@ -1,7 +1,21 @@
+#ifndef __PROC_H___
+#define __PROC_H___
+
+#include "list.h"
+
+/* Process state */
+enum Procstate_t
+{
+  UNUSED,   /* 空闲 */
+  USED,     /* 刚被分配 */
+  SLEEPING, /* 休眠 */
+  READY,    /* 就绪 */
+  RUNNING,  /* 正在执行 */
+  ZOMBIE    /* 等待退出 */
+};
 
 // Saved registers for kernel context switches.
-/* risc-v 的核心寄存器集 */
-struct context
+typedef struct processSwitchContext
 {
   uint64 ra;
   uint64 sp;
@@ -19,37 +33,9 @@ struct context
   uint64 s9;
   uint64 s10;
   uint64 s11;
-};
+}Context_t;
 
-// Per-CPU state.
-/* cpu 控制块 */
-struct cpu
-{
-  /* 记录占用当前 CPU 的进程 */
-  struct proc *proc;          // The process running on this cpu, or null.
-  /* CPU 调度器进程的上下文，作为进程切换的过渡 */
-  struct context context;     // swtch() here to enter scheduler().
-  /* 开关中断的嵌套计数 */
-  int noff;                   // Depth of push_off() nesting.
-  int intena;                 // Were interrupts enabled before push_off()?
-};
-
-extern struct cpu cpus[NCPU];
-
-// per-process data for the trap handling code in trampoline.S.
-// sits in a page by itself just under the trampoline page in the
-// user page table. not specially mapped in the kernel page table.
-// uservec in trampoline.S saves user registers in the trapframe,
-// then initializes registers from the trapframe's
-// kernel_sp, kernel_hartid, kernel_satp, and jumps to kernel_trap.
-// usertrapret() and userret in trampoline.S set up
-// the trapframe's kernel_*, restore user registers from the
-// trapframe, switch to the user page table, and enter user space.
-// the trapframe includes callee-saved user registers like s0-s11 because the
-// return-to-user path via usertrapret() doesn't return through
-// the entire kernel call stack.
-/* 中断上下文 */
-struct trapframe
+typedef struct trapStackFrame
 {
   /*   0 */ uint64 kernel_satp;   // kernel page table
   /*   8 */ uint64 kernel_sp;     // top of process's kernel stack
@@ -87,40 +73,38 @@ struct trapframe
   /* 264 */ uint64 t4;
   /* 272 */ uint64 t5;
   /* 280 */ uint64 t6;
-};
+}Trapframe_t;
 
-enum procstate
-{
-  UNUSED,   /* 空闲 */
-  USED,     /* 刚被分配 */
-  SLEEPING, /* 休眠 */
-  RUNNABLE, /* 就绪 */
-  RUNNING,  /* 正在执行 */
-  ZOMBIE    /* 等待退出 */
-};
+
 
 // Per-process state
 /* 进程控制块 */
-struct proc
+typedef struct processControlBlock
 {
-  // p->lock must be held when using these:
-  enum procstate state;        // Process state
-  void *chan;                  // If non-zero, sleeping on chan   (指向导致进程进入休眠的对象)
-  int killed;                  // If non-zero, have been killed   (标记进程是否已经被杀死)
-  /* 记录子进程退出时要返回给父进程的状态 */
-  int xstate;                  // Exit status to be returned to parent's wait
-  int pid;                     // Process ID
+  enum Procstate_t state;               // Process state
+  struct processControlBlock *parent;   // Parent process
 
-  // wait_lock must be held when using this:
-  struct proc *parent;         // Parent process
+  void          *sleepObj;        // If non-zero, sleeping on special object
+  int           killState;        // If non-zero, have been killed
+  int           exitState;        // Exit status to be returned to parent's wait
+  int           pid;              // Process ID
 
-  // these are private to the process, so p->lock need not be held.
-  uint64 kstack;               // Virtual address of kernel stack (进程内核栈的虚拟地址)
-  uint64 sz;                   // Size of process memory (bytes)  (进程占用的内存大小)
-  pagetable_t pagetable;       // User page table                 (进程所属的用户页表)
-  struct trapframe *trapframe; // data page for trampoline.S      (中断上下文(记录完整的 cpu 工作信息))
-  struct context context;      // swtch() here to run process     (用于进程切换的上下文信息)
-  struct file *ofile[NOFILE];  // Open files                      (存储文件描述符的指针数组)
-  struct inode *cwd;           // Current directory               (当前工作路径)
-  char name[16];               // Process name (debugging)
-};
+  list_entry_t  list;
+  uint64        stack;            // Virtual address of kernel stack
+  uint64        memoSize;         // Size of process memory (bytes)
+  pagetable_t  *pageTab;          // User page table
+  Trapframe_t  *trapFrame;        // data page for trampoline.S
+  Context_t     context;          // switch_to() here to run process
+  char          name[16];         // Process name (debugging)
+}ProcCB_t;
+
+typedef struct cpuControlBlock
+{
+  ProcCB_t *proc;                 // The process running on this cpu, or null.
+  Context_t context;              // switch_to() here to enter scheduler().
+  int       intrOffNest;          // Depth of push_off() nesting.
+  int       intrOldState;         // Were interrupts enabled before push_off()?
+}CpuCB_t;
+
+
+#endif

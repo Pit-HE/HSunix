@@ -75,6 +75,18 @@ void kinit (void)
 {
     kmFreeHeader.next = NULL;
     kmFreeHeader.blkNum = 0;
+
     kmFormat(end, (void*)PHYSTOP);
 }
 
+
+
+
+int alloc (int size)
+{
+    return 0;
+}
+int free (char *obj)
+{
+    return 0;
+}
