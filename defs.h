@@ -5,7 +5,7 @@
 #include "types.h"
 #include "riscv.h"
 #include "proc.h"
-#include "error.h"
+#include "kerror.h"
 
 
 /******************** uart ********************/
