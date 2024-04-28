@@ -6,13 +6,13 @@
 
 
 
-void vm_main (void)
+void TC_vm (void)
 {
     char *buf;
     pagetable_t pgtab, Spgatab;
 
     pgtab = uvm_create();
-    buf = kalloc();
+    buf = kallocPhyPage();
     kvm_map(pgtab, (uint64)0, (uint64)buf, PGSIZE, PTE_R | PTE_W | PTE_U);
 
     strcpy(buf, "hello World!\n");
@@ -28,3 +28,88 @@ void vm_main (void)
     uvm_destroy(Spgatab, PGSIZE);
 }
 
+
+void TC_kalloc (void)
+{
+    // int i;
+    // char *ptr[10];
+
+/* 初步测试 */
+#if 0
+    ptr[0] = (char*)kalloc(32);
+    kfree(ptr[0]);
+
+/* 奇数个测试 */
+#elif 0
+    for (i=0; i<7; i++)
+    {
+        ptr[i] = (char*)kalloc(32);
+    }
+    for (i=0; i<7; i++)
+    {
+        kfree(ptr[i]);
+    }
+
+/* 偶数个测试 */
+#elif 0
+    for (i=0; i<10; i++)
+    {
+        ptr[i] = (char*)kalloc(64);
+    }
+    for (i=0; i<10; i++)
+    {
+        kfree(ptr[i]);
+    }
+
+/* 大数据块测试 */
+#elif 0
+    for (i=0; i<10; i++)
+    {
+        ptr[i] = (char*)kalloc(2048);
+    }
+    for (i=0; i<10; i++)
+    {
+        kfree(ptr[i]);
+    }
+
+/* 临界值测试 */
+#elif 0
+    for (i=0; i<6; i++)
+    {
+        /* 一次分走一半物理内存页大小 */
+        ptr[i] = (char*)kalloc(2048 - 16);
+    }
+    for (i=0; i<6; i++)
+    {
+        kfree(ptr[i]);
+    }
+
+/* 极限值测试 */
+#elif 0
+    for (i=0; i<10; i++)
+    {
+        /* 一次分走一个物理内存页大小 */
+        ptr[i] = (char*)kalloc(4096 - 16);
+    }
+    for (i=0; i<10; i++)
+    {
+        kfree(ptr[i]);
+    }
+
+/* 非顺序操作 */
+#elif 0
+    for (i=0; i<10; i++)
+    {
+        ptr[i] = (char*)kalloc(32);
+    }
+
+    kfree(ptr[0]);
+    kfree(ptr[3]);
+    kfree(ptr[4]);
+    kfree(ptr[7]);
+    kfree(ptr[9]);
+
+    ptr[0] = (char*)kalloc(64);
+    ptr[3] = (char*)kalloc(32);
+#endif
+}

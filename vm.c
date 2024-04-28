@@ -36,7 +36,7 @@ static pte_t *_mmu (pagetable_t pagetable, uint64 vAddr, bool alloc)
         }
         else
         {
-            if (!alloc || (pagetable = (pde_t *)kalloc()) == 0)
+            if (!alloc || (pagetable = (pde_t *)kallocPhyPage()) == 0)
                 return 0;
             memset(pagetable, 0, PGSIZE);
             *pte = PA2PTE(pagetable) | PTE_V;
@@ -97,7 +97,7 @@ static void freepages (pagetable_t pagetable)
             return;
         }
     }
-    kfree(pagetable);
+    kfreePhyPage(pagetable);
 }
 /*******************************************************/
 /* 获取虚拟地址对应的物理地址 */
@@ -152,7 +152,7 @@ void uvm_unmap (pagetable_t pagetable, uint64 va, uint64 npages, bool free)
         
         if (free == TRUE)
         {
-            kfree((void*)PTE2PA(*pte));
+            kfreePhyPage((void*)PTE2PA(*pte));
         }
 
         *pte = 0;
@@ -162,7 +162,7 @@ void uvm_unmap (pagetable_t pagetable, uint64 va, uint64 npages, bool free)
 /* 创建新的页表 */
 pagetable_t uvm_create (void)
 {
-    pagetable_t pgtab = (pagetable_t)kalloc();
+    pagetable_t pgtab = (pagetable_t)kallocPhyPage();
 
     if (pgtab == NULL)
         return NULL;
@@ -183,7 +183,7 @@ uint64 uvm_alloc (pagetable_t pagetable, uint64 oldaddr, uint64 newaddr, int fla
 
     for (addr=oldaddr; addr < newaddr; addr += PGSIZE)
     {
-        mem = kalloc();
+        mem = kallocPhyPage();
         if (mem == NULL)
             goto error_map;
         memset(mem, 0, PGSIZE);
@@ -192,7 +192,7 @@ uint64 uvm_alloc (pagetable_t pagetable, uint64 oldaddr, uint64 newaddr, int fla
         if (mappages(pagetable, oldaddr, (uint64)mem, 4096, PTE_R|PTE_U|flag) != 0)
         {
             /* 释放已申请的内存页 */
-            kfree(mem);
+            kfreePhyPage(mem);
             goto error_map;
         }
     }
@@ -247,7 +247,7 @@ int uvm_copy (pagetable_t destPage, pagetable_t srcPage, uint64 sz, bool alloc)
         if (alloc)
         {
             /* 申请新的内存页给目标页表 */
-            d_pa = (uint64)kalloc();
+            d_pa = (uint64)kallocPhyPage();
             if (d_pa == 0)
                 goto error_cpy;
 
@@ -256,7 +256,7 @@ int uvm_copy (pagetable_t destPage, pagetable_t srcPage, uint64 sz, bool alloc)
             /* 为目标页表建立新的映射关系 */
             if (mappages(destPage, i, d_pa, PGSIZE, s_flags) != 0)
             {
-                kfree((void*)d_pa);
+                kfreePhyPage((void*)d_pa);
                 goto error_cpy;
             }
         }
@@ -344,7 +344,7 @@ int copyin (pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
 /* 初始化虚拟内存管理模块 */
 void kvm_init (void)
 {
-    kernel_pgtab = kalloc();
+    kernel_pgtab = kallocPhyPage();
     memset(kernel_pgtab, 0, PGSIZE);
 
     // uart registers

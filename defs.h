@@ -36,12 +36,13 @@ int   strlen (const char *st);
 char *strcpy (char *dest, const char *src);
 
 
-/******************** kalloc ********************/
-void *kalloc (void);
-void  kfree  (void *pa);
-void  kinit  (void);
-int   alloc  (int size);
-int   free   (char *obj);
+/******************** kallocPhyPage ********************/
+void *kallocPhyPage (void);
+void  kfreePhyPage  (void *pa);
+void *kalloc        (int size);
+void  kfree         (void *obj);
+void  kmem_init     (void);
+void  ksmall_init   (void);
 
 
 /******************** vm ********************/
@@ -78,7 +79,7 @@ int     allocPid    (void);
 void    yield       (void);
 void    sleep       (void *obj);
 void    wakeup      (void *obj);
-int     create      (ProcCB_t *pcb, char *stack, void (*func)(void));
+int     create      (void (*func)(void));
 int     fork        (void);
 void    exit        (int status);
 int     kill        (int pid);

@@ -130,15 +130,21 @@ void wakeup (void *obj)
         }
     }
 }
-int create (ProcCB_t *pcb, char *stack, void (*func)(void))
+int create (void (*func)(void))
 {
+    char *stack = (char *)kalloc(3*1024);
+    ProcCB_t *pcb = (ProcCB_t *)kalloc(sizeof(ProcCB_t));
+
+    memset(pcb, 0, sizeof(ProcCB_t));
+    memset(stack, 0, 3*1024);
+
     pcb->state = READY;
     pcb->pid = allocPid();
     pcb->context.ra = (uint64)func;
     pcb->context.sp = (uint64)stack;
 
     list_init(&pcb->list);
-    list_add(&kProcList,  &pcb->list);
+    // list_add(&kProcList,  &pcb->list);
     list_add(&kReadyList, &pcb->list);
     return 0;
 }

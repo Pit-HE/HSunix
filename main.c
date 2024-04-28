@@ -6,19 +6,16 @@
 #include "list.h"
 
 
-#define PROC_NUM_MAX    3
-ProcCB_t    procUserCB[PROC_NUM_MAX];
-char        procStack[PROC_NUM_MAX][4096];
 extern uint Systicks;
 
 void process_entry0 (void)
 {
-    static uint64 TmrCnt = 0;
+    static uint64 TmrCnt0 = 0;
     while(1)
     {
-        if (++TmrCnt > 50)
+        if (++TmrCnt0 > 50)
         {
-            TmrCnt = 0;
+            TmrCnt0 = 0;
             kprintf ("%s\r\n", "Running");
         }
         sleep(&Systicks);
@@ -26,12 +23,12 @@ void process_entry0 (void)
 }
 void process_entry1 (void)
 {
-    static uint64 TmrCnt = 0;
+    static uint64 TmrCnt1 = 0;
     while(1)
     {
-        if (++TmrCnt > 20)
+        if (++TmrCnt1 > 20)
         {
-            TmrCnt = 0;
+            TmrCnt1 = 0;
             kprintf ("%s\r\n", "Hello World");
         }
         sleep(&Systicks);
@@ -39,12 +36,12 @@ void process_entry1 (void)
 }
 void process_entry2 (void)
 {
-    static uint64 TmrCnt = 0;
+    static uint64 TmrCnt2 = 0;
     while(1)
     {
-        if (++TmrCnt > 10)
+        if (++TmrCnt2 > 10)
         {
-            TmrCnt = 0;
+            TmrCnt2 = 0;
             kprintf ("%s\r\n", "HSunix");
         }
         sleep(&Systicks);
@@ -62,19 +59,20 @@ void process_entry2 (void)
 void main (void)
 {
     console_init();
-    kinit();
+    kmem_init();
     kvm_init();
     trap_init();
     trap_inithart();
     plic_init();
     plic_inithart();
     proc_init();
+    ksmall_init();
 
     kprintf("Start OS ...\r\n");
 
-    create(&procUserCB[0], &procStack[0][2048], process_entry0);
-    create(&procUserCB[1], &procStack[1][2048], process_entry1);
-    create(&procUserCB[2], &procStack[2][2048], process_entry2);
+    create(process_entry2);
+    create(process_entry1);
+    create(process_entry0);
 
     scheduler();
 }
