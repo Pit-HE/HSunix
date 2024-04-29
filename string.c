@@ -12,26 +12,42 @@ void *memset(void *s, int c, uint n)
 
 void *memmove(void *dst, const void *src, uint n)
 {
-  const char *s;
-  char *d;
+    char *tmp = (char *)dst, *s = (char *)src;
 
-  if (n == 0)
+    if (s < tmp && tmp < s + n)
+    {
+        tmp += n;
+        s += n;
+
+        while (n--)
+            *(--tmp) = *(--s);
+    }
+    else
+    {
+        while (n--)
+            *tmp++ = *s++;
+    }
+
     return dst;
+}
 
-  s = src;
-  d = dst;
-  if (s < d && s + n > d)
-  {
-    s += n;
-    d += n;
-    while (n-- > 0)
-      *--d = *--s;
-  }
-  else
-    while (n-- > 0)
-      *d++ = *s++;
+void *memcpy (void *dst, const void *src, uint n)
+{
+    char *tmp = (char *)dst, *s = (char *)src;
+    uint len = 0;
 
-  return dst;
+    if (tmp <= s || tmp > (s + n))
+    {
+        while (n--)
+            *tmp ++ = *s ++;
+    }
+    else
+    {
+        for (len = n; len > 0; len --)
+            tmp[len - 1] = s[len - 1];
+    }
+
+    return dst;
 }
 
 int strlen (const char *st)

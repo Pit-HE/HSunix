@@ -9,6 +9,16 @@
 
 #define console_getc    uartgetc_loop
 #define console_putc    uartputc_sync
+#define console_bufSize 128
+
+typedef struct console_manage_info
+{
+    char buf[console_bufSize];
+    ringbuf_t rb;
+}consoleInfo_t;
+
+static consoleInfo_t consState;
+
 
 
 int console_wString (char *src)
@@ -22,12 +32,12 @@ int console_wString (char *src)
     }
     return 0;
 }
-int console_wCmd (char *src, int n)
+int console_wCmd (char *src, int len)
 {
     int i;
     char *xStr = src;
 
-    for (i=0; i<n; i++, xStr++)
+    for (i=0; i<len; i++, xStr++)
     {
         console_putc(*xStr);
     }
@@ -37,50 +47,29 @@ void console_wChar (char src)
 {
     console_putc(src);
 }
-
-int console_rString (char *src)
+int console_rCmd (char *src, int len)
 {
-    int len = 0;
+    int idx = 0;
     char ch = 0;
     char *xStr = src;
 
-    while(1)
+    while (len > 0)
     {
-        ch = console_getc();
-        if (ch == '\r')
-            ch = '\n';
+        sleep(&consState.rb);
+        kRingbuf_getchar(&consState.rb, &ch);
 
-        xStr[len++] = ch;
-        console_putc(ch);
-
-        if (ch == '\n')
-            break;
-    }
-    return len;
-}
-int console_rCmd (char *src)
-{
-    int  len = 0;
-    char chr = 0;
-    char *xStr = src;
-
-    while(1)
-    {
-        chr = console_getc();
-        if (chr == '\r')
-            chr = '\n';
-
-        xStr[len++] = chr;
-        console_putc(chr);
-
-        if (chr == '\n')
-            break;
+        xStr[idx++] = ch;
+        len -= 1;
     }
     return len;
 }
 int console_rChar (void)
 {
-    return console_getc();
+    int ch;
+
+    sleep(&consState.rb);
+    kRingbuf_getchar(&consState.rb, (char*)&ch);
+    return ch;
 }
 
 
@@ -88,16 +77,14 @@ int console_rChar (void)
 void console_init (void)
 {
     uart_init();
+    kRingbuf_init(&consState.rb, consState.buf, console_bufSize);
+    memset(&consState.buf, 0, console_bufSize);
 }
 
-void console_main (void)
+void console_isr (int c)
 {
-
-}
-
-void console_ISR (int c)
-{
-
+    kRingbuf_putchar(&consState.rb, (char)c);
+    wakeup(&consState.rb);
 }
 
 

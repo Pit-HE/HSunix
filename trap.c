@@ -40,7 +40,7 @@ void trap_userfunc(void)
 
     /* 判断 trap 是否来自用户模式 */
     if ((r_sstatus() & SSTATUS_SPP) != 0)
-      kError(errTrapStatus);
+      kError(errSVC_Trap, errCode_Status);
 
     w_stvec((uint64)kernelvec);
     p->trapFrame->epc = r_sepc();
@@ -124,15 +124,15 @@ void kerneltrap(void)
 
     /* 有效性检查 */
     if ((sstatus & SSTATUS_SPP)==0)
-      kError(errTrapStatus);
+      kError(errSVC_Trap, errCode_Status);
     if (intr_get() != 0)
-      kError(errInterruptEnable);
+      kError(errSVC_Trap, errCode_InterruptState);
 
     /* 处理外设中断与软件中断 */
     devnum = dev_interrupt();
     if (devnum == 0)
     {
-        kError(errInterruptState);
+        kError(errSVC_Trap, errCode_InterruptState);
     }
 
     /* 是否为定时器中断 */

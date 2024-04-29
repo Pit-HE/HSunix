@@ -257,9 +257,7 @@ void kmem_init (void)
     phyPageFreeHeader.blkNum = 0;
     phyPageFreeHeader.next = NULL;
     phyPageFormat(end, (void*)PHYSTOP);
-}
-void ksmall_init (void)
-{
+
     smallMemFreeHeader.blkNum = 0U;
     smallMemFreeHeader.next = &smallMemFreeHeader;
     smallMemFormat();

@@ -128,7 +128,7 @@ void uart_intrrupt(void)
             break;
 
         uartputc_sync(c);
-        console_ISR(c);
+        console_isr(c);
     }
 
     uartstart();

@@ -77,11 +77,11 @@ void kswitch (void)
     ProcCB_t    *pcb = getProcCB();
 
     if (cpu->intrOffNest != 0)
-        kError(errInterruptNumNest);
+        kError(errSVC_Process, errCode_InterruptNest);
     if (pcb->state == RUNNING)
-        kError(errProcessState);
+        kError(errSVC_Process, errCode_ProcessState);
     if (intr_get())
-        kError(errInterruptState);
+        kError(errSVC_Process, errCode_InterruptState);
 
     state = cpu->intrOldState;
     switch_to(&pcb->context, &cpu->context);
@@ -132,19 +132,20 @@ void wakeup (void *obj)
 }
 int create (void (*func)(void))
 {
-    char *stack = (char *)kalloc(3*1024);
+    #define STACK_SIZE  2*1024
     ProcCB_t *pcb = (ProcCB_t *)kalloc(sizeof(ProcCB_t));
+    char *stack = (char *)kalloc(STACK_SIZE);
 
     memset(pcb, 0, sizeof(ProcCB_t));
-    memset(stack, 0, 3*1024);
+    memset(stack, 0, STACK_SIZE);
 
     pcb->state = READY;
     pcb->pid = allocPid();
     pcb->context.ra = (uint64)func;
-    pcb->context.sp = (uint64)stack;
+    pcb->context.sp = (uint64)(stack + STACK_SIZE);
 
     list_init(&pcb->list);
-    // list_add(&kProcList,  &pcb->list);
+    list_add(&kProcList,  &pcb->list);
     list_add(&kReadyList, &pcb->list);
     return 0;
 }

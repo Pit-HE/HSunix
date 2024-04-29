@@ -6,6 +6,7 @@
 #include "riscv.h"
 #include "proc.h"
 #include "kerror.h"
+#include "ringbuff.h"
 
 
 /******************** uart ********************/
@@ -19,19 +20,18 @@ void uart_intrrupt  (void);
 
 /******************** console ********************/
 void console_init       (void);
-void console_main       (void);
-void console_ISR        (int c);
+void console_isr        (int c);
 int  console_wString    (char *src);
-int  console_wCmd       (char *src, int n);
-void console_wChar      (char src);
-int  console_rString    (char *src);
-int  console_rCmd       (char *src);
+int  console_wCmd       (char *src, int len);
+void console_wChar      (char  src);
+int  console_rCmd       (char *src, int len);
 int  console_rChar      (void);
 
 
 /******************** string ********************/
 void *memset (void *s, int c, uint n);
 void *memmove(void *dst, const void *src, uint n);
+void *memcpy (void *dst, const void *src, uint n);
 int   strlen (const char *st);
 char *strcpy (char *dest, const char *src);
 
@@ -42,7 +42,6 @@ void  kfreePhyPage  (void *pa);
 void *kalloc        (int size);
 void  kfree         (void *obj);
 void  kmem_init     (void);
-void  ksmall_init   (void);
 
 
 /******************** vm ********************/
@@ -114,9 +113,21 @@ void kPortEnableInterrupt (void);
 
 
 /******************** error *********************/
-void kError (int code);
+void kError (errService SVC, errCode code);
 
 
+/******************** ringbuff ******************/
+void kRingbuf_init      (ringbuf_t *rb, char *buf, int len);
+void kRingbuf_clean     (ringbuf_t *rb);
+int  kRingbuf_put       (ringbuf_t *rb, char *buf, int len);
+int  kRingbuf_get       (ringbuf_t *rb, char *buf, int len);
+int  kRingbuf_putchar   (ringbuf_t *rb, char  ch);
+int  kRingbuf_getchar   (ringbuf_t *rb, char *ch);
+
+
+/******************** cli ***********************/
+void cli_init (void);
+void cli_main (void);
 
 
 

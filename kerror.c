@@ -1,6 +1,7 @@
 
+#include "kerror.h"
 
-void kError (int code)
+void kError (errService SVC, errCode code)
 {
     while(1)
     {
