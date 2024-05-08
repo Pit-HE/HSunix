@@ -5,6 +5,7 @@
 #include "types.h"
 #include "riscv.h"
 #include "proc.h"
+#include "timer.h"
 #include "kerror.h"
 #include "ringbuff.h"
 
@@ -46,16 +47,16 @@ void  kmem_init     (void);
 
 /******************** vm ********************/
 void    kvm_init    (void);
-uint64  kvm_phyaddr (pagetable_t pagetable, uint64 va);
-void    kvm_map     (pagetable_t pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag);
-pagetable_t uvm_create (void);
-void    uvm_unmap   (pagetable_t pagetable, uint64 va, uint64 npages, bool free);
-uint64  uvm_alloc   (pagetable_t pagetable, uint64 oldaddr, uint64 newaddr, int flag);
-uint64  uvm_free    (pagetable_t pagetable, uint64 oldsz, uint64 newsz);
-void    uvm_destroy (pagetable_t pagetable, uint64 sz);
-int     uvm_copy    (pagetable_t destPage,  pagetable_t srcPage, uint64 sz, bool alloc);
-int     copyout     (pagetable_t pagetable, uint64 dstva, char *src, uint64 len);
-int     copyin      (pagetable_t pagetable, char *dst, uint64 srcva, uint64 len);
+uint64  kvm_phyaddr (Pagetable_t *pagetable, uint64 va);
+void    kvm_map     (Pagetable_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag);
+Pagetable_t *uvm_create (void);
+void    uvm_unmap   (Pagetable_t *pagetable, uint64 va, uint64 npages, bool free);
+uint64  uvm_alloc   (Pagetable_t *pagetable, uint64 oldaddr, uint64 newaddr, int flag);
+uint64  uvm_free    (Pagetable_t *pagetable, uint64 oldsz, uint64 newsz);
+void    uvm_destroy (Pagetable_t *pagetable);
+int     uvm_copy    (Pagetable_t *destPage, Pagetable_t *srcPage, uint64 sz, bool alloc);
+int     copyout     (Pagetable_t *pagetable, uint64 dstva, char *src, uint64 len);
+int     copyin      (Pagetable_t *pagetable, char *dst, uint64 srcva, uint64 len);
 
 
 /******************** trap ********************/
@@ -70,21 +71,19 @@ void kerneltrap     (void);
 #define getCpuID()  r_tp()
 CpuCB_t  *getCpuCB  (void);
 ProcCB_t *getProcCB (void);
-ProcCB_t *allocProcCB (void);
 void    scheduler   (void);
-int     freeProcCB  (ProcCB_t *obj);
+void    defuncter   (void);
 void    proc_init   (void);
-int     allocPid    (void);
-void    yield       (void);
-void    sleep       (void *obj);
-void    wakeup      (void *obj);
-int     create      (void (*func)(void));
-int     fork        (void);
-void    exit        (int status);
-int     kill        (int pid);
-void    setKillState(ProcCB_t *p);
-int     getKillState(ProcCB_t *p);
-
+void    do_yield    (void);
+void    do_suspend  (void *obj);
+void    do_resume   (void *obj);
+int     do_fork     (void);
+int     do_wait     (int *code);
+void    do_exit     (int state);
+int     do_kill     (int pid);
+int     do_sleep    (int ms);
+int     KillState   (ProcCB_t *pcb);
+void    wakeProcCB  (ProcCB_t *pcb);
 
 /******************** plic ********************/
 void plic_init      (void);
@@ -113,7 +112,7 @@ void kPortEnableInterrupt (void);
 
 
 /******************** error *********************/
-void kError (errService SVC, errCode code);
+void kError (eService SVC, eCode code);
 
 
 /******************** ringbuff ******************/
@@ -129,6 +128,21 @@ int  kRingbuf_getchar   (ringbuf_t *rb, char *ch);
 void cli_init (void);
 void cli_main (void);
 
+
+/******************** init **********************/
+void init_main (void);
+void idle_main (void);
+void test_main (void);
+
+
+/******************** timer *********************/
+void     timer_init (void);
+timer_t *timer_add  (ProcCB_t *pcb, int expires);
+void     timer_del  (timer_t *timer);
+void     timer_run  (void);
+
+/******************** exec **********************/
+int do_exec(char *path, char **argv);
 
 
 #endif

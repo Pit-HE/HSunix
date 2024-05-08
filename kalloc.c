@@ -224,7 +224,7 @@ void *kalloc (int size)
         {
             kmNode *obj = (kmNode *)kallocPhyPage();
             if (obj == NULL)
-                break;
+                kError(eSVC_VirtualMem, E_INVAL);
             /* 设置为当前空闲内存块的大小 */
             obj->blkNum = PGSIZE;
             obj->next = (kmNode *)SL_HEADCODE;

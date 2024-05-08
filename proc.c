@@ -8,11 +8,20 @@
 /**********************************************/
 static uint64           kPidToken = 1;
 static CpuCB_t          kCpusList[NCPU];
-static list_entry_t     kProcList;
+static list_entry_t     kUnregistList;
+static list_entry_t     kRegistList;
 static list_entry_t     kReadyList;
-static list_entry_t     kSleepList;
+static list_entry_t     kPendList;
+static ProcCB_t        *kInitProcCB;
+static ProcCB_t        *kIdleProcCB;
 
-/**********************************************/
+/***********************************************
+ *  Process file public library function
+*/
+void setCpuCB (ProcCB_t *pcb)
+{
+    kCpusList[getCpuID()].proc = pcb;
+}
 CpuCB_t *getCpuCB (void)
 {
     return &kCpusList[getCpuID()];
@@ -21,151 +30,435 @@ ProcCB_t *getProcCB (void)
 {
     return getCpuCB()->proc;
 }
+void wakeProcCB (ProcCB_t *pcb)
+{
+    ProcCB_t *curPcb = getProcCB();
+
+    if (pcb->state != READY)
+    {
+        pcb->state = READY;
+
+        if (pcb != curPcb)
+        {
+            list_del_init(&pcb->list);
+            list_add(&kReadyList, &pcb->list);
+        }
+    }
+}
+
+/***********************************************
+ *  Process file static library function
+*/
+#if 1
 int allocPid (void)
 {
     return (kPidToken++);
 }
 ProcCB_t *allocProcCB (void)
 {
-    return NULL;
+    ProcCB_t *pcb;
+
+    pcb = (ProcCB_t *)kalloc(sizeof(ProcCB_t));
+    if (pcb == NULL)
+        goto _exit_allocProcCB;
+    memset(pcb, 0, sizeof(ProcCB_t));
+
+    pcb->trapFrame = (Trapframe_t *)kalloc(sizeof(Trapframe_t));
+    if (pcb->trapFrame == NULL)
+    {
+        kfree(pcb);
+        pcb = NULL;
+        goto _exit_allocProcCB;
+    }
+    memset(pcb->trapFrame, 0, sizeof(Trapframe_t));
+
+    pcb->pageTab = uvm_create();
+    if (pcb->pageTab == NULL)
+    {
+        kfree (pcb->trapFrame);
+        kfree (pcb);
+        pcb = NULL;
+        goto _exit_allocProcCB;
+    }
+
+    memset(&pcb->context, 0, sizeof(Context_t));
+
+    pcb->pid = allocPid();
+    pcb->state = USED;
+
+    list_init(&pcb->list);
+    list_init(&pcb->regist);
+    list_add(&kRegistList, &pcb->regist);
+
+_exit_allocProcCB:
+    return pcb;
 }
-int freeProcCB (ProcCB_t *obj)
+int freeProcCB (ProcCB_t *pcb)
 {
-    return 0;
+    if (pcb == NULL)
+        return -1;
+
+    /* 移除进程所挂载的链表 */
+    list_del_init(&pcb->regist);
+    list_del_init(&pcb->list);
+
+    /* 释放进程申请的栈帧空间 */
+    if (pcb->trapFrame)
+        kfree(pcb->trapFrame);
+    pcb->trapFrame = NULL;
+
+    /* 释放进程所占用的所有物理内存页 */
+    uvm_free(pcb->pageTab, 0, pcb->memSize);
+
+    /* 释放进程申请的页表 */
+    if (pcb->pageTab)
+        uvm_destroy(pcb->pageTab);
+    pcb->pageTab = NULL;
+
+    /* 释放进程控制块的资源 */
+    kfree(pcb);
+
+    return 1;
 }
+ProcCB_t *findProcCB (int pid)
+{
+    ProcCB_t *pcb = NULL;
+    list_entry_t *ptr = NULL;
+
+    if ((kPidToken < pid) && (pid < 0))
+        goto exit_findProcCB;
+    
+    list_for_each(ptr, &kRegistList)
+    {
+        pcb = list_container_of(ptr, ProcCB_t, regist);
+        if (pcb->pid == pid)
+            goto exit_findProcCB;
+    }
+exit_findProcCB:
+    return pcb;
+}
+#endif
+
+
+
 void proc_init (void)
 {
-    list_init(&kProcList);
+    char *stack;
+    ProcCB_t *pcb;
+
+    list_init(&kRegistList);
     list_init(&kReadyList);
-    list_init(&kSleepList);
+    list_init(&kPendList);
+    list_init(&kUnregistList);
+
+    /* Init processs */
+    kInitProcCB = allocProcCB();
+    stack = (char *)kalloc(2048);
+    memset(stack, 0, 2048);
+    strcpy(kInitProcCB->name, "init");
+    kInitProcCB->context.ra = (uint64)init_main;
+    kInitProcCB->stackAddr  = (uint64)stack;
+    kInitProcCB->stackSize  = (uint64) 2048;
+    kInitProcCB->context.sp = (uint64)(stack + 2048);
+    wakeProcCB(kInitProcCB);
+
+    /* Idle processs */
+    kIdleProcCB = allocProcCB();
+    stack = (char *)kalloc(2048);
+    memset(stack, 0, 2048);
+    strcpy(kIdleProcCB->name, "idle");
+    kIdleProcCB->context.ra = (uint64)idle_main;
+    kIdleProcCB->stackAddr  = (uint64)stack;
+    kIdleProcCB->stackSize  = (uint64) 2048;
+    kIdleProcCB->context.sp = (uint64)(stack + 2048);
+    wakeProcCB(kIdleProcCB);
+    setCpuCB(kIdleProcCB);
+
+    /* test process */
+    pcb = allocProcCB();
+    stack = (char *)kalloc(2048);
+    memset(stack, 0, 2048);
+    strcpy(pcb->name, "test");
+    pcb->context.ra = (uint64)test_main;
+    pcb->stackAddr  = (uint64)stack;
+    pcb->stackSize  = (uint64) 2048;
+    pcb->context.sp = (uint64)(stack + 2048);
+    wakeProcCB(pcb);
 }
 
+/* 就绪进程调度器 */
 void scheduler (void)
 {
-    CpuCB_t         *cpu = getCpuCB();
+    CpuCB_t         *cpu;
     ProcCB_t        *pcb;
-    list_entry_t    *ptr, *qtr;
+    list_entry_t    *ptr;
 
-    while(1)
+    intr_on();
+    if (kReadyList.next == &kReadyList)
+        return;
+
+    /* search all ready member of list */
+    list_for_each (ptr, &kReadyList)
     {
-        intr_on();
+        cpu = getCpuCB();
+        pcb = list_container_of(ptr, ProcCB_t, list);
 
-        /* search all ready member of list */
-        list_for_each_safe (ptr, qtr, &kReadyList)
+        if ((pcb->state == READY) && (pcb != cpu->proc))
         {
-            pcb = list_container_of(ptr, ProcCB_t, list);
-            if (pcb->state == READY)
-            {
-                kDISABLE_INTERRUPT();
-                pcb->state = RUNNING;
-                cpu->proc = pcb;
-                kENABLE_INTERRUPT();
+            kDISABLE_INTERRUPT();
+            pcb->state = RUNNING;
+            cpu->proc = pcb;
+            kENABLE_INTERRUPT();
 
-                switch_to(&cpu->context, &pcb->context);
+            switch_to(&cpu->context, &pcb->context);
 
-                cpu->proc = NULL;
-            }
+            cpu->proc = NULL;
+            ptr = kReadyList.next;
         }
     }
 }
 
+/* 死亡进程回收器 */
+void defuncter (void)
+{
+    ProcCB_t *pcb, *childPcb;
+    list_entry_t *ptr, *qtr, *ktr, *jtr;
 
-void kswitch (void)
+    if (kUnregistList.next == &kUnregistList)
+        return;
+
+    /* 遍历死亡进程链表 */
+    list_for_each_safe(ptr, qtr, &kUnregistList)
+    {
+        pcb = list_container_of(ptr, ProcCB_t, regist);
+
+        /* 处理当前死亡进程的子进程 */
+        list_for_each_safe(ktr, jtr, &kRegistList)
+        {
+            childPcb = list_container_of(ktr, ProcCB_t, list);
+
+            if (childPcb->parent == pcb)
+            {
+                childPcb->parent = kInitProcCB;
+
+                if (childPcb->state == EXITING)
+                    do_resume(kInitProcCB);
+            }
+        }
+        /* 释放该死亡进程占用的所有资源 */
+        freeProcCB(pcb);
+    }
+}
+
+void do_switch (void)
 {
     int         state;
     CpuCB_t     *cpu = getCpuCB();
     ProcCB_t    *pcb = getProcCB();
 
     if (cpu->intrOffNest != 0)
-        kError(errSVC_Process, errCode_InterruptNest);
+        kError(eSVC_Process, E_INTERRUPT);
     if (pcb->state == RUNNING)
-        kError(errSVC_Process, errCode_ProcessState);
+        kError(eSVC_Process, E_PROCESS);
     if (intr_get())
-        kError(errSVC_Process, errCode_InterruptState);
+        kError(eSVC_Process, E_INTERRUPT);
 
     state = cpu->intrOldState;
     switch_to(&pcb->context, &cpu->context);
     cpu->intrOldState = state;
 }
-void yield (void)
+void do_yield (void)
 {
     kDISABLE_INTERRUPT();
     getProcCB()->state = READY;
     kENABLE_INTERRUPT();
 
-    kswitch();
+    do_switch();
 }
-void sleep (void *obj)
+void do_suspend (void *obj)
 {
     ProcCB_t *pcb = NULL;
 
     pcb = getProcCB();
 
     kDISABLE_INTERRUPT();
-    pcb->sleepObj = obj;
-    pcb->state = SLEEPING;
-    list_del(&pcb->list);
-    list_add(&kSleepList, &pcb->list);
+    pcb->pendObj = obj;
+    pcb->state = SUSPEND;
+    list_del_init(&pcb->list);
+    list_add(&kPendList, &pcb->list);
     kENABLE_INTERRUPT();
 
-    kswitch();
+    do_switch();
 
-    pcb->sleepObj = NULL;
+    pcb->pendObj = NULL;
 }
-void wakeup (void *obj)
+void do_resume (void *obj)
 {
     ProcCB_t        *pcb = NULL;
     list_entry_t    *ptr, *qtr;
 
-    list_for_each_safe(ptr, qtr, &kSleepList)
+    list_for_each_safe(ptr, qtr, &kPendList)
     {
         pcb = list_container_of(ptr, ProcCB_t, list);
-        if (pcb->sleepObj == obj)
+        if (pcb->pendObj == obj)
         {
             kDISABLE_INTERRUPT();
             pcb->state = READY;
-            list_del(&pcb->list);
+            list_del_init(&pcb->list);
             list_add(&kReadyList, &pcb->list);
             kENABLE_INTERRUPT();
         }
     }
 }
-int create (void (*func)(void))
+int  do_fork (void)
 {
-    #define STACK_SIZE  2*1024
-    ProcCB_t *pcb = (ProcCB_t *)kalloc(sizeof(ProcCB_t));
-    char *stack = (char *)kalloc(STACK_SIZE);
+    int pid = -1;
+    char *stack;
+    ProcCB_t *newPcb;
+    ProcCB_t *curPcb = getProcCB();
 
-    memset(pcb, 0, sizeof(ProcCB_t));
-    memset(stack, 0, STACK_SIZE);
+    stack = (char *)kalloc(curPcb->stackSize);
+    if (stack == NULL)
+        goto _exit_fork;
 
-    pcb->state = READY;
-    pcb->pid = allocPid();
-    pcb->context.ra = (uint64)func;
-    pcb->context.sp = (uint64)(stack + STACK_SIZE);
+    /* 申请新的进程控制块 */
+    newPcb = allocProcCB();
+    if (newPcb == NULL)
+    {
+        kfree(stack);
+        goto _exit_fork;
+    }
 
-    list_init(&pcb->list);
-    list_add(&kProcList,  &pcb->list);
-    list_add(&kReadyList, &pcb->list);
+    /* 完成两个进程间页表空间的复制 */
+    if (uvm_copy(newPcb->pageTab, curPcb->pageTab, curPcb->memSize, TRUE) < 0)
+    {
+        kfree(stack);
+        freeProcCB(newPcb);
+        uvm_destroy(newPcb->pageTab);
+        goto _exit_fork;
+    }
+
+    kDISABLE_INTERRUPT();
+    newPcb->stackSize = curPcb->stackSize;
+    newPcb->memSize = curPcb->memSize;
+    newPcb->stackAddr = (uint64)stack;
+    newPcb->trapFrame->a0 = 0;
+    newPcb->parent = curPcb;
+
+    strcpy(newPcb->name, curPcb->name);
+    memcpy(&newPcb->context, &curPcb->context, sizeof(Context_t));
+    memcpy((void*)newPcb->stackAddr, (void*)curPcb->stackAddr, curPcb->stackSize);
+
+    newPcb->context.sp = (uint64)(stack + (curPcb->context.sp - curPcb->stackAddr));
+    wakeProcCB(newPcb);
+
+    pid = newPcb->pid;
+    kENABLE_INTERRUPT();
+
+_exit_fork:
+    return pid;
+}
+int  do_wait (int *code)
+{
+    int pid = -1;
+    ProcCB_t *childPcb, *curPcb;
+    list_entry_t *ptr, *qtr;
+
+    curPcb = getProcCB();
+    while(1)
+    {
+        list_for_each_safe(ptr, qtr, &kRegistList)
+        {
+            childPcb = list_container_of(ptr, ProcCB_t, regist);
+
+            /* 查找需要退出的子进程 */
+            if ((childPcb->parent == curPcb) &&
+                (childPcb->state == EXITING))
+            {
+		        /* 处理正在退出的子进程 */ 
+                if (code != NULL)
+                    *code = childPcb->exitState;
+
+                pid = childPcb->pid;
+                freeProcCB(childPcb);
+                goto _exit_wait;
+            }
+            if (KillState(curPcb))
+            {
+                pid = -1;
+                goto _exit_wait;
+            }
+        }
+        do_suspend(curPcb);
+    }
+
+_exit_wait:
+    return pid;
+}
+void do_exit (int state)
+{
+    list_entry_t *ptr, *qtr;
+    ProcCB_t *curPcb, *childPcb;
+
+    curPcb = getProcCB();
+    if ((curPcb == kInitProcCB) ||
+        (curPcb == kIdleProcCB))
+        kError(eSVC_Process,E_DANGER);
+
+    /* 确定当前进程是否有子进程 */ 
+    list_for_each_safe (ptr, qtr, &kRegistList)
+    {
+        childPcb = list_container_of(ptr, ProcCB_t, regist);
+
+	    /* 将子进程挂载到 init 进程上 */
+        if (childPcb->parent == curPcb)
+        {
+            childPcb->parent = kInitProcCB;
+
+            if (childPcb->state == EXITING)
+                do_resume(kInitProcCB);
+        }
+    }
+    curPcb->exitState = state;
+    curPcb->state = EXITING;
+
+    do_resume(curPcb->parent);
+    do_switch();
+}
+int  do_kill (int pid)
+{
+    ProcCB_t *pcb;
+
+    pcb = findProcCB(pid);
+    if ((pcb != NULL) && (pcb->state != EXITING))
+    {
+        kDISABLE_INTERRUPT();
+        pcb->killState = 1;
+        list_del_init(&pcb->regist);
+        list_add(&kUnregistList, &pcb->regist);
+
+        wakeProcCB(pcb);
+        kENABLE_INTERRUPT();
+        return 0;
+    }
+    return -1;
+}
+int  do_sleep (int ms)
+{
+    timer_t *timer = NULL;
+
+    if (ms != 0)
+    {
+        timer = timer_add(getProcCB(), ms);
+
+        do_switch();
+
+        timer_del(timer);
+    }
+
     return 0;
 }
-int fork (void)
+int KillState (ProcCB_t *pcb)
 {
-    return 0;
-}
-void exit (int status)
-{
-
-}
-int kill (int pid)
-{
-    return 0;
-}
-void setKillState (ProcCB_t *p)
-{
-
-}
-int getKillState (ProcCB_t *p)
-{
-    return 0;
+    return pcb->killState;
 }

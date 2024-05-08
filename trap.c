@@ -40,7 +40,7 @@ void trap_userfunc(void)
 
     /* 判断 trap 是否来自用户模式 */
     if ((r_sstatus() & SSTATUS_SPP) != 0)
-      kError(errSVC_Trap, errCode_Status);
+      kError(eSVC_Trap, E_STATUS);
 
     w_stvec((uint64)kernelvec);
     p->trapFrame->epc = r_sepc();
@@ -48,8 +48,8 @@ void trap_userfunc(void)
     /***** 系统调用 *****/
     if (r_scause() == 8)
     {
-        if (getKillState(p))
-          exit(-1);
+        if (KillState(p))
+          do_exit(-1);
         p->trapFrame->epc += 4;
         intr_on();
         syscall();
@@ -60,14 +60,14 @@ void trap_userfunc(void)
         devnum = dev_interrupt();
         /* 发生非法故障，杀死当前进程 */
         if (devnum == 0)
-            setKillState(p);
+            do_kill(p->pid);
     }
 
     /* 中断发生后的处理 */
-    if (getKillState(p))
-        exit(-1);
+    if (KillState(p))
+        do_exit(-1);
     if (devnum == 2)
-        yield();
+        do_yield();
     
     /* 返回用户空间 */
     trap_retuser();
@@ -87,7 +87,7 @@ void trap_retuser(void)
     /* 页表寄存器 */
     p->trapFrame->kernel_satp = r_satp();
     /* 重置进程栈地址 */
-    p->trapFrame->kernel_sp = p->stack + PGSIZE;
+    p->trapFrame->kernel_sp = p->stackAddr + PGSIZE;
     /* 设置用户进程中断入口(给 uservec 读取) */
     p->trapFrame->kernel_trap = (uint64)trap_userfunc;
     /* 记录当前的 cpu ID */
@@ -124,20 +124,20 @@ void kerneltrap(void)
 
     /* 有效性检查 */
     if ((sstatus & SSTATUS_SPP)==0)
-      kError(errSVC_Trap, errCode_Status);
+      kError(eSVC_Trap, E_STATUS);
     if (intr_get() != 0)
-      kError(errSVC_Trap, errCode_InterruptState);
+      kError(eSVC_Trap, E_INTERRUPT);
 
     /* 处理外设中断与软件中断 */
     devnum = dev_interrupt();
     if (devnum == 0)
     {
-        kError(errSVC_Trap, errCode_InterruptState);
+        kError(eSVC_Trap, E_INTERRUPT);
     }
 
     /* 是否为定时器中断 */
     if (devnum == 2 && getProcCB() != 0 && getProcCB()->state == RUNNING)
-      yield();
+      do_yield();
 
     // 恢复存储的寄存器
     w_sepc(sepc);
@@ -180,7 +180,7 @@ int dev_interrupt (void)
         if (getCpuID() == 0)
         {
             Systicks++;
-            wakeup(&Systicks);
+            timer_run();
         }
 
         w_sip(r_sip() & ~2);

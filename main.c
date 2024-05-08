@@ -6,15 +6,6 @@
 #include "list.h"
 
 
-void process_init (void)
-{
-    console_wString("sh: ");
-
-    while(1)
-    {
-        cli_main();
-    }
-}
 
 
 
@@ -27,12 +18,11 @@ void main (void)
     trap_inithart();
     plic_init();
     plic_inithart();
-    proc_init();
     cli_init();
-    
-    kprintf("Start OS ...\r\n");
-    create(process_init);
+    proc_init();
+    timer_init();
 
-    scheduler();
+    kprintf("Start OS ...\r\n");
+    idle_main();
 }
 

@@ -55,7 +55,7 @@ int console_rCmd (char *src, int len)
 
     while (len > 0)
     {
-        sleep(&consState.rb);
+        do_suspend(&consState.rb);
         kRingbuf_getchar(&consState.rb, &ch);
 
         xStr[idx++] = ch;
@@ -67,7 +67,7 @@ int console_rChar (void)
 {
     int ch;
 
-    sleep(&consState.rb);
+    do_suspend(&consState.rb);
     kRingbuf_getchar(&consState.rb, (char*)&ch);
     return ch;
 }
@@ -84,7 +84,7 @@ void console_init (void)
 void console_isr (int c)
 {
     kRingbuf_putchar(&consState.rb, (char)c);
-    wakeup(&consState.rb);
+    do_resume(&consState.rb);
 }
 
 

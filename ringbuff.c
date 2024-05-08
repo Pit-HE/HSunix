@@ -6,9 +6,9 @@
 void kRingbuf_init (ringbuf_t *rb, char *buf, int len)
 {
     if (buf == NULL)
-        kError(errSVC_Ringbuf, errCode_ParamNullPoint);
+        kError(eSVC_Ringbuf, E_PARAM);
     if (len == 0)
-        kError(errSVC_Ringbuf, errCode_ParamInfo);
+        kError(eSVC_Ringbuf, E_PARAM);
 
     rb->buf = buf;
 
@@ -21,7 +21,7 @@ void kRingbuf_init (ringbuf_t *rb, char *buf, int len)
 void kRingbuf_clean (ringbuf_t *rb)
 {
     if (rb == NULL)
-        kError (errSVC_Ringbuf, errCode_ParamNullPoint);
+        kError (eSVC_Ringbuf, E_PARAM);
     
     memset(rb->buf, 0, rb->baseSize);
     rb->idleSize = rb->baseSize;
@@ -34,7 +34,7 @@ int kRingbuf_put (ringbuf_t *rb, char *buf, int len)
     int margin;
 
     if ((buf == NULL) || (rb == NULL))
-        kError(errSVC_Ringbuf, errCode_ParamInfo);
+        kError(eSVC_Ringbuf, E_PARAM);
     if ((len == 0) || (rb->idleSize == 0))
         return 0;
 
@@ -63,7 +63,7 @@ int kRingbuf_get (ringbuf_t *rb, char *buf, int len)
     int margin;
 
     if ((rb == NULL) || (buf == NULL))
-        kError(errSVC_Ringbuf, errCode_ParamInfo);
+        kError(eSVC_Ringbuf, E_PARAM);
     if ((len == 0) || (rb->idleSize == rb->baseSize))
         return 0;
 
@@ -90,7 +90,7 @@ int kRingbuf_get (ringbuf_t *rb, char *buf, int len)
 int kRingbuf_putchar (ringbuf_t *rb, char ch)
 {
     if (rb == NULL)
-        kError(errSVC_Ringbuf, errCode_ParamNullPoint);
+        kError(eSVC_Ringbuf, E_PARAM);
     if (rb->idleSize == 0)
         return 0;
 
@@ -112,7 +112,7 @@ int kRingbuf_putchar (ringbuf_t *rb, char ch)
 int kRingbuf_getchar (ringbuf_t *rb, char *ch)
 {
     if (rb == NULL)
-        kError(errSVC_Ringbuf, errCode_ParamNullPoint);
+        kError(eSVC_Ringbuf, E_PARAM);
     if (rb->idleSize == rb->baseSize)
         return 0;
 

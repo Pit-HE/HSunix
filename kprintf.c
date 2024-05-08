@@ -57,7 +57,7 @@ void kprintf (char *fmt, ...)
 
 
   if (fmt == 0)
-    kError(errSVC_Printf, errCode_ParamFormat);
+    kError(eSVC_Printf, E_PARAM);
 
   va_start(ap, fmt);
   for(i = 0; (c = fmt[i] & 0xff) != 0; i++)

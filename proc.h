@@ -6,12 +6,13 @@
 /* Process state */
 enum Procstate_t
 {
-  UNUSED,   /* 空闲 */
+  IDLE,     /* 空闲 */
   USED,     /* 刚被分配 */
+  SUSPEND,  /* 挂起 */
   SLEEPING, /* 休眠 */
   READY,    /* 就绪 */
   RUNNING,  /* 正在执行 */
-  ZOMBIE    /* 等待退出 */
+  EXITING   /* 等待退出 */
 };
 
 // Saved registers for kernel context switches.
@@ -84,18 +85,20 @@ typedef struct processControlBlock
   enum Procstate_t state;               // Process state
   struct processControlBlock *parent;   // Parent process
 
-  void          *sleepObj;        // If non-zero, sleeping on special object
+  void         *pendObj;          // If non-zero, sleeping on special object
   int           killState;        // If non-zero, have been killed
   int           exitState;        // Exit status to be returned to parent's wait
   int           pid;              // Process ID
 
-  list_entry_t  list;
-  uint64        stack;            // Virtual address of kernel stack
-  uint64        memoSize;         // Size of process memory (bytes)
-  pagetable_t  *pageTab;          // User page table
+  list_entry_t  regist;           // 
+  list_entry_t  list;             // Manage process state switch
+  uint64        stackAddr;        // Virtual address of kernel stack
+  uint64        stackSize;        // Virtual address of kernel stack size
+  uint64        memSize;          // Size of process memory (bytes)
+  Pagetable_t  *pageTab;          // User page table
   Trapframe_t  *trapFrame;        // data page for trampoline.S
   Context_t     context;          // switch_to() here to run process
-  char          name[16];         // Process name (debugging)
+  char          name[10];         // Process name (debugging)
 }ProcCB_t;
 
 typedef struct cpuControlBlock

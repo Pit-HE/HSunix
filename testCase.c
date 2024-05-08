@@ -9,7 +9,7 @@
 void tc_virtualmemory (void)
 {
     char *buf;
-    pagetable_t pgtab, Spgatab;
+    Pagetable_t *pgtab, *Spgatab;
 
     pgtab = uvm_create();
     buf = kallocPhyPage();
@@ -24,8 +24,11 @@ void tc_virtualmemory (void)
 
     kprintf ("%s", buf);
 
-    uvm_destroy(pgtab, PGSIZE);
-    uvm_destroy(Spgatab, PGSIZE);
+    uvm_free(pgtab, 0, PGSIZE);
+    uvm_free(Spgatab, 0, PGSIZE);
+
+    uvm_destroy(pgtab);
+    uvm_destroy(Spgatab);
 }
 
 
@@ -139,5 +142,44 @@ void tc_ringbuff (void)
     kRingbuf_getchar(&tcRB, tc_rBuf);
     kRingbuf_get(&tcRB, tc_rBuf, 126);
     kRingbuf_getchar(&tcRB, tc_rBuf);
+#endif
+}
+
+
+void tc_timer (void)
+{
+    // int i;
+    timer_t *tmr[10] = {0};
+    // ProcCB_t *pcb;
+
+    // ProcCB_t *allocProcCB (void);
+    // pcb = allocProcCB();
+
+#if 0
+    for(i=0; i<10; i++)
+    {
+        tmr[i] = timer_add(pcb, (i+1)*10);
+    }
+    for(i=0; i<10; i++)
+    {
+        timer_del(tmr[i]);
+    }
+#elif 1
+    timer_del(tmr[0]);
+#elif 0
+    timer_run();
+#elif 0
+    for(i=0; i<10; i++)
+    {
+        tmr[i] = timer_add(pcb, (i+1)*10);
+    }
+    for(i=0; i<30; i++)
+    {
+        timer_run();
+    }
+    for(i=0; i<10; i++)
+    {
+        timer_del(tmr[i]);
+    }
 #endif
 }

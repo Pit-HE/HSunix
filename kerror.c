@@ -1,10 +1,11 @@
 
+#include "defs.h"
 #include "kerror.h"
 
-void kError (errService SVC, errCode code)
+void kError (eService SVC, eCode code)
 {
+    kprintf ("error: SCV = %d, code = %d", SVC, code);
+
     while(1)
-    {
-        
-    }
+    {}
 }

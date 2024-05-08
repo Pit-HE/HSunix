@@ -7,7 +7,7 @@
 #include "defs.h"
 
 
-pagetable_t     kernel_pgtab;
+Pagetable_t     *kernel_pgtab;
 extern char     etext[];
 extern char     trampoline[];
 
@@ -18,12 +18,12 @@ extern char     trampoline[];
  *  vAddr：要解析的虚拟地址
  *  alloc：是否要为空的页表条目申请新的内存空间
  */
-static pte_t *_mmu (pagetable_t pagetable, uint64 vAddr, bool alloc)
+static pte_t *_mmu (Pagetable_t *pagetable, uint64 vAddr, bool alloc)
 {
     pte_t *pte = NULL;
 
     if (vAddr >= MAXVA)
-        kError(errSVC_VirtualMem, errCode_ParamInfo);
+        kError(eSVC_VirtualMem, E_PARAM);
 
     for (int level = 2; level > 0; level--)
     {
@@ -32,7 +32,7 @@ static pte_t *_mmu (pagetable_t pagetable, uint64 vAddr, bool alloc)
         /* Whether pte is available */
         if (*pte & PTE_V)
         {
-            pagetable = (pagetable_t)PTE2PA(*pte);
+            pagetable = (Pagetable_t *)PTE2PA(*pte);
         }
         else
         {
@@ -46,13 +46,13 @@ static pte_t *_mmu (pagetable_t pagetable, uint64 vAddr, bool alloc)
 }
 
 /* 为指定地址与大小的虚拟内存与物理内存建立映射关系 */
-static int mappages (pagetable_t pagetable, uint64 vAddr, uint64 pAddr, uint64 size, int flag)
+static int mappages (Pagetable_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 size, int flag)
 {
     uint64  start, end;
     pte_t   *pte = NULL;
 
     if (size == 0)
-        kError(errSVC_VirtualMem, errCode_ParamInfo);
+        kError(eSVC_VirtualMem, E_PARAM);
 
     start = PGROUNDDOWN(vAddr);
     end   = PGROUNDDOWN(vAddr + size - 1);
@@ -63,7 +63,7 @@ static int mappages (pagetable_t pagetable, uint64 vAddr, uint64 pAddr, uint64 s
         if (pte == 0)
             return -1;
         if (*pte & PTE_V)
-            kError(errSVC_VirtualMem, errCode_Status);
+            kError(eSVC_VirtualMem, E_STATUS);
 
         *pte = PA2PTE(pAddr) | flag | PTE_V;
 
@@ -76,7 +76,7 @@ static int mappages (pagetable_t pagetable, uint64 vAddr, uint64 pAddr, uint64 s
 }
 
 /* 释放页表本身占用的物理地址 */
-static void freepages (pagetable_t pagetable)
+static void freepages (Pagetable_t *pagetable)
 {
     int     i;
     pte_t   pte;
@@ -89,7 +89,7 @@ static void freepages (pagetable_t pagetable)
         if ((pte & PTE_V) && ((pte & (PTE_R|PTE_W|PTE_X)) == 0))
         {
             pa = PTE2PA(pte);
-            freepages((pagetable_t)pa);
+            freepages((Pagetable_t *)pa);
             pagetable[i] = 0;
         }
         else if (pte & PTE_V)
@@ -101,7 +101,7 @@ static void freepages (pagetable_t pagetable)
 }
 /*******************************************************/
 /* 获取虚拟地址对应的物理地址 */
-uint64 kvm_phyaddr (pagetable_t pagetable, uint64 vAddr)
+uint64 kvm_phyaddr (Pagetable_t *pagetable, uint64 vAddr)
 {
     pte_t   *pte;
 
@@ -123,14 +123,14 @@ uint64 kvm_phyaddr (pagetable_t pagetable, uint64 vAddr)
 }
 
 /* 将指定大小的物理地址与虚拟地址建立映射关系 */
-void kvm_map (pagetable_t pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag)
+void kvm_map (Pagetable_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag)
 {
     if (mappages(pagetable, vAddr, pAddr, sz, flag) < 0)
-        kError(errSVC_VirtualMem, errCode_Status);
+        kError(eSVC_VirtualMem, E_STATUS);
 }
 
 /* 释放范围的页表条目所映射的物理内存页 */
-void uvm_unmap (pagetable_t pagetable, uint64 va, uint64 npages, bool free)
+void uvm_unmap (Pagetable_t *pagetable, uint64 va, uint64 npages, bool free)
 {
     uint64  start, end;
     pte_t   *pte;
@@ -160,9 +160,9 @@ void uvm_unmap (pagetable_t pagetable, uint64 va, uint64 npages, bool free)
 }
 
 /* 创建新的页表 */
-pagetable_t uvm_create (void)
+Pagetable_t *uvm_create (void)
 {
-    pagetable_t pgtab = (pagetable_t)kallocPhyPage();
+    Pagetable_t *pgtab = (Pagetable_t *)kallocPhyPage();
 
     if (pgtab == NULL)
         return NULL;
@@ -172,7 +172,7 @@ pagetable_t uvm_create (void)
 }
 
 /* 为指定范围的虚拟地址映射可用的物理地址 */
-uint64 uvm_alloc (pagetable_t pagetable, uint64 oldaddr, uint64 newaddr, int flag)
+uint64 uvm_alloc (Pagetable_t *pagetable, uint64 oldaddr, uint64 newaddr, int flag)
 {
     void    *mem;
     uint64  addr;
@@ -204,7 +204,7 @@ error_map:
 }
 
 /* 释放指定范围内虚拟地址所映射的物理地址 */
-uint64 uvm_free (pagetable_t pagetable, uint64 oldsz, uint64 newsz)
+uint64 uvm_free (Pagetable_t *pagetable, uint64 oldsz, uint64 newsz)
 {
     int npages;
 
@@ -219,15 +219,14 @@ uint64 uvm_free (pagetable_t pagetable, uint64 oldsz, uint64 newsz)
     return newsz;
 }
 
-/* 销毁已申请的页表以及其映射的所有物理内存页 */
-void uvm_destroy (pagetable_t pagetable, uint64 sz)
+/* 销毁已申请的页表 */
+void uvm_destroy (Pagetable_t *pagetable)
 {
-    uvm_free(pagetable, 0, sz);
     freepages(pagetable);
 }
 
 /* 完成两个内存页中指定大小内存的拷贝 */
-int uvm_copy (pagetable_t destPage, pagetable_t srcPage, uint64 sz, bool alloc)
+int uvm_copy (Pagetable_t *destPage, Pagetable_t *srcPage, uint64 sz, bool alloc)
 {
     uint64  i;
     pte_t   *d_pte = NULL, *s_pte = NULL;
@@ -282,7 +281,7 @@ error_cpy:
 }
 
 /* 从内核空间拷贝数据到用户空间 */
-int copyout (pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
+int copyout (Pagetable_t *pagetable, uint64 dstva, char *src, uint64 len)
 {
     uint64 n, va_base, pa;
 
@@ -308,7 +307,7 @@ int copyout (pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
 }
 
 /* 从用户空间拷贝数据到内核空间 */
-int copyin (pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
+int copyin (Pagetable_t *pagetable, char *dst, uint64 srcva, uint64 len)
 {
     uint64 n, va0, pa0;
 
