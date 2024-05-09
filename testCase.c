@@ -13,6 +13,8 @@ void tc_virtualmemory (void)
 
     pgtab = uvm_create();
     buf = kallocPhyPage();
+
+    extern void kvm_map (Pagetable_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag);
     kvm_map(pgtab, (uint64)0, (uint64)buf, PGSIZE, PTE_R | PTE_W | PTE_U);
 
     strcpy(buf, "hello World!\n");
@@ -20,6 +22,8 @@ void tc_virtualmemory (void)
     Spgatab = uvm_create();
 
     uvm_copy(Spgatab, pgtab, 20, TRUE);
+
+    extern uint64  kvm_phyaddr (Pagetable_t *pagetable, uint64 va);
     buf = (char *)kvm_phyaddr(Spgatab, 0);
 
     kprintf ("%s", buf);

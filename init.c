@@ -52,7 +52,7 @@ void test_main (void)
                 do_exit(999);
 
             kprintf ("pid = %d, cnt = %d\r\n", pcb->pid, testCnt++);
-            do_sleep(1000);
+            do_sleep(100);
         }
     }
     else if(testCnt == 1)

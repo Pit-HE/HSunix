@@ -47,8 +47,6 @@ void  kmem_init     (void);
 
 /******************** vm ********************/
 void    kvm_init    (void);
-uint64  kvm_phyaddr (Pagetable_t *pagetable, uint64 va);
-void    kvm_map     (Pagetable_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag);
 Pagetable_t *uvm_create (void);
 void    uvm_unmap   (Pagetable_t *pagetable, uint64 va, uint64 npages, bool free);
 uint64  uvm_alloc   (Pagetable_t *pagetable, uint64 oldaddr, uint64 newaddr, int flag);
@@ -61,9 +59,8 @@ int     copyin      (Pagetable_t *pagetable, char *dst, uint64 srcva, uint64 len
 
 /******************** trap ********************/
 void trap_init      (void);
-void trap_inithart  (void);
 void trap_userfunc  (void);
-void trap_retuser   (void);
+void trap_userret   (void);
 void kerneltrap     (void);
 
 
@@ -71,6 +68,8 @@ void kerneltrap     (void);
 #define getCpuID()  r_tp()
 CpuCB_t  *getCpuCB  (void);
 ProcCB_t *getProcCB (void);
+void    wakeProcCB  (ProcCB_t *pcb);
+void    dumpProcCB  (void);
 void    scheduler   (void);
 void    defuncter   (void);
 void    proc_init   (void);

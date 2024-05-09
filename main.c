@@ -13,9 +13,8 @@ void main (void)
 {
     console_init();
     kmem_init();
-    kvm_init();
+    // kvm_init();
     trap_init();
-    trap_inithart();
     plic_init();
     plic_inithart();
     cli_init();

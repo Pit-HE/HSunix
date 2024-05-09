@@ -12,14 +12,16 @@ OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
 
 
-s_src = entry.S trampoline.S kernelvec.S switch.S
+
+s_src = entry.S trampoline.S kernelvec.S switch.S temp_retuser.S
 c_src = $(wildcard *.c)
 obj :=
 obj +=$(patsubst %.S,%.o, ${s_src})
 obj +=$(patsubst %.c,%.o, ${c_src})
 
 
-CFLAGS  = -Wall -Werror -O0 -fno-omit-frame-pointer -ggdb -gdwarf-2
+
+CFLAGS := -Wall -Werror -O0 -fno-omit-frame-pointer -ggdb -gdwarf-2
 CFLAGS += -MD
 CFLAGS += -mcmodel=medany
 CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
@@ -32,33 +34,26 @@ LDFLAGS = -z max-page-size=4096
 QEMUOPTS = -machine virt -bios none -kernel kernel -m 200M -smp $(CPUS) -nographic
 
 
+
 %.o:%.c
 	$(CC)${CFLAGS} $^ -c -o $@
 %.o:%.S
-	$(CC) -c -o $@ $^
+	$(CC)${CFLAGS} -c -o $@ $^
+
+
 
 kernel: $(obj) kernel.ld
 	$(LD) $(LDFLAGS) -T kernel.ld -o kernel $(obj) 
 	$(OBJDUMP) -S kernel > kernel.asm
 	$(OBJDUMP) -t kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > kernel.sym
 
-
 all:kernel 
-
-
 qemu:
 	$(QEMU) $(QEMUOPTS) -S -gdb tcp::25000
-
-compile:
-	make all
-	make clean
-
 debug:
-	make compile
-	make qemu
-
+	make all clean qemu
 clean:
 	rm -rf *.d *.o *.asm *.out *.sym initcode
 
-.PHONY: all clean
+.PHONY: all clean debug qemu
 
