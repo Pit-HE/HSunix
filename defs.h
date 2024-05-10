@@ -92,7 +92,7 @@ void plic_complete  (int irq);
 
 
 /******************** syscall ********************/
-void syscall(void);
+void do_syscall(void);
 
 
 /******************** printf ********************/

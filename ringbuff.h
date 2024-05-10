@@ -7,8 +7,8 @@
 typedef struct kernel_ringbuff_info
 {
     char *buf;
-    int baseSize;
-    int idleSize;
+    int baseSize;   // buf size
+    int idleSize;   // idle buf size
     int rIndex;
     int wIndex;
 }ringbuf_t;

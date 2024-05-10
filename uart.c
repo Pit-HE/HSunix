@@ -127,9 +127,10 @@ void uart_intrrupt(void)
         if (c == -1)
             break;
 
-        uartputc_sync(c);
         console_isr(c);
     }
 
+    kDISABLE_INTERRUPT();
     uartstart();
+    kENABLE_INTERRUPT();
 }

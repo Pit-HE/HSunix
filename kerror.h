@@ -15,6 +15,7 @@ typedef enum kernel_error_service_list
     eSVC_Ringbuf,
     eSVC_Process,
     eSVC_Timer,
+    eSVC_Syscall,
 /**********/
     eSVC_Max,
 }eService;

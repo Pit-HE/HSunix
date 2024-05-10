@@ -19,6 +19,7 @@ timer_t *timer_add (ProcCB_t *pcb, int expires)
     if ((pcb == NULL) || (expires == 0))
         kError(eSVC_Timer, E_PARAM);
 
+    kDISABLE_INTERRUPT();
     timer = (timer_t *)kalloc(sizeof(timer_t));
     if (timer != NULL)
     {
@@ -43,6 +44,7 @@ timer_t *timer_add (ProcCB_t *pcb, int expires)
         }
         list_add_before(plist, &timer->list);
     }
+    kENABLE_INTERRUPT();
     return timer;
 }
 
@@ -55,6 +57,7 @@ void timer_del (timer_t *timer)
     if (timer->code != TIMER_CODE)
         return;
 
+    kDISABLE_INTERRUPT();
     if (!list_empty(&timer->list))
     {
         if (timer->expires != 0)
@@ -68,6 +71,7 @@ void timer_del (timer_t *timer)
         list_del_init(&timer->list);
     }
     kfree(timer);
+    kENABLE_INTERRUPT();
 }
 
 void timer_run (void)
@@ -81,7 +85,9 @@ void timer_run (void)
     if (pList != &kSleepList)
     {
         pTimer = list_container_of(pList, timer_t, list);
-        pTimer->expires -= 1;
+
+        if (pTimer->expires > 0)
+            pTimer->expires -= 1;
 
         while(pTimer->expires == 0)
         {
@@ -89,7 +95,17 @@ void timer_run (void)
             pcb = pTimer->pcb;
 
             wakeProcCB(pcb);
-            timer_del(pTimer);
+            if (pTimer->expires != 0)
+            {
+                if (pTimer->list.next != &kSleepList)
+                {
+                    pTimer = list_container_of(pTimer->list.next, timer_t, list);
+                    pTimer->expires += pTimer->expires;
+                }
+            }
+            kDISABLE_INTERRUPT();
+            list_del_init(&pTimer->list);
+            kENABLE_INTERRUPT();
 
             if (pList == &kSleepList)
                 break;

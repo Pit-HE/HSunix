@@ -28,12 +28,12 @@ void trap_init(void)
 ******************************************************/
 int dev_interrupt (void)
 {
-    int irq;
+    int irq, ret = 0;
     uint64 scause = r_scause();
 
     /***** 外部中断 *****/
     if ((scause & 0x8000000000000000L) && 
-        (scause & 0xFF) == 9)
+        (scause & 0xF) == 9)
     {
         irq = plic_claim();
         switch (irq)
@@ -50,7 +50,7 @@ int dev_interrupt (void)
         }
         if (irq)
             plic_complete(irq);
-        return 1;
+        ret = 1;
     }
     /***** 软件中断 *****/
     else if (scause == 0x8000000000000001L)
@@ -62,14 +62,14 @@ int dev_interrupt (void)
         }
 
         w_sip(r_sip() & ~2);
-        return 2;
+        ret = 2;
     }
     else
     {
-        return 0;
+        kError(eSVC_Interrupt, E_STATUS);
     }
 
-    return 0;
+    return ret;
 }
 
 /******************************************************
@@ -99,7 +99,7 @@ void trap_userfunc(void)
 
         pcb->trapFrame->epc += 4;
         intr_on();
-        syscall();
+        do_syscall();
     }
     /***** 外部中断、软件中断、非法故障 *****/
     else 
@@ -164,6 +164,7 @@ void trap_userret(void)
 void kerneltrap(void)
 {
     int devnum = 0;
+    ProcCB_t *pcb;
     uint64 sepc = r_sepc();
     uint64 sstatus = r_sstatus();
     // uint64 scause = r_scause();
@@ -180,10 +181,12 @@ void kerneltrap(void)
     {
         kError(eSVC_Trap, E_INTERRUPT);
     }
+    pcb = getProcCB();
 
     /* 是否为定时器中断 */
-    if (devnum == 2 && getProcCB() != 0 && getProcCB()->state == RUNNING)
-      do_yield();
+    if ((devnum == 2) && (pcb != NULL) && 
+        (pcb->state == RUNNING))
+        do_yield();
 
     // 恢复存储的寄存器
     w_sepc(sepc);

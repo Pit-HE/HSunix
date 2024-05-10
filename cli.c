@@ -15,8 +15,6 @@ void cli_init (void)
 {
     char *buf;
 
-    memset(&cliState, 0, sizeof(cliState));
-
     buf = (char *)kalloc(CLI_BUFF_SIZE);
     if (buf != NULL)
     {
@@ -34,7 +32,7 @@ void cli_main (void)
 
     ch = console_rChar();
     kRingbuf_putchar(&cliState.cb, ch);
-
+    
     if ((ch == '\r') || (ch == '\n'))
     {
         console_wString("\r\n");

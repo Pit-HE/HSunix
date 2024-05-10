@@ -49,10 +49,10 @@ void test_main (void)
             if (testCnt == 5)
                 do_kill(testPid);
             if (testCnt >= 10)
-                do_exit(999);
+                do_exit(88);
 
             kprintf ("pid = %d, cnt = %d\r\n", pcb->pid, testCnt++);
-            do_sleep(100);
+            do_sleep(1000);
         }
     }
     else if(testCnt == 1)

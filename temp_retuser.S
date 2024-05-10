@@ -8,9 +8,31 @@
 #include "riscv.h"
 #include "memlayout.h"
 
+
+.globl syscall
+syscall:
+    move t0,    a0
+    move a0,    a1
+    move a1,    a2
+    move a2,    a3
+    move a3,    a4
+    move a4,    a5
+    move a5,    a6
+    move a6,    a7
+    move a7,    t0
+    ecall
+    ret
+
+
 # void temp_uservec (int *tramp)
 .globl temp_uservec
 temp_uservec:
+    csrr t0, sscratch
+    sd a0,   112(t0)
+
+    # 内存屏障
+    sfence.vma zero, zero
+
     # 读取特权模式进入用户模式前，
     # 进程控制块中的 pcb->trapFrame 信息
     csrr a0, sscratch

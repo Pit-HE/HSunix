@@ -16,6 +16,8 @@ void userret (void);
 void trampoline (void);
 void temp_uservec (int *tramp);
 void temp_userret (int *tramp);
+
+int dev_interrupt (void);
 /*******************************/
 void user_trap (void);
 void user_ret (void);
@@ -28,6 +30,9 @@ void user_processEntry (void)
     while(1)
     {
         userCnt++;
+
+        void syscall_sleep (int ms);
+        syscall_sleep(1000);
     }
 }
 
@@ -44,18 +49,21 @@ void user_trap (void)
     /* 保存进程进入特权模式前在用户空间执行的代码地址 */
     pcb->trapFrame->epc = r_sepc();
 
-    /* 总的中断服务函数,处理此次发生的中断事件 */
-    int dev_interrupt (void);
-    flag = dev_interrupt();
+    if (r_scause() == 8)
+    {
+        pcb->trapFrame->epc += 4;
+
+        intr_on();
+        do_syscall();
+    }
+    else
+    {
+        /* 总的中断服务函数,处理此次发生的中断事件 */
+        flag = dev_interrupt();
+    }
 
     if (flag == 2)
         do_yield();
-
-    /* 此处代码不符合编码规范，但也只能暂时保留，
-     * 因为未实现用户模式的休眠代码,
-     * 所以只能在这里让进程释放对CPU的占用
-     */
-    do_sleep(50);
 
     user_ret();
 }
@@ -75,6 +83,7 @@ void user_ret (void)
     pcb->trapFrame->kernel_satp = r_satp();
     /* 内核工作的栈地址(这是最核心的一步) */
     pcb->trapFrame->kernel_sp = (uint64)r_sp();
+    // pcb->trapFrame->kernel_sp = (uint64)pcb->stackAddr + pcb->stackSize;
     pcb->trapFrame->kernel_trap = (uint64)user_trap;
     pcb->trapFrame->kernel_hartid = r_tp();
 

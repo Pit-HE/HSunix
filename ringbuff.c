@@ -10,13 +10,12 @@ void kRingbuf_init (ringbuf_t *rb, char *buf, int len)
     if (len == 0)
         kError(eSVC_Ringbuf, E_PARAM);
 
+    memset(rb, 0, sizeof(ringbuf_t));
+
     rb->buf = buf;
-
-    rb->rIndex = 0;
-    rb->wIndex = 0;
-
     rb->baseSize = len;
-    rb->idleSize = len;
+
+    kRingbuf_clean(rb);
 }
 void kRingbuf_clean (ringbuf_t *rb)
 {
@@ -96,15 +95,10 @@ int kRingbuf_putchar (ringbuf_t *rb, char ch)
 
     rb->buf[rb->wIndex] = ch;
     rb->idleSize -= 1;
+    rb->wIndex += 1;
 
-    if ((rb->baseSize - rb->wIndex) == 1)
-    {
+    if (rb->baseSize == rb->wIndex)
         rb->wIndex = 0;
-    }
-    else
-    {
-        rb->wIndex += 1;
-    }
 
     return 1;
 }
@@ -118,15 +112,10 @@ int kRingbuf_getchar (ringbuf_t *rb, char *ch)
 
     *ch = rb->buf[rb->rIndex];
     rb->idleSize += 1;
+    rb->rIndex += 1;
 
-    if ((rb->baseSize - rb->rIndex) == 1)
-    {
+    if (rb->baseSize == rb->rIndex)
         rb->rIndex = 0;
-    }
-    else
-    {
-        rb->rIndex += 1;
-    }
 
     return 1;
 }

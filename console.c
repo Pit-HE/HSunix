@@ -83,6 +83,7 @@ void console_init (void)
 
 void console_isr (int c)
 {
+    console_putc(c);
     kRingbuf_putchar(&consState.rb, (char)c);
     do_resume(&consState.rb);
 }

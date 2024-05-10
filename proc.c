@@ -33,16 +33,19 @@ ProcCB_t *getProcCB (void)
 }
 void wakeProcCB (ProcCB_t *pcb)
 {
-    ProcCB_t *curPcb = getProcCB();
+    ProcCB_t *curPcb;
 
+    curPcb = getProcCB();
     if (pcb->state != READY)
     {
         pcb->state = READY;
 
         if (pcb != curPcb)
         {
+            kDISABLE_INTERRUPT();
             list_del_init(&pcb->list);
             list_add(&kReadyList, &pcb->list);
+            kENABLE_INTERRUPT();
         }
     }
 }
@@ -165,6 +168,7 @@ int freeProcCB (ProcCB_t *pcb)
     if (pcb == NULL)
         return -1;
 
+    kDISABLE_INTERRUPT();
     /* 移除进程所挂载的链表 */
     list_del_init(&pcb->regist);
     list_del_init(&pcb->list);
@@ -184,6 +188,7 @@ int freeProcCB (ProcCB_t *pcb)
 
     /* 释放进程控制块的资源 */
     kfree(pcb);
+    kENABLE_INTERRUPT();
 
     return 1;
 }
@@ -296,7 +301,7 @@ void scheduler (void)
 
             switch_to(&cpu->context, &pcb->context);
 
-            cpu->proc = NULL;
+            cpu->proc = kIdleProcCB;
             break;
         }
     }
@@ -316,11 +321,13 @@ void defuncter (void)
     {
         pcb = list_container_of(ptr, ProcCB_t, regist);
 
+        kDISABLE_INTERRUPT();
         /* 处理当前死亡进程的子进程 */
         freeChildProcCB(pcb);
 
         /* 释放该死亡进程占用的所有资源 */
         freeProcCB(pcb);
+        kENABLE_INTERRUPT();
     }
 }
 
@@ -384,7 +391,7 @@ void do_resume (void *obj)
         }
     }
 }
-int  do_fork (void)
+int do_fork (void)
 {
     int pid = -1;
     char *stack;
@@ -432,7 +439,7 @@ int  do_fork (void)
 _exit_fork:
     return pid;
 }
-int  do_wait (int *code)
+int do_wait (int *code)
 {
     int pid = -1;
     ProcCB_t *childPcb, *curPcb;
@@ -487,7 +494,7 @@ void do_exit (int state)
     do_resume(curPcb->parent);
     do_switch();
 }
-int  do_kill (int pid)
+int do_kill (int pid)
 {
     ProcCB_t *pcb;
 
@@ -505,13 +512,15 @@ int  do_kill (int pid)
     }
     return -1;
 }
-int  do_sleep (int ms)
+int do_sleep (int ms)
 {
     timer_t *timer = NULL;
+    ProcCB_t *pcb = NULL;
 
     if (ms != 0)
     {
-        timer = timer_add(getProcCB(), ms);
+        pcb = getProcCB();
+        timer = timer_add(pcb, ms);
 
         do_switch();
 
