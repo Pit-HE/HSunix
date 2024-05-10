@@ -14,7 +14,6 @@
 void uart_init      (void);
 void uartputc_async (int);
 void uartputc_sync  (int);
-int  uartgetc_loop  (void);
 int  uartgetc_intr  (void);
 void uart_intrrupt  (void);
 
@@ -95,7 +94,7 @@ void plic_complete  (int irq);
 void do_syscall(void);
 
 
-/******************** printf ********************/
+/******************** kprintf ********************/
 void kprintf (char*, ...);
 
 
@@ -119,9 +118,10 @@ void kRingbuf_init      (ringbuf_t *rb, char *buf, int len);
 void kRingbuf_clean     (ringbuf_t *rb);
 int  kRingbuf_put       (ringbuf_t *rb, char *buf, int len);
 int  kRingbuf_get       (ringbuf_t *rb, char *buf, int len);
-int  kRingbuf_putchar   (ringbuf_t *rb, char  ch);
-int  kRingbuf_getchar   (ringbuf_t *rb, char *ch);
-
+int  kRingbuf_putChar   (ringbuf_t *rb, char  ch);
+int  kRingbuf_getChar   (ringbuf_t *rb, char *ch);
+int  kRingbuf_putState  (ringbuf_t *rb);
+int  kRingbuf_getState  (ringbuf_t *rb);
 
 /******************** cli ***********************/
 void cli_init (void);

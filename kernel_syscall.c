@@ -6,15 +6,16 @@
 
 static uint64 sys_exit (int arg[])
 {
+    do_exit(arg[0]);
     return 0;
 }
 static uint64 sys_fork (int arg[])
 {
-    return 0;
+    return do_fork();
 }
 static uint64 sys_wait (int arg[])
 {
-    return 0;
+    return do_wait(&arg[0]);
 }
 static uint64 sys_exec (int arg[])
 {
@@ -22,18 +23,20 @@ static uint64 sys_exec (int arg[])
 }
 static uint64 sys_yield (int arg[])
 {
+    do_yield();
     return 0;
 }
 static uint64 sys_kill (int arg[])
 {
-    return 0;
+    return do_kill(arg[0]);
 }
 static uint64 sys_getpid (int arg[])
 {
-    return 0;
+    return getProcCB()->pid;
 }
 static uint64 sys_putc (int arg[])
 {
+    console_wChar((char)arg[0]);
     return 0;
 }
 static uint64 sys_pgdir (int arg[])
@@ -42,7 +45,8 @@ static uint64 sys_pgdir (int arg[])
 }
 static uint64 sys_gettime (int arg[])
 {
-    return 0;
+    extern uint64 Systicks;
+    return Systicks;
 }
 static uint64 sys_sleep (int arg[])
 {

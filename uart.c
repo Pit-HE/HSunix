@@ -72,13 +72,10 @@ static void uartstart(void)
     while (1)
     {
         if (uart_tx_w == uart_tx_r)
-        {
             return;
-        }
         if ((ReadReg(LSR) & LSR_TX_IDLE) == 0)
-        {
             return;
-        }
+
         int c = uart_tx_buf[uart_tx_r % UART_TX_BUF_SIZE];
         uart_tx_r += 1;
         WriteReg(THR, c);
@@ -94,26 +91,10 @@ void uartputc_async(int c)
 
 void uartputc_sync(int c)
 {
+    kDISABLE_INTERRUPT();
     while ((ReadReg(LSR) & LSR_TX_IDLE) == 0);
     WriteReg(THR, c);
-}
-
-int uartgetc_loop(void)
-{
-    while (! (ReadReg(LSR) & 0x01));
-    return ReadReg(RHR);
-}
-
-int uartgetc_intr(void)
-{
-    if (ReadReg(LSR) & 0x01)
-    {
-        return ReadReg(RHR);
-    }
-    else
-    {
-        return -1;
-    }
+    kENABLE_INTERRUPT();
 }
 
 
@@ -123,11 +104,10 @@ void uart_intrrupt(void)
 {
     while (1)
     {
-        int c = uartgetc_intr();
-        if (c == -1)
+        if(!(ReadReg(LSR) & LSR_RX_READY))
             break;
 
-        console_isr(c);
+        console_isr(ReadReg(RHR));
     }
 
     kDISABLE_INTERRUPT();

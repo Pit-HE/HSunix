@@ -23,18 +23,6 @@ void user_trap (void);
 void user_ret (void);
 
 
-/* 进程在用户空间(模式)中执行的函数 */ 
-uint64 userCnt = 0;
-void user_processEntry (void)
-{
-    while(1)
-    {
-        userCnt++;
-
-        void syscall_sleep (int ms);
-        syscall_sleep(1000);
-    }
-}
 
 /* 处理进程从用户模式切换到特权模式的功能 */
 void user_trap (void)
@@ -42,9 +30,9 @@ void user_trap (void)
     int flag;
     ProcCB_t *pcb;
 
-    pcb = getProcCB();
     /* 避免进程在特权模式下又重复发生特权模式的中断 */ 
     w_stvec((uint64)kernelvec);
+    pcb = getProcCB();
 
     /* 保存进程进入特权模式前在用户空间执行的代码地址 */
     pcb->trapFrame->epc = r_sepc();
@@ -71,11 +59,13 @@ void user_trap (void)
 /* 设置进程从特权模式切换到用户模式前的信息 */
 void user_ret (void)
 {
-    ProcCB_t *pcb = getProcCB();
+    ProcCB_t *pcb;
 
     intr_off();
     /* 恢复用户模式下发生异常的入口 */
     w_stvec((uint64)temp_uservec);
+
+    pcb = getProcCB();
 
     /* 记录当前特权模式下的内核信息，
      * 用于切换进入特权模式前恢复内核的工作状态

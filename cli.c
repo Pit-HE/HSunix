@@ -31,22 +31,22 @@ void cli_main (void)
         return;
 
     ch = console_rChar();
-    kRingbuf_putchar(&cliState.cb, ch);
-    
-    if ((ch == '\r') || (ch == '\n'))
+    if (ch == '\r')
+        ch = '\n';
+    kRingbuf_putChar(&cliState.cb, ch);
+
+    if (ch == '\n')
     {
-        console_wString("\r\n");
-        kRingbuf_putchar(&cliState.cb, '\n');
+        kprintf("\r\n");
 
         do
         {
-            kRingbuf_getchar(&cliState.cb, &ch);
+            kRingbuf_getChar(&cliState.cb, &ch);
             console_wChar(ch);
         }
         while(ch != '\n');
 
-        kRingbuf_clean(&cliState.cb);
-        console_wString("sh: ");
+        kprintf("sh: ");
     }
     /* TODO: Add the complete command line interaction */
 }

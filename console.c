@@ -7,7 +7,6 @@
 #include "defs.h"
 
 
-#define console_getc    uartgetc_loop
 #define console_putc    uartputc_sync
 #define console_bufSize 128
 
@@ -55,8 +54,9 @@ int console_rCmd (char *src, int len)
 
     while (len > 0)
     {
-        do_suspend(&consState.rb);
-        kRingbuf_getchar(&consState.rb, &ch);
+        if (0 == kRingbuf_getState(&consState.rb))
+            do_suspend(&consState.rb);
+        kRingbuf_getChar(&consState.rb, &ch);
 
         xStr[idx++] = ch;
         len -= 1;
@@ -67,8 +67,10 @@ int console_rChar (void)
 {
     int ch;
 
-    do_suspend(&consState.rb);
-    kRingbuf_getchar(&consState.rb, (char*)&ch);
+    if (0 == kRingbuf_getState(&consState.rb))
+        do_suspend(&consState.rb);
+    kRingbuf_getChar(&consState.rb, (char*)&ch);
+
     return ch;
 }
 
@@ -84,7 +86,7 @@ void console_init (void)
 void console_isr (int c)
 {
     console_putc(c);
-    kRingbuf_putchar(&consState.rb, (char)c);
+    kRingbuf_putChar(&consState.rb, (char)c);
     do_resume(&consState.rb);
 }
 

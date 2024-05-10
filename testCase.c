@@ -139,13 +139,13 @@ void tc_ringbuff (void)
     kRingbuf_put(&tcRB, tc_wBuf, 50);
     kRingbuf_get(&tcRB, tc_rBuf, 80);
 #elif 0
-    kRingbuf_putchar(&tcRB, 0xA5);
+    kRingbuf_putChar(&tcRB, 0xA5);
     kRingbuf_put(&tcRB, tc_wBuf, 126);
-    kRingbuf_putchar(&tcRB, 0x5A);
+    kRingbuf_putChar(&tcRB, 0x5A);
 
-    kRingbuf_getchar(&tcRB, tc_rBuf);
+    kRingbuf_getChar(&tcRB, tc_rBuf);
     kRingbuf_get(&tcRB, tc_rBuf, 126);
-    kRingbuf_getchar(&tcRB, tc_rBuf);
+    kRingbuf_getChar(&tcRB, tc_rBuf);
 #endif
 }
 

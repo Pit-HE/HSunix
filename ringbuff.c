@@ -86,7 +86,7 @@ int kRingbuf_get (ringbuf_t *rb, char *buf, int len)
     return len;
 }
 
-int kRingbuf_putchar (ringbuf_t *rb, char ch)
+int kRingbuf_putChar (ringbuf_t *rb, char ch)
 {
     if (rb == NULL)
         kError(eSVC_Ringbuf, E_PARAM);
@@ -103,7 +103,7 @@ int kRingbuf_putchar (ringbuf_t *rb, char ch)
     return 1;
 }
 
-int kRingbuf_getchar (ringbuf_t *rb, char *ch)
+int kRingbuf_getChar (ringbuf_t *rb, char *ch)
 {
     if (rb == NULL)
         kError(eSVC_Ringbuf, E_PARAM);
@@ -117,6 +117,20 @@ int kRingbuf_getchar (ringbuf_t *rb, char *ch)
     if (rb->baseSize == rb->rIndex)
         rb->rIndex = 0;
 
+    return 1;
+}
+
+int kRingbuf_putState (ringbuf_t *rb)
+{
+    if (rb->idleSize == 0)
+        return 0;
+    return 1;
+}
+
+int kRingbuf_getState (ringbuf_t *rb)
+{
+    if (rb->idleSize == rb->baseSize)
+        return 0;
     return 1;
 }
 
