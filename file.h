@@ -2,6 +2,7 @@
 #ifndef __FILE_H__
 #define __FILE_H__
 
+
 #include "defs.h"
 #include "proc.h"
 
@@ -9,7 +10,9 @@ struct Inode;
 struct File;
 struct FileSystem;
 
+
 #define FILE_MAGIC  0xFD5A
+
 
 /* 标记文件描述符的类型 */
 enum InodeType
@@ -20,6 +23,7 @@ enum InodeType
     I_PIPO,        /* 管道 */
     I_DEVICE,      /* 设备 */
 };
+
 
 /* 文件对象的操作接口
  *
@@ -35,6 +39,7 @@ struct FileOperation
     int (*flush)    (struct File *file);
     int (*lseek)    (struct File *file, unsigned int offset);
 };
+
 
 /* 文件系统的操作接口 */
 struct FileSystemOps
@@ -53,6 +58,7 @@ struct FileSystemOps
     int (*rename)   (struct FileSystem *fs, const char *oldpath, const char *newpath);
 };
 
+
 /* 描述文件系统信息的结构体 */
 struct FileSystem
 {
@@ -61,10 +67,11 @@ struct FileSystem
     void                    *data;      /* 私有数据域 */
 };
 
+
 /* 文件系统的 index node */
 struct Inode
 {
-    uint                        dev;        /* 所属的设备 */
+    struct Device              *dev;        /* 所属的设备 */
     enum InodeType              type;       /* 类型 */
     uint                        ref;        /* 引用计数 */
     uint                        size;       /* 占用的磁盘大小 */
@@ -73,6 +80,7 @@ struct Inode
     uint                        addr;       /* 存放磁盘地址的缓冲区 */
     struct FileOperation       *fop;        /* inode 对象操作接口 */
 };
+
 
 /* 文件描述符 */
 struct File
@@ -84,6 +92,8 @@ struct File
     struct Inode       *inode;      /* 占有的 inode */
 };
 
+
+/* 目录项 */
 struct Dirent
 {
     uint flag;
@@ -93,25 +103,36 @@ struct Dirent
 
 /**********************************/
 int  fdTab_alloc (ProcCB *pcb);
-void fdTab_free (ProcCB *pcb);
-int fd_alloc (void);
+void fdTab_free  (ProcCB *pcb);
+int  fd_alloc    (void);
+void fd_free     (int fd);
 struct File *fd_get (int fd);
-void fd_put (struct File *f);
-int fd_copy (int fd);
+int  fd_copy     (int fd);
 
 /**********************************/
 struct Inode *inode_alloc (void);
-void inode_free (struct Inode *inode);
-int inode_open (struct Inode *inode);
-void inode_close (struct Inode *inode);
-int inode_read (struct Inode *inode, void *buf, uint len);
-int inode_write (struct Inode *inode, void *buf, uint len);
+void inode_free  (struct Inode *inode);
+int  inode_open  (struct Inode *inode);
+int  inode_close (struct Inode *inode);
+int  inode_read  (struct Inode *inode, void *buf, uint len);
+int  inode_write (struct Inode *inode, void *buf, uint len);
+int  inode_flush (struct Inode *inode);
 
 /**********************************/
-int file_open  (struct File *f, const char *path, uint flags);
-int file_close (struct File *f);
-int file_read  (struct File *f, void *buf, uint len);
-int file_write (struct File *f, void *buf, uint len);
-int file_flush (struct File *f);
+struct File *file_alloc (void);
+void file_free  (struct File *file);
+int  file_open  (struct File *file, char *path, uint flags);
+int  file_close (struct File *file);
+int  file_read  (struct File *file, void *buf, uint len);
+int  file_write (struct File *file, void *buf, uint len);
+void file_flush (struct File *file);
+
+/**********************************/
+int path_parser (char *path, struct Inode *inode);
+int path_parent (char *path, struct Inode *inode);
+
+/**********************************/
+struct Dirent *dir_open (char *name);
+int dir_close (struct Dirent *dir);
 
 #endif

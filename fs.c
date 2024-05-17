@@ -7,10 +7,10 @@
 
 
 /* 文件系统对外接口：打开指定路径的文件 */
-int fs_open (const char *file, int flags)
+int fs_open (const char *path, int flags)
 {
     int fd;
-    struct File *f = NULL;
+    struct File *file = NULL;
 
     fd = fd_alloc();
     if (fd < 0)
@@ -19,14 +19,14 @@ int fs_open (const char *file, int flags)
         return -1;
     }
 
-    f = fd_get(fd);
-    if (f == NULL)
+    file = fd_get(fd);
+    if (file == NULL)
     {
         kErr_printf("fail: fs_open get fd !\r\n");
         return -1;
     }
 
-    if (0 > file_open(f, file, flags))
+    if (0 > file_open(file, (char *)file, flags))
     {
         kErr_printf("fail: fs_open open file !\r\n");
         return -1;
@@ -39,23 +39,23 @@ int fs_open (const char *file, int flags)
 int fs_close (int fd)
 {
     int ret;
-    struct File *f;
+    struct File *file;
 
-    f = fd_get(fd);
-    if (f < 0)
+    file = fd_get(fd);
+    if (file < 0)
     {
         kErr_printf("fail: fs_close get fd !\r\n");
         return -1;
     }
 
-    ret = file_close(f);
+    ret = file_close(file);
     if (0 > ret)
     {
         kErr_printf("fail: fs_close close file !\r\n");
         return -1;
     }
 
-    fd_put(f);
+    fd_free(fd);
 
     return ret;
 }
@@ -64,16 +64,16 @@ int fs_close (int fd)
 int fs_write (int fd, void *buf, int len)
 {
     int ret;
-    struct File *f;
+    struct File *file;
 
-    f = fd_get(fd);
-    if (f < 0)
+    file = fd_get(fd);
+    if (file < 0)
     {
         kErr_printf("fail: fs_write get fd !\r\n");
         return -1;
     }
 
-    ret = file_write(f, buf, len);
+    ret = file_write(file, buf, len);
     if (0 > ret)
     {
         kErr_printf("fail: fs_write write file !\r\n");
@@ -87,16 +87,16 @@ int fs_write (int fd, void *buf, int len)
 int fs_read (int fd, void *buf, int len)
 {
     int ret;
-    struct File *f;
+    struct File *file;
 
-    f = fd_get(fd);
-    if (f < 0)
+    file = fd_get(fd);
+    if (file < 0)
     {
         kErr_printf("fail: fs_read get fd !\r\n");
         return -1;
     }
 
-    ret = file_read(f, buf, len);
+    ret = file_read(file, buf, len);
     if (ret < 0)
     {
         kErr_printf("fail: fs_read read file !\r\n");

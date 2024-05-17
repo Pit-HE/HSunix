@@ -1,5 +1,7 @@
 /*
  * 设备管理模块，管理注册到系统中的所有设备对象
+ * ( 标准的操作系统中，设备对象应该注册到文件系统中的指定路径，
+ *   但是目前为了减少难度，就将设备独立出来单独操作 )
  */
 #include "defs.h"
 #include "device.h"
@@ -77,6 +79,8 @@ struct Device *dev_get (const char *name)
     ListEntry_t     *ptr;
 
     if (name == NULL)
+        return NULL;
+    if (TRUE == list_empty(&gDevList))
         return NULL;
 
     /* 遍历当前注册的所有设备 */

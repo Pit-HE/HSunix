@@ -12,8 +12,6 @@ struct Inode *inode_alloc (void)
         return NULL;
     kmemset(inode, 0, sizeof(struct Inode));
 
-    inode->ref = 1;
-
     return inode;
 }
 void inode_free (struct Inode *inode)
@@ -24,13 +22,17 @@ void inode_free (struct Inode *inode)
     kfree(inode);
 }
 
+/* 打开时 inode 引用计数递增 */
 int inode_open (struct Inode *inode)
 {
+    if (inode == NULL)
+        return -1;
     return 0;
 }
-void inode_close (struct Inode *inode)
+/* 关闭时 inode 引用计数递减 */
+int inode_close (struct Inode *inode)
 {
-
+    return 0;
 }
 int inode_read (struct Inode *inode, void *buf, uint len)
 {
@@ -40,7 +42,10 @@ int inode_write (struct Inode *inode, void *buf, uint len)
 {
     return 0;
 }
-
+int  inode_flush (struct Inode *inode)
+{
+    return 0;
+}
 
 
 

@@ -1,42 +1,8 @@
 /*
- * 管理文件描述符与进程的文件描述符数组的模块
+ * 管理并操作进程的文件描述符数组
  */
 #include "fcntl.h"
 #include "defs.h"
-
-
-
-/* 申请一个文件描述符的内存空间
- *
- * 返回值：NULL 为失败
- */
-static struct File *_allocFD (void)
-{
-    struct File *fd = NULL;
-
-    fd = (struct File *)kalloc(sizeof(struct File));
-    if (fd == NULL)
-        return fd;
-    kmemset(fd, 0, sizeof(struct File));
-
-    fd->magic = FILE_MAGIC;
-    fd->ref = 1;
-
-    return fd;
-}
-/* 释放已申请的文件描述符 */
-static void _freeFD (struct File *fd)
-{
-    if (fd == NULL)
-        return;
-    if (fd->magic != FILE_MAGIC)
-        return;
-    if (--fd->ref != 0)
-        return;
-
-    kfree(fd);
-}
-
 
 
 /* 用于进程申请默认的文件描述符表
@@ -56,16 +22,16 @@ int fdTab_alloc (ProcCB *pcb)
     kmemset (pcb->fdTab, 0, sizeof(struct File *) * 20);
 
     /* 标准输入 */
-    pcb->fdTab[0] = _allocFD();
+    pcb->fdTab[0] = file_alloc();
     file_open(pcb->fdTab[0], "consele", O_WRONLY);
 
     /* 标准输出 */
-    pcb->fdTab[1] = _allocFD();
-    file_open(pcb->fdTab[0], "consele", O_RDONLY);
+    pcb->fdTab[1] = file_alloc();
+    file_open(pcb->fdTab[1], "consele", O_RDONLY);
 
     /* 标准错误 */
-    pcb->fdTab[2] = _allocFD();
-    file_open(pcb->fdTab[0], "consele", O_RDONLY | O_WRONLY);
+    pcb->fdTab[2] = file_alloc();
+    file_open(pcb->fdTab[2], "consele", O_RDONLY | O_WRONLY);
 
     return ret;
 }
@@ -79,7 +45,7 @@ void fdTab_free (ProcCB *pcb)
     {
         if (pcb->fdTab[i] != NULL)
         {
-            _freeFD(pcb->fdTab[i]);
+            file_free(pcb->fdTab[i]);
         }
     }
     /* 释放整个文件描述符数组占用的空间 */
@@ -102,7 +68,7 @@ int fd_alloc (void)
         if (pcb->fdTab[i] == NULL)
         {
             /* 为空闲的描述数组成员分配空的描述符结构体 */
-            pcb->fdTab[i] = _allocFD();
+            pcb->fdTab[i] = file_alloc();
             fd = i;
             break;
         }
@@ -117,7 +83,7 @@ int fd_alloc (void)
         {
             kmemset(tab, 0, sizeof(struct File*)*(pcb->fdLen + 5));
             /* 为空闲的描述数组成员分配空的描述符结构体 */
-            pcb->fdTab[pcb->fdLen] = _allocFD();
+            pcb->fdTab[pcb->fdLen] = file_alloc();
             fd = pcb->fdLen;
 
             /* 记录原有的描述符信息 */
@@ -134,6 +100,17 @@ int fd_alloc (void)
     return fd;
 }
 
+/* 释放申请的文件描述符数组的成员 */
+void fd_free (int fd)
+{
+    ProcCB *pcb = getProcCB();
+
+    if ((fd < 0) || (fd > pcb->fdLen))
+        return;
+
+    file_free(pcb->fdTab[fd]);
+}
+
 /* 通过文件描述符编号获得对应的结构体
  *
  * 返回值：NULL 为失败
@@ -145,20 +122,7 @@ struct File *fd_get (int fd)
     if ((fd < 0) || (fd > pcb->fdLen))
         return NULL;
 
-    pcb->fdTab[fd]->ref += 1;
-
     return pcb->fdTab[fd];
-}
-
-/* 释放已经获取的文件描述符 */
-void fd_put (struct File *f)
-{
-    if (f == NULL)
-        return;
-    if (f->magic != FILE_MAGIC)
-        return;
-
-    _freeFD(f);
 }
 
 /* 将入参的文件描述符拷贝一个新的并返回
