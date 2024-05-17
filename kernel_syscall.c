@@ -85,7 +85,7 @@ static uint64 sys_dup (int arg[])
     return 0;
 }
 
-static uint64 (*syscall_entry[])(int arg[]) = 
+static uint64 (*syscall_entry[])(int arg[]) =
 {
     [SYS_exit]      sys_exit,
     [SYS_fork]      sys_fork,
@@ -115,7 +115,7 @@ void do_syscall (void)
 {
     int code;
     int args[7];
-    ProcCB_t *pcb = getProcCB();
+    ProcCB *pcb = getProcCB();
 
     code = pcb->trapFrame->a7;
 

@@ -63,7 +63,7 @@ void kfreePhyPage (void *pa)
     /* 格式化物理内存页 */
     memset (pa, 1, PGSIZE);
     p = (kmNode*)pa;
-    
+
     /* 添加到空闲链表 */
     p->next = phyPageFreeHeader.next;
     phyPageFreeHeader.next = p;
@@ -96,7 +96,7 @@ void kfree (void *obj)
     if (obj == NULL)
         goto exit_kfree;
     objHear--;
-    if ((objHear->next != (kmNode *)SL_HEADCODE) || 
+    if ((objHear->next != (kmNode *)SL_HEADCODE) ||
             (objHear->blkNum == 0U))
         goto exit_kfree;
 
@@ -212,7 +212,7 @@ void *kalloc (int size)
             }
             oldHear->blkNum = objsize;
             oldHear->next = (kmNode *)SL_HEADCODE;
-            retAddr = (void*)++oldHear; 
+            retAddr = (void*)++oldHear;
             break;
         }
 
@@ -237,6 +237,7 @@ void *kalloc (int size)
 exit_kalloc:
     return retAddr;
 }
+
 static void smallMemFormat (void)
 {
     kmNode* curHear;

@@ -1,7 +1,7 @@
 
 # Context switch
 #
-#   void switch_to(Context_t *old, Context_t *new);
+#   void switch_to(Context *old, Context *new);
 #
 # Save current registers in old. Load from new.
 

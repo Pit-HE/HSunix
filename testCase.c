@@ -154,9 +154,9 @@ void tc_timer (void)
 {
     // int i;
     timer_t *tmr[10] = {0};
-    // ProcCB_t *pcb;
+    // ProcCB *pcb;
 
-    // ProcCB_t *allocProcCB (void);
+    // ProcCB *allocProcCB (void);
     // pcb = allocProcCB();
 
 #if 0

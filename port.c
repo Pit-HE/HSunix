@@ -4,7 +4,7 @@
 
 void kPortDisableInterrupt (void)
 {
-    CpuCB_t *cpu = getCpuCB();
+    CpuCB *cpu = getCpuCB();
 
     intr_off();
 
@@ -17,7 +17,7 @@ void kPortDisableInterrupt (void)
 
 void kPortEnableInterrupt (void)
 {
-    CpuCB_t *cpu = getCpuCB();
+    CpuCB *cpu = getCpuCB();
 
     if (cpu->intrOffNest > 0)
     {

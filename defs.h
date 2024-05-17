@@ -4,7 +4,9 @@
 
 #include "types.h"
 #include "riscv.h"
+#include "file.h"
 #include "proc.h"
+#include "fs.h"
 #include "timer.h"
 #include "kerror.h"
 #include "ringbuff.h"
@@ -65,9 +67,9 @@ void kerneltrap     (void);
 
 /******************** proc ********************/
 #define getCpuID()  r_tp()
-CpuCB_t  *getCpuCB  (void);
-ProcCB_t *getProcCB (void);
-void    wakeProcCB  (ProcCB_t *pcb);
+CpuCB  *getCpuCB  (void);
+ProcCB *getProcCB (void);
+void    wakeProcCB  (ProcCB *pcb);
 void    dumpProcCB  (void);
 void    scheduler   (void);
 void    defuncter   (void);
@@ -80,8 +82,8 @@ int     do_wait     (int *code);
 void    do_exit     (int state);
 int     do_kill     (int pid);
 int     do_sleep    (int ms);
-int     KillState   (ProcCB_t *pcb);
-void    wakeProcCB  (ProcCB_t *pcb);
+int     KillState   (ProcCB *pcb);
+void    wakeProcCB  (ProcCB *pcb);
 
 /******************** plic ********************/
 void plic_init      (void);
@@ -99,7 +101,7 @@ void kprintf (char*, ...);
 
 
 /******************** switch ********************/
-void switch_to (Context_t *old, Context_t *new);
+void switch_to (Context *old, Context *new);
 
 
 /******************** Port **********************/
@@ -136,7 +138,7 @@ void test_main (void);
 
 /******************** timer *********************/
 void     timer_init (void);
-timer_t *timer_add  (ProcCB_t *pcb, int expires);
+timer_t *timer_add  (ProcCB *pcb, int expires);
 void     timer_del  (timer_t *timer);
 void     timer_run  (void);
 

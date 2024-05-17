@@ -32,7 +32,7 @@ int dev_interrupt (void)
     uint64 scause = r_scause();
 
     /***** 外部中断 *****/
-    if ((scause & 0x8000000000000000L) && 
+    if ((scause & 0x8000000000000000L) &&
         (scause & 0xF) == 9)
     {
         irq = plic_claim();
@@ -79,7 +79,7 @@ int dev_interrupt (void)
 void trap_userfunc(void)
 {
     uint devnum = 0;
-    ProcCB_t *pcb = getProcCB();
+    ProcCB *pcb = getProcCB();
 
     /* 判断 trap 是否来自用户模式 */
     if ((r_sstatus() & SSTATUS_SPP) != 0)
@@ -102,7 +102,7 @@ void trap_userfunc(void)
         do_syscall();
     }
     /***** 外部中断、软件中断、非法故障 *****/
-    else 
+    else
     {
         devnum = dev_interrupt();
         /* 发生非法故障，杀死当前进程 */
@@ -115,7 +115,7 @@ void trap_userfunc(void)
         do_exit(-1);
     if (devnum == 2)
         do_yield();
-    
+
     /* 返回用户空间 */
     trap_userret();
 }
@@ -124,7 +124,7 @@ void trap_userfunc(void)
 void trap_userret(void)
 {
     unsigned long x;
-    ProcCB_t *pcb = getProcCB();
+    ProcCB *pcb = getProcCB();
 
     intr_off();
 
@@ -164,7 +164,7 @@ void trap_userret(void)
 void kerneltrap(void)
 {
     int devnum = 0;
-    ProcCB_t *pcb;
+    ProcCB *pcb;
     uint64 sepc = r_sepc();
     uint64 sstatus = r_sstatus();
     // uint64 scause = r_scause();
@@ -184,7 +184,7 @@ void kerneltrap(void)
     pcb = getProcCB();
 
     /* 是否为定时器中断 */
-    if ((devnum == 2) && (pcb != NULL) && 
+    if ((devnum == 2) && (pcb != NULL) &&
         (pcb->state == RUNNING))
         do_yield();
 

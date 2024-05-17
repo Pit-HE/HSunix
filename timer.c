@@ -3,7 +3,7 @@
 
 
 #define TIMER_CODE  0x5AA5
-static list_entry_t kSleepList;
+static ListEntry_t kSleepList;
 
 
 void timer_init (void)
@@ -11,10 +11,10 @@ void timer_init (void)
     list_init (&kSleepList);
 }
 
-timer_t *timer_add (ProcCB_t *pcb, int expires)
+timer_t *timer_add (ProcCB *pcb, int expires)
 {
     timer_t *pTimer, *timer;
-    list_entry_t *plist;
+    ListEntry_t *plist;
 
     if ((pcb == NULL) || (expires == 0))
         kError(eSVC_Timer, E_PARAM);
@@ -76,9 +76,9 @@ void timer_del (timer_t *timer)
 
 void timer_run (void)
 {
-    list_entry_t *pList;
+    ListEntry_t *pList;
     timer_t *pTimer;
-    ProcCB_t *pcb;
+    ProcCB *pcb;
 
     pList = kSleepList.next;
 

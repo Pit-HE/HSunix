@@ -28,9 +28,9 @@ void user_ret (void);
 void user_trap (void)
 {
     int flag;
-    ProcCB_t *pcb;
+    ProcCB *pcb;
 
-    /* 避免进程在特权模式下又重复发生特权模式的中断 */ 
+    /* 避免进程在特权模式下又重复发生特权模式的中断 */
     w_stvec((uint64)kernelvec);
     pcb = getProcCB();
 
@@ -59,7 +59,7 @@ void user_trap (void)
 /* 设置进程从特权模式切换到用户模式前的信息 */
 void user_ret (void)
 {
-    ProcCB_t *pcb;
+    ProcCB *pcb;
 
     intr_off();
     /* 恢复用户模式下发生异常的入口 */

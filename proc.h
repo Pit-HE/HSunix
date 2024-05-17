@@ -1,10 +1,13 @@
+
 #ifndef __PROC_H___
 #define __PROC_H___
 
+#include "riscv.h"
 #include "list.h"
+#include "file.h"
 
 /* Process state */
-enum Procstate_t
+enum Procstate
 {
   IDLE,     /* 空闲 */
   USED,     /* 刚被分配 */
@@ -34,7 +37,7 @@ typedef struct processSwitchContext
   uint64 s9;
   uint64 s10;
   uint64 s11;
-}Context_t;
+}Context;
 
 typedef struct trapStackFrame
 {
@@ -74,7 +77,7 @@ typedef struct trapStackFrame
   /* 264 */ uint64 t4;
   /* 272 */ uint64 t5;
   /* 280 */ uint64 t6;
-}Trapframe_t;
+}Trapframe;
 
 
 
@@ -82,32 +85,36 @@ typedef struct trapStackFrame
 /* 进程控制块 */
 typedef struct processControlBlock
 {
-  enum Procstate_t state;               // Process state
+  enum Procstate state;                 // Process state
   struct processControlBlock *parent;   // Parent process
 
   void         *pendObj;          // If non-zero, sleeping on special object
-  int           killState;        // If non-zero, have been killed
-  int           exitState;        // Exit status to be returned to parent's wait
-  int           pid;              // Process ID
+  uint          killState;        // If non-zero, have been killed
+  uint          exitState;        // Exit status to be returned to parent's wait
+  uint          pid;              // Process ID
 
-  list_entry_t  regist;           // 
-  list_entry_t  list;             // Manage process state switch
+  ListEntry_t   regist;           // 创建进程时用于注册到内核的 kRegistList 链表
+  ListEntry_t   list;             // Manage process state switch
+
+  struct File **fdTab;            // 文件描述符的指针数组
+  uint          fdLen;            // 记录当前文件描述符数组的长度(可以动态变化)
+
   uint64        stackAddr;        // Virtual address of kernel stack
   uint64        stackSize;        // Virtual address of kernel stack size
   uint64        memSize;          // Size of process memory (bytes)
   Pagetable_t  *pageTab;          // User page table
-  Trapframe_t  *trapFrame;        // data page for trampoline.S
-  Context_t     context;          // switch_to() here to run process
+  Trapframe    *trapFrame;        // data page for trampoline.S
+  Context       context;          // switch_to() here to run process
   char          name[10];         // Process name (debugging)
-}ProcCB_t;
+}ProcCB;
 
 typedef struct cpuControlBlock
 {
-  ProcCB_t *proc;                 // The process running on this cpu, or null.
-  Context_t context;              // switch_to() here to enter scheduler().
+  ProcCB   *proc;                 // The process running on this cpu, or null.
+  Context   context;              // switch_to() here to enter scheduler().
   int       intrOffNest;          // Depth of push_off() nesting.
   int       intrOldState;         // Were interrupts enabled before push_off()?
-}CpuCB_t;
+}CpuCB;
 
 
 #endif

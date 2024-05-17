@@ -10,8 +10,8 @@ typedef struct kernelTimer
 {
     int             code;
     uint64          expires;
-    list_entry_t    list;
-    ProcCB_t        *pcb;
+    ListEntry_t    list;
+    ProcCB        *pcb;
 }timer_t;
 
 

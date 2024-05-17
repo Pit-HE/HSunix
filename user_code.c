@@ -18,7 +18,7 @@ void user_processEntry (void)
         printf ("userspace: cnt = %d\r\n", userCnt);
         printf ("userspace: time = %d\r\n", gettime());
 
-        sleep(300);
+        sleep(1000);
     }
 }
 

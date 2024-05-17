@@ -25,7 +25,7 @@ int testCnt = 0;
 int testPid = 0;
 void test_main (void)
 {
-    ProcCB_t *pcb = getProcCB();
+    ProcCB *pcb = getProcCB();
 
     // if (testCnt <= 2)
     // {
