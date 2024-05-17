@@ -10,7 +10,7 @@ void kRingbuf_init (ringbuf_t *rb, char *buf, int len)
     if (len == 0)
         kError(eSVC_Ringbuf, E_PARAM);
 
-    memset(rb, 0, sizeof(ringbuf_t));
+    kmemset(rb, 0, sizeof(ringbuf_t));
 
     rb->buf = buf;
     rb->baseSize = len;
@@ -21,8 +21,8 @@ void kRingbuf_clean (ringbuf_t *rb)
 {
     if (rb == NULL)
         kError (eSVC_Ringbuf, E_PARAM);
-    
-    memset(rb->buf, 0, rb->baseSize);
+
+    kmemset(rb->buf, 0, rb->baseSize);
     rb->idleSize = rb->baseSize;
     rb->rIndex = 0;
     rb->wIndex = 0;
@@ -43,13 +43,13 @@ int kRingbuf_put (ringbuf_t *rb, char *buf, int len)
 
     if (margin > len)
     {
-        memcpy(&rb->buf[rb->wIndex], buf, len);
+        kmemcpy(&rb->buf[rb->wIndex], buf, len);
         rb->wIndex += len;
     }
     else
     {
-        memcpy(&rb->buf[rb->wIndex], buf, margin);
-        memcpy(&rb->buf[0], &buf[margin], len - margin);
+        kmemcpy(&rb->buf[rb->wIndex], buf, margin);
+        kmemcpy(&rb->buf[0], &buf[margin], len - margin);
         rb->wIndex = len - margin;
     }
     rb->idleSize -= len;
@@ -72,17 +72,17 @@ int kRingbuf_get (ringbuf_t *rb, char *buf, int len)
 
     if (margin > len)
     {
-        memcpy(buf, &rb->buf[rb->rIndex], len);
+        kmemcpy(buf, &rb->buf[rb->rIndex], len);
         rb->rIndex += len;
     }
     else
     {
-        memcpy(&buf[0], &rb->buf[rb->rIndex], margin);
-        memcpy(&buf[margin], &rb->buf[0], len - margin);
+        kmemcpy(&buf[0], &rb->buf[rb->rIndex], margin);
+        kmemcpy(&buf[margin], &rb->buf[0], len - margin);
         rb->rIndex = len - margin;
     }
     rb->idleSize += len;
-    
+
     return len;
 }
 

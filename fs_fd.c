@@ -1,7 +1,9 @@
 /*
- * 提供文件系统中，操作文件描述符与进程的文件描述符数组的接口
+ * 管理文件描述符与进程的文件描述符数组的模块
  */
-#include "file.h"
+#include "fcntl.h"
+#include "defs.h"
+
 
 
 /* 申请一个文件描述符的内存空间
@@ -15,12 +17,10 @@ static struct File *_allocFD (void)
     fd = (struct File *)kalloc(sizeof(struct File));
     if (fd == NULL)
         return fd;
-    memset(fd, 0, sizeof(struct File));
+    kmemset(fd, 0, sizeof(struct File));
 
     fd->magic = FILE_MAGIC;
     fd->ref = 1;
-
-    fd->inode = inode_alloc();
 
     return fd;
 }
@@ -34,7 +34,6 @@ static void _freeFD (struct File *fd)
     if (--fd->ref != 0)
         return;
 
-    inode_free(fd->inode);
     kfree(fd);
 }
 
@@ -47,7 +46,6 @@ static void _freeFD (struct File *fd)
 int fdTab_alloc (ProcCB *pcb)
 {
     int ret = -1;
-    struct Inode *inode;
 
     pcb->fdTab = (struct File **)kalloc(sizeof(struct File *) * 20);
     if (pcb->fdTab == NULL)
@@ -55,28 +53,19 @@ int fdTab_alloc (ProcCB *pcb)
     pcb->fdLen = 20;
     ret = 1;
 
-    memset (pcb->fdTab, 0, sizeof(struct File *) * 20);
+    kmemset (pcb->fdTab, 0, sizeof(struct File *) * 20);
 
     /* 标准输入 */
     pcb->fdTab[0] = _allocFD();
-    inode = inode_alloc();
-    inode->dev = 0;// 0号设备，控制台
-    inode->type = I_DEVICE;
-    pcb->fdTab[0]->inode = inode;
+    file_open(pcb->fdTab[0], "consele", O_WRONLY);
 
     /* 标准输出 */
     pcb->fdTab[1] = _allocFD();
-    inode = inode_alloc();
-    inode->dev = 0;// 0号设备，控制台
-    inode->type = I_DEVICE;
-    pcb->fdTab[1]->inode = inode;
+    file_open(pcb->fdTab[0], "consele", O_RDONLY);
 
     /* 标准错误 */
     pcb->fdTab[2] = _allocFD();
-    inode = inode_alloc();
-    inode->dev = 0;// 0号设备，控制台
-    inode->type = I_DEVICE;
-    pcb->fdTab[2]->inode = inode;
+    file_open(pcb->fdTab[0], "consele", O_RDONLY | O_WRONLY);
 
     return ret;
 }
@@ -126,14 +115,14 @@ int fd_alloc (void)
         tab = (struct File **)kalloc(sizeof(struct File*)*(pcb->fdLen + 5));
         if (tab != NULL)
         {
-            memset(tab, 0, sizeof(struct File*)*(pcb->fdLen + 5));
+            kmemset(tab, 0, sizeof(struct File*)*(pcb->fdLen + 5));
             /* 为空闲的描述数组成员分配空的描述符结构体 */
             pcb->fdTab[pcb->fdLen] = _allocFD();
             fd = pcb->fdLen;
 
             /* 记录原有的描述符信息 */
             kDISABLE_INTERRUPT();
-            memcpy(tab, pcb->fdTab, pcb->fdLen);
+            kmemcpy(tab, pcb->fdTab, pcb->fdLen);
             kfree(pcb->fdTab);
 
             pcb->fdTab = tab;

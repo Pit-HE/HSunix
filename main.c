@@ -11,6 +11,7 @@
 
 void main (void)
 {
+    dev_init();
     console_init();
     kmem_init();
     // kvm_init();

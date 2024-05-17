@@ -17,7 +17,7 @@ void tc_virtualmemory (void)
     extern void kvm_map (Pagetable_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag);
     kvm_map(pgtab, (uint64)0, (uint64)buf, PGSIZE, PTE_R | PTE_W | PTE_U);
 
-    strcpy(buf, "hello World!\n");
+    kstrcpy(buf, "hello World!\n");
 
     Spgatab = uvm_create();
 

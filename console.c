@@ -19,7 +19,8 @@ typedef struct console_manage_info
 static consoleInfo_t consState;
 
 
-
+/******************************************/
+/* 控制台原始接口 */
 int console_wString (char *src)
 {
     char *xStr = src;
@@ -74,21 +75,48 @@ int console_rChar (void)
     return ch;
 }
 
-
-
-void console_init (void)
+/******************************************/
+/* 控制台为注册成内核文件设备而封装的接口 */
+static int console_dev_write (struct File *file,
+    void *buf, unsigned int count)
 {
-    uart_init();
-    kRingbuf_init(&consState.rb, consState.buf, console_bufSize);
-    memset(&consState.buf, 0, console_bufSize);
+    return console_wCmd(buf, count);
+}
+static int console_dev_read (struct File *file,
+    void *buf, unsigned int count)
+{
+    return console_rCmd(buf, count);
 }
 
+
+
+/* 控制台的中断服务函数 */
 void console_isr (int c)
 {
     console_putc(c);
     kRingbuf_putChar(&consState.rb, (char)c);
     do_resume(&consState.rb);
 }
+void console_init (void)
+{
+    struct Device *dev;
+
+    uart_init();
+    kRingbuf_init(&consState.rb, consState.buf, console_bufSize);
+    kmemset(&consState.buf, 0, console_bufSize);
+
+    /* 向内核注册 console 设备 */
+    dev = dev_alloc("console");
+    if (dev != NULL)
+    {
+        dev->opt.write = console_dev_write;
+        dev->opt.read  = console_dev_read;
+
+        dev_register(dev);
+    }
+}
+
+
 
 
 

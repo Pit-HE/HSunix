@@ -9,6 +9,7 @@
 #include "fs.h"
 #include "timer.h"
 #include "kerror.h"
+#include "device.h"
 #include "ringbuff.h"
 
 
@@ -31,12 +32,12 @@ int  console_rChar      (void);
 
 
 /******************** string ********************/
-void *memset (void *s, int c, uint n);
-void *memmove(void *dst, const void *src, uint n);
-void *memcpy (void *dst, const void *src, uint n);
-int   strlen (const char *st);
-char *strcpy (char *dest, const char *src);
-
+void *kmemset (void *s, int c, uint n);
+void *kmemmove(void *dst, const void *src, uint n);
+void *kmemcpy (void *dst, const void *src, uint n);
+int   kstrlen (const char *st);
+char *kstrcpy (char *dest, const char *src);
+int   kstrcmp (const char *p1, const char *p2);
 
 /******************** kallocPhyPage ********************/
 void *kallocPhyPage (void);
@@ -142,8 +143,18 @@ timer_t *timer_add  (ProcCB *pcb, int expires);
 void     timer_del  (timer_t *timer);
 void     timer_run  (void);
 
+
 /******************** exec **********************/
 int do_exec(char *path, char **argv);
 
+
+/******************** device ********************/
+void dev_init (void);
+struct Device *dev_alloc (const char *name);
+void dev_free (struct Device *dev);
+void dev_register (struct Device *dev);
+void dev_unregister (struct Device *dev);
+struct Device *dev_get (const char *name);
+void dev_put (struct Device *dev);
 
 #endif

@@ -38,7 +38,7 @@ static pte_t *_mmu (Pagetable_t *pagetable, uint64 vAddr, bool alloc)
         {
             if (!alloc || (pagetable = (pde_t *)kallocPhyPage()) == 0)
                 return 0;
-            memset(pagetable, 0, PGSIZE);
+            kmemset(pagetable, 0, PGSIZE);
             *pte = PA2PTE(pagetable) | PTE_V;
         }
     }
@@ -81,7 +81,7 @@ static void freepages (Pagetable_t *pagetable)
     int     i;
     pte_t   pte;
     uint64  pa;
-    
+
     for (i=0; i<512; i++)
     {
         pte = pagetable[i];
@@ -108,7 +108,7 @@ uint64 kvm_phyaddr (Pagetable_t *pagetable, uint64 vAddr)
     /* 虚拟地址的有效性检查 */
     if (vAddr > MAXVA)
         return 0;
-    
+
     /* 获取第三级的页表条目 */
     pte = _mmu(pagetable, vAddr, FALSE);
 
@@ -117,7 +117,7 @@ uint64 kvm_phyaddr (Pagetable_t *pagetable, uint64 vAddr)
         return 0;
     if (! (*pte & PTE_U))
         return 0;
-    
+
     /* 将页表条目内存储的物理地址返回 */
     return PTE2PA(*pte);
 }
@@ -139,7 +139,7 @@ void uvm_unmap (Pagetable_t *pagetable, uint64 va, uint64 npages, bool free)
         return;
     if (npages <= 0)
         return;
-    
+
     end = va + (npages * PGSIZE);
     for (start = va; start < end; start += PGSIZE)
     {
@@ -149,7 +149,7 @@ void uvm_unmap (Pagetable_t *pagetable, uint64 va, uint64 npages, bool free)
             return;
         if (! (*pte & PTE_V))
             return;
-        
+
         if (free == TRUE)
         {
             kfreePhyPage((void*)PTE2PA(*pte));
@@ -166,7 +166,7 @@ Pagetable_t *uvm_create (void)
 
     if (pgtab == NULL)
         return NULL;
-    memset(pgtab, 0, PGSIZE);
+    kmemset(pgtab, 0, PGSIZE);
 
     return pgtab;
 }
@@ -186,8 +186,8 @@ uint64 uvm_alloc (Pagetable_t *pagetable, uint64 oldaddr, uint64 newaddr, int fl
         mem = kallocPhyPage();
         if (mem == NULL)
             goto error_map;
-        memset(mem, 0, PGSIZE);
-    
+        kmemset(mem, 0, PGSIZE);
+
         /* 建立映射关系 */
         if (mappages(pagetable, oldaddr, (uint64)mem, 4096, PTE_R|PTE_U|flag) != 0)
         {
@@ -209,7 +209,7 @@ uint64 uvm_free (Pagetable_t *pagetable, uint64 oldsz, uint64 newsz)
     int npages;
 
     if (newsz <= oldsz)
-        return 0;    
+        return 0;
     if (PGROUNDUP(newsz) > PGROUNDUP(oldsz))
     {
         npages = (PGROUNDUP(newsz) - PGROUNDUP(oldsz)) / PGSIZE;
@@ -251,7 +251,7 @@ int uvm_copy (Pagetable_t *destPage, Pagetable_t *srcPage, uint64 sz, bool alloc
                 goto error_cpy;
 
             /* 完成内存页的数据拷贝 */
-            memmove ((void*)d_pa, (void*)s_pa, PGSIZE);
+            kmemmove ((void*)d_pa, (void*)s_pa, PGSIZE);
             /* 为目标页表建立新的映射关系 */
             if (mappages(destPage, i, d_pa, PGSIZE, s_flags) != 0)
             {
@@ -268,7 +268,7 @@ int uvm_copy (Pagetable_t *destPage, Pagetable_t *srcPage, uint64 sz, bool alloc
             d_pa = PTE2PA(*d_pte);
 
             /* 完成内存页的数据拷贝 */
-            memmove ((void*)d_pa, (void*)s_pa, PGSIZE);
+            kmemmove ((void*)d_pa, (void*)s_pa, PGSIZE);
             /* 为目标页表建立新的映射关系 */
             if (mappages(destPage, i, d_pa, PGSIZE, s_flags) != 0)
                 goto error_cpy;
@@ -292,12 +292,12 @@ int copyout (Pagetable_t *pagetable, uint64 dstva, char *src, uint64 len)
         pa = kvm_phyaddr(pagetable, va_base);
         if (pa <= 0)
             return -1;
-        
+
         n = PGSIZE - (dstva - va_base);
         if (n > len)
             n = len;
-        
-        memmove ((void*)(pa + (dstva - va_base)), src, n);
+
+        kmemmove ((void*)(pa + (dstva - va_base)), src, n);
 
         src += n;
         len -= n;
@@ -330,7 +330,7 @@ int copyin (Pagetable_t *pagetable, char *dst, uint64 srcva, uint64 len)
             n = len;
 
         /* 将用户空间数据拷贝到内核空间 */
-        memmove(dst, (void *)(pa0 + (srcva - va0)), n);
+        kmemmove(dst, (void *)(pa0 + (srcva - va0)), n);
 
         /* 确认数据是否拷贝完成 */
         len -= n;
@@ -344,7 +344,7 @@ int copyin (Pagetable_t *pagetable, char *dst, uint64 srcva, uint64 len)
 void kvm_init (void)
 {
     kernel_pgtab = kallocPhyPage();
-    memset(kernel_pgtab, 0, PGSIZE);
+    kmemset(kernel_pgtab, 0, PGSIZE);
 
     // uart registers
     mappages(kernel_pgtab, UART0, UART0, PGSIZE, PTE_R | PTE_W);

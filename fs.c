@@ -1,5 +1,5 @@
 /*
- * 提供文件系统中，对外的操作接口
+ * 文件系统对外的操作接口
  */
 #include "defs.h"
 #include "file.h"
@@ -61,7 +61,7 @@ int fs_close (int fd)
 }
 
 /* 文件系统对外接口：将数据写入指定文件中 */
-int fs_write (int fd, void *buf, uint len)
+int fs_write (int fd, void *buf, int len)
 {
     int ret;
     struct File *f;
@@ -84,7 +84,7 @@ int fs_write (int fd, void *buf, uint len)
 }
 
 /* 文件系统对外接口：从指定文件中读取指定长度的数据 */
-int fs_read (int fd, void *buf, uint len)
+int fs_read (int fd, void *buf, int len)
 {
     int ret;
     struct File *f;

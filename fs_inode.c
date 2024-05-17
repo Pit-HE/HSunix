@@ -10,7 +10,7 @@ struct Inode *inode_alloc (void)
     inode = (struct Inode *)kalloc(sizeof(struct Inode));
     if (inode == NULL)
         return NULL;
-    memset(inode, 0, sizeof(struct Inode));
+    kmemset(inode, 0, sizeof(struct Inode));
 
     inode->ref = 1;
 

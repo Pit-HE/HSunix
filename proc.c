@@ -119,7 +119,7 @@ ProcCB *allocProcCB (void)
     pcb = (ProcCB *)kalloc(sizeof(ProcCB));
     if (pcb == NULL)
         goto _exit_allocProcCB;
-    memset(pcb, 0, sizeof(ProcCB));
+    kmemset(pcb, 0, sizeof(ProcCB));
 
     /* 申请存放进程trap信息的内存空间 */
     pcb->trapFrame = (Trapframe *)kalloc(sizeof(Trapframe));
@@ -129,7 +129,7 @@ ProcCB *allocProcCB (void)
         pcb = NULL;
         goto _exit_allocProcCB;
     }
-    memset(pcb->trapFrame, 0, sizeof(Trapframe));
+    kmemset(pcb->trapFrame, 0, sizeof(Trapframe));
 
     /* 为进程申请在用户模式中使用的栈 */
     pcb->trapFrame->sp = (uint64)kalloc(2048);
@@ -161,7 +161,7 @@ ProcCB *allocProcCB (void)
     //     goto _exit_allocProcCB;
     // }
 
-    memset(&pcb->context, 0, sizeof(Context));
+    kmemset(&pcb->context, 0, sizeof(Context));
 
     pcb->pid = allocPid();
     pcb->state = USED;
@@ -239,8 +239,8 @@ void proc_init (void)
     /* Init processs */
     kInitProcCB = allocProcCB();
     stack = (char *)kalloc(2048);
-    memset(stack, 0, 2048);
-    strcpy(kInitProcCB->name, "init");
+    kmemset(stack, 0, 2048);
+    kstrcpy(kInitProcCB->name, "init");
     kInitProcCB->context.ra = (uint64)init_main;
     kInitProcCB->stackAddr  = (uint64)stack;
     kInitProcCB->stackSize  = (uint64)2048;
@@ -250,8 +250,8 @@ void proc_init (void)
     /* Idle processs */
     kIdleProcCB = allocProcCB();
     stack = (char *)kalloc(2048);
-    memset(stack, 0, 2048);
-    strcpy(kIdleProcCB->name, "idle");
+    kmemset(stack, 0, 2048);
+    kstrcpy(kIdleProcCB->name, "idle");
     kIdleProcCB->context.ra = (uint64)idle_main;
     kIdleProcCB->stackAddr  = (uint64)stack;
     kIdleProcCB->stackSize  = (uint64)2048;
@@ -262,8 +262,8 @@ void proc_init (void)
     /* test process */
     pcb = allocProcCB();
     stack = (char *)kalloc(2048);
-    memset(stack, 0, 2048);
-    strcpy(pcb->name, "test");
+    kmemset(stack, 0, 2048);
+    kstrcpy(pcb->name, "test");
     pcb->context.ra = (uint64)test_main;
     pcb->stackAddr  = (uint64)stack;
     pcb->stackSize  = (uint64)2048;
@@ -275,8 +275,8 @@ void proc_init (void)
      */
     pcb = allocProcCB();
     stack = (char *)kalloc(2048);
-    memset(stack, 0, 2048);
-    strcpy(pcb->name, "user");
+    kmemset(stack, 0, 2048);
+    kstrcpy(pcb->name, "user");
     void user_ret (void);
     pcb->context.ra = (uint64)user_ret;
     pcb->stackAddr  = (uint64)stack;
@@ -439,9 +439,9 @@ int do_fork (void)
     newPcb->trapFrame->a0 = 0;
     newPcb->parent = curPcb;
 
-    strcpy(newPcb->name, curPcb->name);
-    memcpy(&newPcb->context, &curPcb->context, sizeof(Context));
-    memcpy((void*)newPcb->stackAddr, (void*)curPcb->stackAddr, curPcb->stackSize);
+    kstrcpy(newPcb->name, curPcb->name);
+    kmemcpy(&newPcb->context, &curPcb->context, sizeof(Context));
+    kmemcpy((void*)newPcb->stackAddr, (void*)curPcb->stackAddr, curPcb->stackSize);
 
     newPcb->context.sp = (uint64)(stack + (curPcb->context.sp - curPcb->stackAddr));
     wakeProcCB(newPcb);

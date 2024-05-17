@@ -44,7 +44,7 @@ void *kallocPhyPage (void)
     phyPageFreeHeader.next = p->next;
     phyPageFreeHeader.blkNum -= 1;
 
-    memset((void*)p, 5, PGSIZE);
+    kmemset((void*)p, 5, PGSIZE);
     return p;
 }
 
@@ -61,7 +61,7 @@ void kfreePhyPage (void *pa)
         return;
 
     /* 格式化物理内存页 */
-    memset (pa, 1, PGSIZE);
+    kmemset (pa, 1, PGSIZE);
     p = (kmNode*)pa;
 
     /* 添加到空闲链表 */

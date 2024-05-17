@@ -21,22 +21,25 @@ enum InodeType
     I_DEVICE,      /* 设备 */
 };
 
-/* 文件的操作接口 */
+/* 文件对象的操作接口
+ *
+ * 设备、管道等也可以使用该结构体注册为文件对象
+ */
 struct FileOperation
 {
-    int (*open)     (struct File *fd);
-    int (*close)    (struct File *fd);
-    int (*ioctl)    (struct File *fd, int cmd, void *args);
-    int (*read)     (struct File *fd, void *buf, uint count);
-    int (*write)    (struct File *fd, const void *buf, uint count);
-    int (*flush)    (struct File *fd);
-    int (*lseek)    (struct File *fd, uint offset);
+    int (*open)     (struct File *file);
+    int (*close)    (struct File *file);
+    int (*ioctl)    (struct File *file, int cmd, void *args);
+    int (*read)     (struct File *file, void *buf, unsigned int count);
+    int (*write)    (struct File *file, void *buf, unsigned int count);
+    int (*flush)    (struct File *file);
+    int (*lseek)    (struct File *file, unsigned int offset);
 };
 
 /* 文件系统的操作接口 */
 struct FileSystemOps
 {
-    const struct FileOperation *fops;
+    struct FileOperation *fops;
 
     /* mount and unmount file system */
     int (*mount)    (struct FileSystem *fs, unsigned long rwflag, const void *data);
