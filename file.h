@@ -24,6 +24,17 @@ enum InodeType
     I_DEVICE,      /* 设备 */
 };
 
+struct InodeOperation
+{
+    int (*open)     (struct Inode *inode);
+    int (*close)    (struct Inode *inode);
+    int (*ioctl)    (struct Inode *inode, int cmd, void *args);
+    int (*read)     (struct Inode *inode, void *buf, unsigned int count);
+    int (*write)    (struct Inode *inode, void *buf, unsigned int count);
+    int (*flush)    (struct Inode *inode);
+    int (*lseek)    (struct Inode *inode, unsigned int offset);
+};
+
 
 /* 文件对象的操作接口
  *
@@ -44,7 +55,7 @@ struct FileOperation
 /* 文件系统的操作接口 */
 struct FileSystemOps
 {
-    struct FileOperation *fops;
+    struct FileOperation *i_opss;
 
     /* mount and unmount file system */
     int (*mount)    (struct FileSystem *fs, unsigned long rwflag, const void *data);
@@ -78,7 +89,7 @@ struct Inode
     uint                        lock;       /* 锁 */
     uint                        valid;      /* 是否已经从磁盘读取数据 */
     uint                        addr;       /* 存放磁盘地址的缓冲区 */
-    struct FileOperation       *fop;        /* inode 对象操作接口 */
+    struct InodeOperation      *i_ops;      /* inode 对象操作接口 */
 };
 
 

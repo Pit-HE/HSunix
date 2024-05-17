@@ -26,7 +26,7 @@ int fs_open (const char *path, int flags)
         return -1;
     }
 
-    if (0 > file_open(file, (char *)file, flags))
+    if (0 > file_open(file, (char *)path, flags))
     {
         kErr_printf("fail: fs_open open file !\r\n");
         return -1;

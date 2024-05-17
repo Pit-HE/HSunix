@@ -77,12 +77,12 @@ int console_rChar (void)
 
 /******************************************/
 /* 控制台为注册成内核文件设备而封装的接口 */
-static int console_dev_write (struct File *file,
+static int console_dev_write (struct Inode *file,
     void *buf, unsigned int count)
 {
     return console_wCmd(buf, count);
 }
-static int console_dev_read (struct File *file,
+static int console_dev_read (struct Inode *file,
     void *buf, unsigned int count)
 {
     return console_rCmd(buf, count);

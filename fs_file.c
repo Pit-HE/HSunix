@@ -84,7 +84,7 @@ int file_open (struct File *file, char *path, uint flags)
         /* 记录设备的信息 */
         inode->dev  = dev;
         inode->type = I_DEVICE;
-        inode->fop  = &dev->opt;
+        inode->i_ops  = &dev->opt;
     }
     ret = inode_open(inode);
 

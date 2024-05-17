@@ -11,9 +11,9 @@
 
 void main (void)
 {
+    kmem_init();
     dev_init();
     console_init();
-    kmem_init();
     // kvm_init();
     trap_init();
     plic_init();
@@ -22,7 +22,9 @@ void main (void)
     proc_init();
     timer_init();
 
+    self_inspection();
     kprintf("Start OS ...\r\n");
+
     idle_main();
 }
 

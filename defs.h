@@ -39,6 +39,7 @@ int   kstrlen (const char *st);
 char *kstrcpy (char *dest, const char *src);
 int   kstrcmp (const char *p1, const char *p2);
 
+
 /******************** kallocPhyPage ********************/
 void *kallocPhyPage (void);
 void  kfreePhyPage  (void *pa);
@@ -64,6 +65,10 @@ void trap_init      (void);
 void trap_userfunc  (void);
 void trap_userret   (void);
 void kerneltrap     (void);
+
+
+/******************** test ********************/
+void self_inspection (void);
 
 
 /******************** proc ********************/
