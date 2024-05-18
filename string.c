@@ -1,5 +1,6 @@
 
-#include "types.h"
+
+#include "defs.h"
 
 
 void *kmemset(void *s, int c, uint n)
@@ -87,3 +88,26 @@ int kstrcmp (const char *p1, const char *p2)
     return c1 - c2;
 }
 
+int kstrncmp(const char *p, const char *q, uint n)
+{
+  while (n > 0 && *p && *p == *q)
+    n--, p++, q++;
+  if (n == 0)
+    return 0;
+  return (uchar)*p - (uchar)*q;
+}
+
+char *kstrdup(const char *s)
+{
+    unsigned int len = kstrlen(s) + 1;
+    char *tmp = (char *)kalloc(len);
+
+    if (!tmp)
+    {
+        return NULL;
+    }
+
+    kmemcpy(tmp, s, len);
+
+    return tmp;
+}

@@ -217,16 +217,19 @@ void tc_timer (void)
 void tc_fsDevice (void)
 {
     int fd;
-    char buf[20];
+    char rbuf[20];
+    char wbuf[20];
 
-    kmemset(buf, 0, 20);
-    kstrcpy(buf, "Hello World !\r\n");
+    kmemset(wbuf, 0, 20);
+    kstrcpy(wbuf, "Hello World !\r\n");
 
-    fd = fs_open("console", O_WRONLY);
-    fs_write (fd, buf, kstrlen(buf));
-    fs_read(fd, buf, 10);
+    fd = vfs_open("console", O_WRONLY);
+    vfs_write (fd, wbuf, kstrlen(wbuf));
+    vfs_read(fd, rbuf, 1);
+    vfs_close(fd);
 
-    fs_close(fd);
+    vfs_write(1, wbuf, kstrlen(wbuf));
+    vfs_read(0, rbuf, 1);
 }
 
 

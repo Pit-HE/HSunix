@@ -70,16 +70,11 @@ void test_main (void)
         }
     }
  #elif 1
-    ProcCB *pcb = getProcCB();
-
     while(1)
     {
-        if (pcb->fdTab[0]->magic != 0)
-        {
-            extern void tc_fsDevice (void);
-            tc_fsDevice();
-        }
-    
+        extern void tc_fsDevice (void);
+        tc_fsDevice();
+
         do_sleep(100);
     }
  #endif

@@ -31,6 +31,10 @@ static inline ListEntry_t *list_prev(ListEntry_t *listelm) __attribute__((always
 static inline void __list_add(ListEntry_t *elm, ListEntry_t *prev, ListEntry_t *next) __attribute__((always_inline));
 static inline void __list_del(ListEntry_t *prev, ListEntry_t *next) __attribute__((always_inline));
 
+/* 定义一个自动初始化的链表对象 */
+#define LIST_INIT_OBJ(elm) \
+    ListEntry_t elm={&elm, &elm}
+
 /**
  * list_container_of - return the start address of struct type
  * ptr: known pointer address.

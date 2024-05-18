@@ -6,6 +6,8 @@
 /* 获取指定文件所对应的 inode */
 int path_parser (char *path, struct Inode *inode)
 {
+    
+
     return 0;
 }
 

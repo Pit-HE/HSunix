@@ -3,6 +3,8 @@
  */
 #include "defs.h"
 #include "file.h"
+#include "fcntl.h"
+
 
 /* 申请一个文件描述符的内存空间
  *
@@ -53,7 +55,7 @@ void file_free (struct File *file)
  */
 int file_open (struct File *file, char *path, uint flags)
 {
-    int ret = 1;
+    int ret = 0;
     struct Device *dev;
     struct Inode *inode;
 
@@ -84,15 +86,17 @@ int file_open (struct File *file, char *path, uint flags)
         /* 记录设备的信息 */
         inode->dev  = dev;
         inode->type = I_DEVICE;
-        inode->i_ops  = &dev->opt;
+        inode->fops  = &dev->opt;
     }
-    ret = inode_open(inode);
 
     /* 初始化新打开的文件描述符 */
     file->inode  = inode;
     file->ref   += 1;
     file->offset = 0;
     file->flags  = flags;
+
+    if (inode->fops->open != NULL)
+        ret = inode->fops->open(inode);
 
     return ret;
 }
@@ -106,15 +110,19 @@ int file_close (struct File *file)
     int ret;
     struct Inode *inode;
 
-    if ((file == NULL) || (file->magic != FILE_MAGIC))
+    if (file == NULL)
         return -1;
-    if (file->ref <= 0)
+    if ((file->magic != FILE_MAGIC) || (file->ref <= 0))
         return -1;
 
     file->ref -= 1;
-    inode = file->inode;
 
-    ret = inode_close(inode);
+    inode = file->inode;
+    if ((inode == NULL) || (inode->magic != INODE_MAGIC))
+        return -1;
+
+    if (inode->fops->close != NULL)
+        ret = inode->fops->close(inode);
 
     /* 释放 open 中申请的 inode */
     inode_free(inode);
@@ -128,14 +136,26 @@ int file_close (struct File *file)
  */
 int file_read (struct File *file, void *buf, uint len)
 {
+    int ret = 0;
+    struct Inode *inode;
+
     if ((file == NULL) || (buf == NULL))
         return -1;
-    if (file->magic != FILE_MAGIC)
-        return -1;
-    if (file->ref <= 0)
+    if ((file->magic != FILE_MAGIC) || (file->ref <= 0))
         return -1;
 
-    return inode_read(file->inode, buf, len);
+    if ((file->flags != O_RDONLY) ||
+        ((file->flags & O_ACCMODE) != O_RDWR))
+        return -1;
+
+    inode = file->inode;
+    if ((inode == NULL) || (inode->magic != INODE_MAGIC))
+        return -1;
+
+    if (inode->fops->read != NULL)
+        ret = inode->fops->read(inode, buf, len);
+
+    return ret;
 }
 
 /* 将数据写入文件
@@ -144,26 +164,43 @@ int file_read (struct File *file, void *buf, uint len)
  */
 int file_write (struct File *file, void *buf, uint len)
 {
+    int ret = 0;
+    struct Inode *inode;
+
     if ((file == NULL) || (buf == NULL))
         return -1;
-    if (file->magic != FILE_MAGIC)
-        return -1;
-    if (file->ref <= 0)
+    if ((file->magic != FILE_MAGIC) || (file->ref <= 0))
         return -1;
 
-    return inode_write(file->inode, buf, len);
+    if ((file->flags != O_WRONLY) ||
+        ((file->flags & O_ACCMODE) != O_RDWR))
+        return -1;
+
+    inode = file->inode;
+    if ((inode == NULL) || (inode->magic != INODE_MAGIC))
+        return -1;
+
+    if (inode->fops->write != NULL)
+        ret = inode->fops->write(inode, buf, len);
+
+    return ret;
 }
 
 /* 将文件在内存中的缓存信息写入磁盘 */
 void file_flush (struct File *file)
 {
+    struct Inode *inode;
+
     if (file == NULL)
         return;
-    if (file->magic != FILE_MAGIC)
-        return;
-    if (file->ref <= 0)
+    if ((file->magic != FILE_MAGIC) || (file->ref <= 0))
         return;
 
-    inode_flush(file->inode);
+    inode = file->inode;
+    if ((inode == NULL) || (inode->magic != INODE_MAGIC))
+        return;
+
+    if (inode->fops->flush != NULL)
+        inode->fops->flush(inode);
 }
 

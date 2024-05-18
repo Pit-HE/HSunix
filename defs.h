@@ -38,6 +38,7 @@ void *kmemcpy (void *dst, const void *src, uint n);
 int   kstrlen (const char *st);
 char *kstrcpy (char *dest, const char *src);
 int   kstrcmp (const char *p1, const char *p2);
+int   kstrncmp(const char *p, const char *q, uint n);
 
 
 /******************** kallocPhyPage ********************/
