@@ -41,7 +41,7 @@ struct FileOperation
     int (*read)     (struct Inode *inode, void *buf, unsigned int count);
     int (*write)    (struct Inode *inode, void *buf, unsigned int count);
     int (*flush)    (struct Inode *inode);
-    int (*lseek)    (struct Inode *inode, unsigned int offset);
+    int (*lseek)    (struct Inode *inode, unsigned int offs);
     int (*getdents) (struct Inode *inode, struct Dirent *dirp, unsigned int count);
 };
 
@@ -56,21 +56,47 @@ struct FileSystemOps
     /* make a file system */
     int (*mkfs)     (uint dev_id, char *fs_name);
 
+    /* 获取文件系统的信息 */
     int (*statfs)   (struct FileSystem *fs, struct statfs *buf);
+
+    /* 删除指定路径的文件或目录 */
     int (*unlink)   (struct FileSystem *fs, char *path);
+
+    /* 获取文件的信息 */
     int (*stat)     (struct FileSystem *fs, char *path, struct stat *buf);
+
+    /* 重命名指定文件 */
     int (*rename)   (struct FileSystem *fs, char *oldpath, char *newpath);
-    int (*lookup)   (struct FileSystem *fs, char *path, struct Inode *inode);
+
+    /* 在实体文件系统中查找 inode 所对应的对象 */
+    int (*lookup)   (struct FileSystem *fs, struct Inode *inode, char *path);
+
+    /* 在实体文件系统中创建 inode 所需的对象 */
+    int (*create)   (struct FileSystem *fs, struct Inode *inode, char *path);
 };
 
 
 /* 描述文件系统信息的结构体 */
 struct FileSystem
 {
-    char                     name[10];  /* 文件系统的名字 */
+    char                    name[20];   /* 文件系统的名字 */
     struct FileOperation    *fops;      /* 文件系统中文件的操作接口 */
     struct FileSystemOps    *fsops;     /* 文件系统的操作接口 */
     void                    *data;      /* 私有数据域 */
+};
+
+
+/* 管理注册到内核的每个实体文件系统 
+ * ( 文件系统分为注册和挂载两种模式 )
+ */
+struct FileSystemDev
+{
+    ListEntry_t          list;      /* 链接到 gFsList */
+    char                 name[20];  /* 文件系统执行挂载时要设置专有名字 */
+    /* 在注册模式时表示被挂载次数，在挂载模式时表示被引用次数 */
+    unsigned int         ref;       /* 挂载计数/引用计数 */
+    bool                 Multi;     /* 单个文件系统实体是否允许挂载多次 */
+    struct FileSystem   *fs;        /* 记录传入的实体文件系统 */
 };
 
 
@@ -88,7 +114,7 @@ struct Inode
     uint                        offs;       /* 文件对象的偏移链 */
     struct FileOperation       *fops;       /* 文件系统对象的操作接口 */
     struct FileSystem          *fs;         /* 当前 inode 所属的文件系统 */
-    void                       *data;       /* 私有数据域 */
+    void                       *data;       /* 私有数据域(例如用于：记录实体文件系统的文件操作结构体) */
 };
 
 
@@ -103,12 +129,18 @@ struct File
     void               *data;       /* 私有数据域 */
 };
 
-
+struct dirent
+{
+    uchar  d_type;      /* The type of the file */
+    uchar  d_namlen;    /* The length of the not including the terminating null file name */
+    uint   d_reclen;    /* length of this record */
+    char d_name[128];   /* The null-terminated file name */
+};
 /* 目录项 */
 struct Dirent
 {
     uint flag;
-    char name[16];
+    char name[20];
 };
 
 
@@ -135,15 +167,16 @@ void file_flush (struct File *file);
 
 /**********************************/
 int path_parser (char *path, struct Inode *inode);
-int path_parent (char *path, struct Inode *inode);
 
 /**********************************/
 struct Dirent *dir_open (char *name);
 int dir_close (struct Dirent *dir);
 
 /**********************************/
-int fsdev_register (struct FileSystem *fs);
-int fsdev_mount (char *name, unsigned int flag, void *data);
+int fsdev_register (char *name, struct FileOperation *fops,
+        struct FileSystemOps *fsops, unsigned int multi);
+int fsdev_mount (char *fsname, char *mount_name, 
+        unsigned int flag, void *data);
 int fsdev_unmount (char *name);
 struct FileSystem *fsdev_get (char *name);
 void fsdev_put (char *name);

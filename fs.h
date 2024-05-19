@@ -19,7 +19,6 @@ struct stat
     int     mode;
 };
 
-
 int vfs_open  (const char *path, int flags);
 int vfs_close (int fd);
 int vfs_write (int fd, void *buf, int len);

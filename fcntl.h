@@ -12,7 +12,7 @@
 #define O_EXCL		00000200
 #define O_NOCTTY	00000400
 #define O_TRUNC		00001000    /* 丢弃文件内容 */
-#define O_APPEND	00002000
+#define O_APPEND	00002000    /* 在文件末尾继续写入 */
 
 
 
