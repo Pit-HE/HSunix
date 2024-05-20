@@ -19,6 +19,7 @@ void main (void)
     plic_init();
     plic_inithart();
     cli_init();
+    vfs_init();
     proc_init();
     timer_init();
 

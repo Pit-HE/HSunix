@@ -6,6 +6,13 @@
 #include "kerror.h"
 
 
+
+/* 初始化虚拟文件系统 */
+void vfs_init (void)
+{
+    path_init();
+}
+
 /* 文件系统对外接口：打开指定路径的文件 */
 int vfs_open (const char *path, int flags)
 {
@@ -106,9 +113,16 @@ int vfs_read (int fd, void *buf, int len)
     return ret;
 }
 
-
-
-void fs_init (void)
+/* 设置进程的启动路径 (传入的必须是绝对路径) */
+int vfs_setpwd (ProcCB *pcb, char *path)
 {
-    path_init();
+    if ((pcb == NULL) || (path == NULL))
+        return -1;
+
+    /* 传入的必须是绝对路径 */
+    if (*path != '/')
+        return -1;
+
+    return file_setpwd(pcb, path);
 }
+

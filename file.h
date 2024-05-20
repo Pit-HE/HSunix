@@ -78,28 +78,14 @@ struct FileSystemOps
     int (*free)     (struct FileSystem *fs, struct Inode *inode);
 };
 
-
 /* 描述文件系统信息的结构体 */
 struct FileSystem
 {
-    char                    name[20];   /* 文件系统的名字 */
+    char                     name[20];  /* 文件系统的名字 */
+    struct Inode            *root;      /* 文件系统的根节点 */
     struct FileOperation    *fops;      /* 文件系统中文件的操作接口 */
     struct FileSystemOps    *fsops;     /* 文件系统的操作接口 */
     void                    *data;      /* 私有数据域 */
-};
-
-
-/* 管理注册到内核的每个实体文件系统
- * ( 文件系统分为注册和挂载两种模式 )
- */
-struct FileSystemDev
-{
-    ListEntry_t          list;      /* 链接到 gFsList */
-    char                 name[20];  /* 文件系统执行挂载时要设置专有名字 */
-    /* 在注册模式时表示被挂载次数，在挂载模式时表示被引用次数 */
-    unsigned int         ref;       /* 挂载计数/引用计数 */
-    bool                 Multi;     /* 单个文件系统实体是否允许挂载多次 */
-    struct FileSystem   *fs;        /* 记录传入的实体文件系统 */
 };
 
 
@@ -107,9 +93,9 @@ struct FileSystemDev
 struct Inode
 {
     uint                        magic;      /* 魔幻数 */
-    struct Device              *dev;        /* 所属的设备 */
+    struct Device              *dev;        /* 操作的设备 */
     enum InodeType              type;       /* 类型 */
-    uint                        flags;      /* 文件的操作权限 */
+    uint                        flags;      /* 操作权限 (O_RDWR\O_RDONLY\O_WRONLY) */
     uint                        size;       /* 占用的磁盘大小 */
     uint                        lock;       /* 锁 */
     uint                        valid;      /* 是否已经从磁盘读取数据 */
@@ -117,7 +103,7 @@ struct Inode
     uint                        writeoff;   /* 文件打开后写指针的偏移 */
     uint                        readoff;    /* 文件打开后读指针的偏移 */
     struct FileOperation       *fops;       /* 文件系统对象的操作接口 */
-    struct FileSystem          *fs;         /* 当前 inode 所属的文件系统 */
+    struct FileSystem          *fs;         /* 所属的文件系统 */
     void                       *data;       /* 私有数据域(例如用于：记录实体文件系统的文件操作结构体) */
 };
 
@@ -152,19 +138,25 @@ int  fd_copy     (int fd);
 
 /**********************************/
 struct Inode *inode_alloc (void);
-void inode_free  (struct Inode *inode);
+void inode_free (struct Inode *inode);
+int inode_init (struct Inode *inode, unsigned int flags,
+        struct FileOperation *fops, enum InodeType type);
 
 /**********************************/
 struct File *alloc_fileobj (void);
-void free_fileobj  (struct File *file);
-int  file_open  (struct File *file, char *path, uint flags);
-int  file_close (struct File *file);
-int  file_read  (struct File *file, void *buf, uint len);
-int  file_write (struct File *file, void *buf, uint len);
-int  file_flush (struct File *file);
+void free_fileobj   (struct File *file);
+int  file_open      (struct File *file, char *path, uint flags);
+int  file_close     (struct File *file);
+int  file_read      (struct File *file, void *buf, uint len);
+int  file_write     (struct File *file, void *buf, uint len);
+int  file_flush     (struct File *file);
+int  file_setpwd    (ProcCB *pcb, char *path);
 
 /**********************************/
-struct Inode *path_parser (char *path);
+char *path_getfirst (char *path, char *name);
+int path_getlast (char *path, char *parentPath, char *name);
+struct Inode *path_parser (char *path,
+    unsigned int flags, enum InodeType type);
 int path_init (void);
 
 /**********************************/

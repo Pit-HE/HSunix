@@ -141,9 +141,21 @@ ProcCB *allocProcCB (void)
         goto _exit_allocProcCB;
     }
 
+    /* 设置进程的初始工作路径 */
+    pcb->pwd = (struct File *)kalloc(sizeof(struct File));
+    if (pcb->pwd == NULL)
+    {
+        kfree ((void*)pcb->trapFrame->sp);
+        kfree (pcb->trapFrame);
+        kfree (pcb);
+        pcb = NULL;
+        goto _exit_allocProcCB;
+    }
+
     /* 为进程申请默认大小的文件描述符空间 */
     if (fdTab_alloc(pcb) <= 0)
     {
+        kfree ((void*)pcb->pwd);
         kfree ((void*)pcb->trapFrame->sp);
         kfree (pcb->trapFrame);
         kfree (pcb);
@@ -165,6 +177,8 @@ ProcCB *allocProcCB (void)
 
     pcb->pid = allocPid();
     pcb->state = USED;
+
+    vfs_setpwd(pcb, "/");
 
     list_init(&pcb->list);
     list_init(&pcb->regist);

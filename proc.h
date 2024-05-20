@@ -99,7 +99,7 @@ typedef struct processControlBlock
   struct File **fdTab;            // 文件描述符的指针数组
   uint          fdLen;            // 记录当前文件描述符数组的长度(可以动态变化)
 
-  struct Inode *cwd;              // 进程工作路径的 inode
+  struct File  *pwd;              // 进程当前的工作路径
 
   uint64        stackAddr;        // Virtual address of kernel stack
   uint64        stackSize;        // Virtual address of kernel stack size

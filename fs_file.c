@@ -55,11 +55,10 @@ int file_open (struct File *file, char *path, uint flags)
     if (file->magic != FILE_MAGIC)
         return -1;
 
-    /* 判断要操作的对象类型 */
+    /* 判断要操作的对象类型, 设备还是文件系统 */
     if ((*path == '/') || (*path == '.'))
     {
-        /* 操作的是文件系统对象 */
-        inode = path_parser(path);
+        inode = path_parser(path, flags, I_FILE);
         if (inode == NULL)
             return -1;
     }
@@ -69,15 +68,12 @@ int file_open (struct File *file, char *path, uint flags)
         if (inode == NULL)
             return -1;
 
-        /* 操作的是设备、管道等对象 */
         dev = dev_get(path);
         if (dev == NULL)
             return -1;
-
-        /* 记录设备的信息 */
         inode->dev  = dev;
-        inode->type = I_DEVICE;
-        inode->fops  = &dev->opt;
+
+        inode_init(inode, flags, &dev->opt, I_DEVICE);
     }
 
     /* 初始化新打开的文件描述符 */
@@ -200,3 +196,19 @@ int file_flush (struct File *file)
     return ret;
 }
 
+/* 设置进程的工作路径 (传入的必须是绝对路径)
+ *
+ * 返回值：-1表示失败
+ */
+int file_setpwd (ProcCB *pcb, char *path)
+{
+    if ((pcb == NULL) || (path == NULL))
+        return -1;
+
+    /* 获取文件路径所对应的inode */
+    pcb->pwd->inode = path_parser(path, O_RDWR,I_FILE);
+    if (pcb->pwd->inode == NULL)
+        return -1;
+
+    return 0;
+}

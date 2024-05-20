@@ -19,6 +19,7 @@ struct ramfs_node
     char                name[RAMFS_NAME_LEN];
     ListEntry_t         siblist;  /* 链接同级节点的链表 */
     ListEntry_t         sublist;  /* 链接子级节点的链表 */
+    unsigned int        flags;    /* 文件的权限 */
     char               *data;     /* 文件存储数据的内存空间 */
     unsigned int        size;     /* 文件的大小 */
     struct ramfs_sb    *sb;       /* 所属的 ramfs */

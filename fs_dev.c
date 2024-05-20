@@ -4,6 +4,20 @@
 #include "defs.h"
 
 
+/* 管理注册到内核的每个实体文件系统
+ * ( 文件系统分为注册和挂载两种模式 )
+ */
+struct FileSystemDev
+{
+    ListEntry_t          list;      /* 链接到 gFsList */
+    char                 name[20];  /* 文件系统执行挂载时要设置专有名字 */
+    /* 在注册模式时表示被挂载次数，在挂载模式时表示被引用次数 */
+    unsigned int         ref;       /* 挂载计数/引用计数 */
+    bool                 Multi;     /* 单个文件系统实体是否允许挂载多次 */
+    struct FileSystem   *fs;        /* 记录传入的实体文件系统 */
+};
+
+
 /* 以链表的形式记录每个注册的文件系统 */
 LIST_INIT_OBJ(gFsRegistList);
 /* 以链表的形式记录每个挂载的文件系统 */
@@ -123,6 +137,7 @@ int fsdev_mount (char *fsname, char *mount_name,
         unsigned int flag, void *data)
 {
     int ret = 0;
+    struct Inode *root;
     struct FileSystemDev *reg_dev, *new_dev;
 
     /* 避免重复挂载 */
@@ -143,6 +158,18 @@ int fsdev_mount (char *fsname, char *mount_name,
     new_dev = dup_fsdev(reg_dev);
     if (new_dev == NULL)
         return -1;
+
+    /* 创建文件系统的根目录节点，将其链接到挂载的文件系统 */
+    root = inode_alloc();
+    if (root == NULL)
+    {
+        free_fsdev(new_dev);
+        return -1;
+    }
+    inode_init(root, flag, new_dev->fs->fops, I_DIR);
+    root->fs = new_dev->fs;
+    /* 将根文件节点链接到文件系统 */
+    new_dev->fs->root = root;
 
     reg_dev->ref += 1;
     kstrcpy(new_dev->name, mount_name);
@@ -181,6 +208,7 @@ int fsdev_unmount (char *name)
     if (fs_dev->fs->fsops->unmount != NULL)
         ret = fs_dev->fs->fsops->unmount(fs_dev->fs);
 
+    inode_free(fs_dev->fs->root);
     free_fsdev(fs_dev);
 
     return ret;

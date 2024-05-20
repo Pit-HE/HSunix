@@ -82,25 +82,9 @@ int _free_sublist (struct FileSystem *fs, struct ramfs_node *node)
  * path: 要解析的路径
  * name：存放第一个节点字符的缓冲区
  */
-char *_path_getfirst (char *path, char *name)
+static char *ramfs_path_getfirst (char *path, char *name)
 {
-    char *ptr = path;
-
-    if ((path == NULL) || (name == NULL))
-        return NULL;
-
-    /* 跳过文件路径上的斜杠 */
-    while(*ptr == '/')
-        ptr += 1;
-
-    /* 获取第一个节点的字符串 */
-    while(*ptr != '/' && *ptr)
-        *name++ = *ptr++;
-
-    /* 标记字符串的结束 */
-    *name = '\0';
-
-    return ptr;
+    return path_getfirst(path, name);
 }
 
 /* 解析路径中最后一个节点的名字，并返回该节点前的父节点路径
@@ -111,57 +95,9 @@ char *_path_getfirst (char *path, char *name)
  *
  * 返回值：-1为失败
  */
-int _path_getlast (char *path, char *parentPath, char *name)
+static int ramfs_path_getlast (char *path, char *parentPath, char *name)
 {
-    char *p_path, *q_path;
-
-    if ((path == NULL) || (parentPath == NULL) || (name == NULL))
-        return -1;
-    p_path = q_path = path;
-
-    /* 跳过根目录的斜杠，以及处理只传入根目录的情况 */
-    while(*p_path == '/')
-        p_path++;
-    if (*p_path == '\0')
-    {
-        parentPath[0] = '/';
-        parentPath[1] = '\0';
-        return 0;
-    }
-
-    while(1)
-    {
-        while(*p_path != '/' && *p_path)
-            p_path++;
-
-        if (*p_path != '\0')
-        {
-            p_path += 1;    /* 跳过斜杠 */
-            q_path = p_path;
-        }
-        else
-        {
-            /* q_path 已停留在子文件名的开头
-             * p_path 已停留在字符串的结尾处
-             */
-            if (q_path == path)
-            {
-                parentPath[0] = '/';
-                parentPath[1] = '\0';
-                q_path += 1;
-            }
-            else
-            {
-                kmemcpy(parentPath, path, q_path - path - 1);
-                parentPath[q_path - path - 1] = '\0';
-            }
-            kmemcpy(name, q_path, p_path - q_path);
-            name[p_path - q_path] = '\0';
-            break;
-        }
-    }
-
-    return 0;
+    return path_getlast(path, parentPath, name);
 }
 
 /* 获取文件路径所对应的节点 ( 传入的必须是绝对路径 ) */
@@ -187,7 +123,7 @@ struct ramfs_node *_path_getnode (struct ramfs_sb *sb, char *path)
         return NULL;
 
     /* 获取当前 cur_path 路径下的第一个文件对象的名字 */
-    cur_path = _path_getfirst(cur_path, first_name);
+    cur_path = ramfs_path_getfirst(cur_path, first_name);
     if (first_name[0] == '\0')
         return NULL;    // 避免传入的路径仅为斜杠的情况
 
@@ -428,6 +364,8 @@ int ramfs_mount (struct FileSystem *fs, unsigned long flag, void *data)
 
     /* 将超级块与文件系统结构体建立联系 */
     fs->data = sb;
+    /* 初始化文件系统结构体中的 inode 根节点*/
+    fs->root->data = &sb->root;
 
     return 0;
 }
@@ -452,6 +390,7 @@ int ramfs_unmount (struct FileSystem *fs)
 
     /* 取消 inode 与文件系统的关联 */
     fs->data = NULL;
+    fs->root->data = NULL;
 
     return 0;
 }
@@ -548,7 +487,7 @@ int ramfs_rename (struct FileSystem *fs, char *oldpath, char *newpath)
 
     /* 获取新文件的名字 */
     kmemset(new_name, 0, RAMFS_NAME_LEN);
-    if (-1 == _path_getlast (newpath, parent_path, new_name))
+    if (-1 == ramfs_path_getlast (newpath, parent_path, new_name))
         return -1;
 
     /* 修改名字 */
@@ -580,10 +519,12 @@ int ramfs_lookup (struct FileSystem *fs, struct Inode *inode, char *path)
         inode->type = I_DIR;
     else
         inode->type = I_FILE;
+    inode->fs = fs;
     inode->data = node; /* 非常重要的一步操作 */
     inode->readoff = 0;
     inode->writeoff = 0;
     inode->size = node->size;
+    inode->flags = node->flags;
 
     return 0;
 }
@@ -609,7 +550,7 @@ int ramfs_create (struct FileSystem *fs, struct Inode *inode, char *path)
     /* 获取父节点的 ramfs_node 和要创建的节点名字 */
     kmemset(parent_path, 0, RAMFS_PATH_MAT);
     kmemset(node_name, 0, RAMFS_NAME_LEN);
-    if (-1 == _path_getlast (path, parent_path, node_name))
+    if (-1 == ramfs_path_getlast (path, parent_path, node_name))
         return -1;
     if (NULL == (parent_node = _path_getnode(sb, parent_path)))
         return -1;

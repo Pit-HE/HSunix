@@ -2,6 +2,7 @@
 #include "types.h"
 #include "riscv.h"
 #include "defs.h"
+#include "file.h"
 #include "list.h"
 #include "fcntl.h"
 #include "fs.h"
@@ -239,21 +240,17 @@ void tc_fsDevice (void)
 
 /* 测试 ramfs 文件系统的函数接口 */
 #if 1
-#include "dfs_ramfs.h"
 static void _tc_ramfsPathParser (char *path)
 {
     char parent[256], file[128], *pStr = NULL;
 
-    char *_path_getfirst (char *path, char *name);
-    int _path_getlast  (char *path, char *parentPath, char *name);
-
     kprintf ("PATH: %s\r\n", path);
 
-    pStr = _path_getfirst(path, file);
+    pStr = path_getfirst(path, file);
     kprintf ("first pStr = %s \r\n", pStr);
     kprintf ("first file = %s\r\n", file);
 
-    _path_getlast (path, parent, file);
+    path_getlast (path, parent, file);
     kprintf("last path = %s\r\n", parent);
     kprintf("last file = %s\r\n", file);
 }

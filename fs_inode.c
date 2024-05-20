@@ -16,6 +16,7 @@ struct Inode *inode_alloc (void)
 
     return inode;
 }
+
 void inode_free (struct Inode *inode)
 {
     if (inode == NULL)
@@ -27,8 +28,16 @@ void inode_free (struct Inode *inode)
     kfree(inode);
 }
 
+int inode_init (struct Inode *inode, unsigned int flags,
+        struct FileOperation *fops, enum InodeType type)
+{
+    if ((inode == NULL) || (fops == NULL))
+        return -1;
 
+    inode->flags = flags;
+    inode->fops  = fops;
+    inode->type  = type;
 
-
-
+    return 0;
+}
 
