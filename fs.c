@@ -4,7 +4,7 @@
 #include "defs.h"
 #include "file.h"
 #include "kerror.h"
-
+#include "fcntl.h"
 
 
 /* 初始化虚拟文件系统 */
@@ -113,16 +113,56 @@ int vfs_read (int fd, void *buf, int len)
     return ret;
 }
 
-/* 设置进程的启动路径 (传入的必须是绝对路径) */
-int vfs_setpwd (ProcCB *pcb, char *path)
+/* 初始化进程的文件相关项*/
+int vfs_pcbInit (ProcCB *pcb, char *path)
 {
-    if ((pcb == NULL) || (path == NULL))
+    if (pcb == NULL)
         return -1;
-
     /* 传入的必须是绝对路径 */
-    if (*path != '/')
+    if ((path == NULL) || (*path != '/'))
         return -1;
 
-    return file_setpwd(pcb, path);
+    /* 创建进程工作路径的字符串 */
+    pcb->pwd = (char *)kalloc(kstrlen(path)+1);
+    if ( pcb->pwd == NULL)
+        return -1;
+    kstrcpy(pcb->pwd, path);
+
+    /* 设置进程的根节点 */
+    pcb->root = file_alloc();
+    if (pcb->root == NULL)
+    {
+        kfree(pcb->pwd);
+        return -1;
+    }
+    if (-1 == file_open(pcb->root, path, O_RDWR))
+    {
+        file_free(pcb->root);
+        kfree(pcb->pwd);
+        return -1;
+    }
+
+    /* 为进程申请默认大小的文件描述符数组空间 */
+    if (-1 == fdTab_alloc(pcb))
+    {
+        file_close(pcb->root);
+        file_free(pcb->root);
+        kfree(pcb->pwd);
+        return -1;
+    }
+
+    return 0;
 }
 
+/* 反初始化进程的文件相关项 */
+int vfs_pcbdeinit (ProcCB *pcb)
+{
+    if (pcb == NULL)
+        return -1;
+
+    file_close(pcb->root);
+    file_free(pcb->root);
+    kfree(pcb->pwd);
+
+    return 0;
+}

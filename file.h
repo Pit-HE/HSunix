@@ -143,14 +143,13 @@ int inode_init (struct Inode *inode, unsigned int flags,
         struct FileOperation *fops, enum InodeType type);
 
 /**********************************/
-struct File *alloc_fileobj (void);
-void free_fileobj   (struct File *file);
+struct File *file_alloc (void);
+void file_free   (struct File *file);
 int  file_open      (struct File *file, char *path, uint flags);
 int  file_close     (struct File *file);
 int  file_read      (struct File *file, void *buf, uint len);
 int  file_write     (struct File *file, void *buf, uint len);
 int  file_flush     (struct File *file);
-int  file_setpwd    (ProcCB *pcb, char *path);
 
 /**********************************/
 char *path_getfirst (char *path, char *name);

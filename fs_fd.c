@@ -22,15 +22,15 @@ int fdTab_alloc (ProcCB *pcb)
     kmemset (pcb->fdTab, 0, sizeof(struct File *) * 20);
 
     /* 标准输入 */
-    pcb->fdTab[0] = alloc_fileobj();
+    pcb->fdTab[0] = file_alloc();
     file_open(pcb->fdTab[0], "console", O_RDONLY);
 
     /* 标准输出 */
-    pcb->fdTab[1] = alloc_fileobj();
+    pcb->fdTab[1] = file_alloc();
     file_open(pcb->fdTab[1], "console", O_WRONLY);
 
     /* 标准错误 */
-    pcb->fdTab[2] = alloc_fileobj();
+    pcb->fdTab[2] = file_alloc();
     file_open(pcb->fdTab[2], "console", O_RDONLY | O_WRONLY);
 
     return ret;
@@ -45,7 +45,7 @@ void fdTab_free (ProcCB *pcb)
     {
         if (pcb->fdTab[i] != NULL)
         {
-            free_fileobj(pcb->fdTab[i]);
+            file_free(pcb->fdTab[i]);
         }
     }
     /* 释放整个文件描述符数组占用的空间 */
@@ -68,7 +68,7 @@ int fd_alloc (void)
         if (pcb->fdTab[i] == NULL)
         {
             /* 为空闲的描述数组成员分配空的描述符结构体 */
-            pcb->fdTab[i] = alloc_fileobj();
+            pcb->fdTab[i] = file_alloc();
             fd = i;
             break;
         }
@@ -83,7 +83,7 @@ int fd_alloc (void)
         {
             kmemset(tab, 0, sizeof(struct File*)*(pcb->fdLen + 5));
             /* 为空闲的描述数组成员分配空的描述符结构体 */
-            pcb->fdTab[pcb->fdLen] = alloc_fileobj();
+            pcb->fdTab[pcb->fdLen] = file_alloc();
             fd = pcb->fdLen;
 
             /* 记录原有的描述符信息 */
@@ -108,7 +108,7 @@ void fd_free (int fd)
     if ((fd < 0) || (fd > pcb->fdLen))
         return;
 
-    free_fileobj(pcb->fdTab[fd]);
+    file_free(pcb->fdTab[fd]);
 }
 
 /* 通过文件描述符编号获得对应的结构体

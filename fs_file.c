@@ -11,7 +11,7 @@
  *
  * 返回值：NULL 为失败
  */
-struct File *alloc_fileobj (void)
+struct File *file_alloc (void)
 {
     struct File *file = NULL;
 
@@ -26,7 +26,7 @@ struct File *alloc_fileobj (void)
 }
 
 /* 释放已申请的文件描述符 */
-void free_fileobj (struct File *file)
+void file_free (struct File *file)
 {
     if (file == NULL)
         return;
@@ -38,7 +38,6 @@ void free_fileobj (struct File *file)
     kmemset(file, 0, sizeof(struct File));
     kfree(file);
 }
-
 
 /* 打开文件系统中要操作的对象，将其信息存入文件描述符
  *
@@ -58,6 +57,7 @@ int file_open (struct File *file, char *path, uint flags)
     /* 判断要操作的对象类型, 设备还是文件系统 */
     if ((*path == '/') || (*path == '.'))
     {
+        /* 获取该节点，若是没有则可以选择创建 */
         inode = path_parser(path, flags, I_FILE);
         if (inode == NULL)
             return -1;
@@ -196,19 +196,3 @@ int file_flush (struct File *file)
     return ret;
 }
 
-/* 设置进程的工作路径 (传入的必须是绝对路径)
- *
- * 返回值：-1表示失败
- */
-int file_setpwd (ProcCB *pcb, char *path)
-{
-    if ((pcb == NULL) || (path == NULL))
-        return -1;
-
-    /* 获取文件路径所对应的inode */
-    pcb->pwd->inode = path_parser(path, O_RDWR,I_FILE);
-    if (pcb->pwd->inode == NULL)
-        return -1;
-
-    return 0;
-}

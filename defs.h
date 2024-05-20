@@ -39,7 +39,7 @@ int   kstrlen (const char *st);
 char *kstrcpy (char *dest, const char *src);
 int   kstrcmp (const char *p1, const char *p2);
 int   kstrncmp(const char *p, const char *q, uint n);
-
+char *kstrcat(char *dest, const char *src);
 
 /******************** kallocPhyPage ********************/
 void *kallocPhyPage (void);

@@ -18,20 +18,28 @@ char *path_getfirst (char *path, char *name)
 {
     char *ptr = path;
 
-    if ((path == NULL) || (name == NULL))
+    if (path == NULL)
         return NULL;
 
     /* 跳过文件路径上的斜杠 */
     while(*ptr == '/')
-        ptr += 1;
+        ptr++;
 
-    /* 获取第一个节点的字符串 */
-    while(*ptr != '/' && *ptr)
-        *name++ = *ptr++;
+    if (name != NULL)
+    {
+        /* 获取第一个节点的字符串 */
+        while(*ptr != '/' && *ptr)
+            *name++ = *ptr++;
+        /* 标记字符串的结束 */
+        *name = '\0';
+    }
+    else
+    {
+        while(*ptr != '/' && *ptr)
+            ptr++;
+    }
 
-    /* 标记字符串的结束 */
-    *name = '\0';
-
+    /* 每次 ptr 都会停在文件路径的斜杠上 */
     return ptr;
 }
 
@@ -98,18 +106,26 @@ int path_getlast (char *path, char *parentPath, char *name)
 
 
 /* 当文件路径没有对应的 inode 时则创建新的节点
- * ( 要处理传入的文件路径中间缺少了很多个文件夹的情况 )
+ * ( 未处理文件路径中间缺少多个中间文件夹的情况 )
  */
-int path_createinode (struct Inode *inode,
-        struct Inode *boot_inode, char *path)
+int path_createinode (struct Inode *inode, char *path)
 {
+    char parent_path[256];
     struct FileSystem *fs = inode->fs;
 
     /* 创建文件路径所对应的文件节点 */
     if (fs->fsops->create == NULL)
         return -1;
+    if (fs->fsops->lookup == NULL)
+        return -1;
 
-    /* TODO：遍历文件路径，确保路径上的每个文件夹都存在，若不存在则创建它 */
+    /* 确认该文件路径中的父节点是否存在 */
+    path_getlast(path, parent_path, NULL);
+    if (-1 == fs->fsops->lookup(fs, inode, parent_path))
+        return -1;
+    
+    /* 父节点存在，则表明该文件可以创建 */ 
+    fs->fsops->create(fs, inode, path);
 
     return 0;
 }
@@ -121,7 +137,8 @@ struct Inode *path_parser (char *path,
 {
     struct FileSystem *fs;
     ProcCB *pcb = getProcCB();
-    struct Inode *inode, *boot_inode;
+    struct Inode *inode;
+    char *abs_path; // 绝对路径
 
     if ((path == NULL) || (pcb == NULL))
         return NULL;
@@ -132,36 +149,44 @@ struct Inode *path_parser (char *path,
 
     if (*path == '/')
     {
-        /* 绝对路径 */
-        boot_inode = default_fs->root;
-        if (path[1] == '\0')
-            return boot_inode;
+        abs_path = path;
+        fs = default_fs;
     }
     else
     {
-        /* 工作路径 */
-        boot_inode = pcb->pwd->inode;
+        abs_path = (char *)kalloc(kstrlen(pcb->pwd) + kstrlen(path) + 1);
+        if (abs_path == NULL)
+            return NULL;
+        kstrcpy(abs_path, pcb->pwd);
+        kstrcat(abs_path, path);
+
+        fs = pcb->root->inode->fs;
     }
-    fs = boot_inode->fs;
-    if (fs == NULL)
+    if ((fs == NULL) || (abs_path == NULL))
         return NULL;
 
     /* 确认文件路径对应的 inode 是否存在 */
     if (fs->fsops->lookup != NULL)
     {
-        if (-1 == fs->fsops->lookup(fs, inode, path))
+        if (-1 == fs->fsops->lookup(fs, inode, abs_path))
         {
-            /* 创建路径对应的文件节点，
-               以及其路径上的所有文件夹 */
-            if (flags & O_CREAT)
+            /* 是否要创建新的节点 */
+            if ((flags & O_CREAT) != O_CREAT)
             {
-                inode_init(inode, flags, fs->fops, type);
-                inode->fs = fs;
-
-                if (-1 == path_createinode (inode, boot_inode,path))
-                    inode_free(inode);
+                inode_free(inode);
+                return NULL;
             }
-            return NULL;
+
+            /* 初始化要创建的 inode 节点 */
+            inode_init(inode, flags, fs->fops, type);
+            inode->fs = fs;
+
+            /* 在实体文件系统中创建与 inode 对应的节点 */
+            if (-1 == path_createinode(inode, abs_path))
+            {
+                inode_free(inode);
+                return NULL;
+            }
         }
     }
 

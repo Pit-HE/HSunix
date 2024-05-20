@@ -109,3 +109,17 @@ char *kstrdup(const char *s)
 
     return tmp;
 }
+
+/* 字符串拼接函数 */
+char *kstrcat(char *dest, const char *src)
+{
+    char *ptr = dest;
+
+    while(*ptr)
+        ptr++;
+    while(*src != '\0')
+        *ptr++ = *src++;
+    *ptr = *src;
+
+    return dest;
+}

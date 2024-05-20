@@ -20,12 +20,12 @@ struct stat
     int     mode;
 };
 
-void vfs_init   (void);
-int  vfs_open   (const char *path, int flags);
-int  vfs_close  (int fd);
-int  vfs_write  (int fd, void *buf, int len);
-int  vfs_read   (int fd, void *buf, int len);
-int  vfs_setpwd (ProcCB *pcb, char *path);
-
+void  vfs_init   (void);
+int   vfs_open   (const char *path, int flags);
+int   vfs_close  (int fd);
+int   vfs_write  (int fd, void *buf, int len);
+int   vfs_read   (int fd, void *buf, int len);
+int   vfs_pcbInit (ProcCB *pcb, char *path);
+int   vfs_pcbdeinit (ProcCB *pcb);
 
 #endif
