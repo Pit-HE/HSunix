@@ -107,3 +107,8 @@ int vfs_read (int fd, void *buf, int len)
 }
 
 
+
+void fs_init (void)
+{
+    path_init();
+}

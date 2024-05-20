@@ -212,7 +212,7 @@ void tc_timer (void)
 
 
 /* 测试文件系统的设备操作
- * ( 注：该测试用例需要在进程中调用，不可在上电时调用 )
+ * ( 注：该用例需要在进程中调用 )
  */
 void tc_fsDevice (void)
 {
@@ -223,16 +223,59 @@ void tc_fsDevice (void)
     kmemset(wbuf, 0, 20);
     kstrcpy(wbuf, "Hello World !\r\n");
 
+    /* 查看设备打开与读写流程是否正常 */
     fd = vfs_open("console", O_WRONLY);
     vfs_write (fd, wbuf, kstrlen(wbuf));
     vfs_read(fd, rbuf, 1);
     vfs_close(fd);
 
-    vfs_write(1, wbuf, kstrlen(wbuf));
+    /* 测试进程的标准输入 */
     vfs_read(0, rbuf, 1);
+
+    /* 测试进程的标准输出 */
+    vfs_write(1, wbuf, kstrlen(wbuf));
 }
 
 
+/* 测试 ramfs 文件系统的函数接口 */
+#if 1
+#include "dfs_ramfs.h"
+static void _tc_ramfsPathParser (char *path)
+{
+    char parent[256], file[128], *pStr = NULL;
+
+    char *_path_getfirst (char *path, char *name);
+    int _path_getlast  (char *path, char *parentPath, char *name);
+
+    kprintf ("PATH: %s\r\n", path);
+
+    pStr = _path_getfirst(path, file);
+    kprintf ("first pStr = %s \r\n", pStr);
+    kprintf ("first file = %s\r\n", file);
+
+    _path_getlast (path, parent, file);
+    kprintf("last path = %s\r\n", parent);
+    kprintf("last file = %s\r\n", file);
+}
+void tc_ramfs_api (void)
+{
+ #if 1
+    /* 测试 ramfs 中字符串处理的接口 */
+    char path[256];
+
+    kstrcpy(path, "/home/HSunix/kernel");
+    _tc_ramfsPathParser(path);
+
+    kstrcpy(path, "/usr");
+    _tc_ramfsPathParser(path);
+
+    kstrcpy(path, "/");
+    _tc_ramfsPathParser(path);
+ #elif 0
+
+ #endif
+}
+#endif
 
 /* 系统自检接口 */
 void self_inspection (void)
@@ -241,4 +284,5 @@ void self_inspection (void)
     // tc_kalloc();
     // tc_ringbuff();
     // tc_timer();
+    tc_ramfs_api();
 }

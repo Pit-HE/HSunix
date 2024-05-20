@@ -3,6 +3,10 @@
  */
 #include "defs.h"
 #include "file.h"
+#include "fcntl.h"
+
+/* 记录操作系统上电默认使用的文件系统 */
+struct FileSystem *default_fs = NULL;
 
 
 /* 获取指定文件所在的父 inode */
@@ -12,16 +16,38 @@
 // }
 
 /* 获取指定文件所对应的 inode，
- * 若路径所对应实体文件文件的 inode 成员不存在，则创建他
- *
- * 返回值：-1为失败
+ * 若路径所对应实体文件文件的 inode 成员不存在则创建
  */
-int path_parser (char *path, struct Inode *inode)
+struct Inode *path_parser (char *path)
 {
-    
+    ProcCB *pcb;
+    struct Inode *inode;
 
-    return 0;
+    if (path == NULL)
+        return NULL;
+    pcb = getProcCB();
+
+    // 是否为绝对路径
+    if (*path == '/')
+        inode = default_fs->data;
+    else
+        inode = pcb->cwd;
+
+
+    return inode;
 }
 
 
+/* 挂载系统默认使用的文件系统 */
+int path_init (void)
+{
+    if (-1 == fsdev_mount("ramfs", "rootfs", O_RDWR, NULL))
+        return -1;
+
+    default_fs = fsdev_get("rootfs");
+    if (default_fs == NULL)
+        return -1;
+
+    return 0;
+}
 

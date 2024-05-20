@@ -1,7 +1,8 @@
 /*
- * 用 ram 来模拟的实体文件系统
- * ( 该文件系统是用于测试虚拟文件系统是否正常工作 )
- * ( 该文件系统是可以在单个系统内挂载多个的 )
+ *          用 ram 来模拟的实体文件系统
+ *
+ * 1、允许在虚拟文件系统内挂载多个实体对象
+ * 2、允许在上一个 ramfs 的文件路径中挂载新的 ramfs
  */
 #include "dfs_ramfs.h"
 #include "defs.h"
@@ -9,9 +10,10 @@
 
 
 /****************************************************
- *      ramfs 文件系统专属接口
- */
-static struct ramfs_node *_alloc_ramfs_node (void)
+ *      ramfs 文件系统仅内部使用的接口
+ ***************************************************/
+/* 申请一个 ramfs_node 对象 */
+struct ramfs_node *_alloc_ramfs_node (void)
 {
     struct ramfs_node *node;
 
@@ -25,89 +27,198 @@ static struct ramfs_node *_alloc_ramfs_node (void)
 
     return node;
 }
-static void _free_ramfs_node (struct ramfs_node *node)
+
+/* 释放已申请的 ramfs_node 对象 */
+void _free_ramfs_node (struct FileSystem *fs, struct ramfs_node *node)
 {
-    if (node == NULL)
+    struct ramfs_sb *sb;
+
+    if ((fs == NULL) || (node == NULL))
         return;
-    
+
+    sb = fs->data;
+    if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
+        return;
+
+    kDISABLE_INTERRUPT();
     list_del(&node->siblist);
-    list_del(&node->sublist);
+    kENABLE_INTERRUPT();
+
+    if (node->data != NULL)
+        kfree(node->data);
+
+    sb->size -= sizeof(struct ramfs_node) + node->size;
 
     kmemset(node, 0, sizeof(struct ramfs_node));
     kfree(node);
 }
 
-/* 路径分离，解析传文件路径，分离其中的父节点路径与文件名
- *
- * 返回值：-1为失败
- */
-static int _path_separate (char *path, char *parentPath, char *fileName)
+/* 释放目录节点下的所有子节点 */
+int _free_sublist (struct FileSystem *fs, struct ramfs_node *node)
 {
+    ListEntry_t *list;
+    struct ramfs_node *sub_node;
+
+    if (node == NULL)
+        return - 1;
+
+    /* 遍历当前节点下的所有子节点 */
+    list_for_each(list, &node->sublist)
+    {
+        sub_node = list_container_of(list, struct ramfs_node, siblist);
+
+        /* 递归所有的文件夹节点 */
+        if (sub_node->type == RAMFS_DIR)
+            _free_sublist(fs, sub_node);
+
+        _free_ramfs_node(fs, sub_node);
+    }
+
     return 0;
 }
 
-/* 解析路径中的第一个节点的名字 */
-static int _path_getfirst (char *path, char *name)
+/* 解析路径中第一个节点的名字, 并返回剩下的路径内容
+ *
+ * path: 要解析的路径
+ * name：存放第一个节点字符的缓冲区
+ */
+char *_path_getfirst (char *path, char *name)
 {
     char *ptr = path;
 
+    if ((path == NULL) || (name == NULL))
+        return NULL;
+
+    /* 跳过文件路径上的斜杠 */
     while(*ptr == '/')
         ptr += 1;
 
+    /* 获取第一个节点的字符串 */
     while(*ptr != '/' && *ptr)
         *name++ = *ptr++;
+
+    /* 标记字符串的结束 */
     *name = '\0';
 
+    return ptr;
+}
+
+/* 解析路径中最后一个节点的名字，并返回该节点前的父节点路径
+ *
+ * path: 要解析的路径
+ * parentPath: 存放父节点路径的缓冲区
+ * name：最后一个节点的名字
+ *
+ * 返回值：-1为失败
+ */
+int _path_getlast (char *path, char *parentPath, char *name)
+{
+    char *p_path, *q_path;
+
+    if ((path == NULL) || (parentPath == NULL) || (name == NULL))
+        return -1;
+    p_path = q_path = path;
+
+    /* 跳过根目录的斜杠，以及处理只传入根目录的情况 */
+    while(*p_path == '/')
+        p_path++;
+    if (*p_path == '\0')
+    {
+        parentPath[0] = '/';
+        parentPath[1] = '\0';
+        return 0;
+    }
+
+    while(1)
+    {
+        while(*p_path != '/' && *p_path)
+            p_path++;
+
+        if (*p_path != '\0')
+        {
+            p_path += 1;    /* 跳过斜杠 */
+            q_path = p_path;
+        }
+        else
+        {
+            /* q_path 已停留在子文件名的开头
+             * p_path 已停留在字符串的结尾处
+             */
+            if (q_path == path)
+            {
+                parentPath[0] = '/';
+                parentPath[1] = '\0';
+                q_path += 1;
+            }
+            else
+            {
+                kmemcpy(parentPath, path, q_path - path - 1);
+                parentPath[q_path - path - 1] = '\0';
+            }
+            kmemcpy(name, q_path, p_path - q_path);
+            name[p_path - q_path] = '\0';
+            break;
+        }
+    }
+
     return 0;
 }
 
-/* 获取文件路径中所对应的文件节点 */
-static struct ramfs_node *_path_parser (struct ramfs_sb *sb, char *path)
+/* 获取文件路径所对应的节点 ( 传入的必须是绝对路径 ) */
+struct ramfs_node *_path_getnode (struct ramfs_sb *sb, char *path)
 {
-    char subdir_name[RAMFS_NAME_LEN];
-    struct ramfs_node *node;
+    ListEntry_t *list;
+    struct ramfs_node *cur_node, *sub_node;
+    char first_name[RAMFS_NAME_LEN], *cur_path;
 
-    node = (struct ramfs_node *)kalloc(sizeof(struct ramfs_node));
-    if (node == NULL)
+    if ((sb == NULL) || (path == NULL))
         return NULL;
 
-    if (-1 == _path_getfirst(path, subdir_name))
+    cur_path = path;
+    cur_node = &sb->root;
+
+ _loop_path_parser:
+    /* 读取到了最后一个文件 */
+    if (*cur_path == '\0')
+        return cur_node;
+
+    /* 确保路径上的都是文件夹 */
+    if (cur_node->type != RAMFS_DIR)
         return NULL;
 
-    /* TODO: 完善文件路径解析的功能 */
+    /* 获取当前 cur_path 路径下的第一个文件对象的名字 */
+    cur_path = _path_getfirst(cur_path, first_name);
+    if (first_name[0] == '\0')
+        return NULL;    // 避免传入的路径仅为斜杠的情况
 
-    return node;
+    /* 遍历目录节点下的所有子对象 */
+    list_for_each(list, &cur_node->sublist)
+    {
+        sub_node = list_container_of(list, struct ramfs_node, siblist);
+
+        /* 确认是否为要查找的下一个子对象 */
+        if (0 == kstrcmp(sub_node->name, first_name))
+        {
+            cur_node = sub_node;
+            goto _loop_path_parser;
+        }
+    }
+
+    return NULL;
 }
 
-/* 释放目录节点下的所有节点 ( 需要用到递归 ) */
-static int _free_sublist (struct ramfs_node *node)
-{
-    if (node == NULL)
-        return - 1;
-    if (node->type == RAMFS_FILE)
-    {
-        kfree(node->data);
-    }
-    else
-    {
-        /* TODO: 遍历目录下的所有 node 并执行释放 */
-    }
-
-
-    _free_ramfs_node(node);
-    return 0;
-}
 
 /****************************************************
  *      ramfs 文件系统文件操作接口
- */
+ ***************************************************/
+/* 开启指定的文件，使其能被文件系统的接口所操作 */
 int ramfs_open (struct Inode *inode)
 {
     struct ramfs_node *node;
 
     if ((inode == NULL) || (inode->magic != INODE_MAGIC))
         return -1;
-    
+
     /* 在调用该函数前，虚拟文件系统应调用 lookup 接口，
      * 查找文件路径所对应的 inode 以及其对应的 node
      */
@@ -118,7 +229,7 @@ int ramfs_open (struct Inode *inode)
     if (inode->flags & O_APPEND)
     {
         /* 在文件末尾继续写入 */
-        node->offs = node->size;
+        inode->writeoff = node->size;
     }
     else
     {
@@ -129,25 +240,27 @@ int ramfs_open (struct Inode *inode)
             node->data = NULL;
             node->size = 0;
         }
-
-        /* 重新开启文件的偏移值 */
-        node->offs = 0;
+        inode->writeoff = 0;
     }
 
+    /* 同步 inode 与 ramfs_node 的信息 */
     inode->size = node->size;
-    inode->offs = node->offs;
+    inode->readoff = 0;
 
     return 0;
 }
+/* 关闭已打开的文件 */
 int ramfs_close (struct Inode *inode)
 {
-    /* 不做任何操作，因为文件需要继续存在 */
+    /* 不做任何操作，因为文件需要继续保存与文件系统中 */
     return 0;
 }
+/* 用于设置指定文件的功能 */
 int ramfs_ioctl (struct Inode *inode, int cmd, void *args)
 {
     return 0;
 }
+/* 将缓冲区数据从指定文件中读取 */
 int ramfs_read (struct Inode *inode, void *buf, unsigned int count)
 {
     unsigned int rLen;
@@ -157,95 +270,153 @@ int ramfs_read (struct Inode *inode, void *buf, unsigned int count)
         return -1;
 
     node = inode->data;
-    if (node == NULL)
+    if ((node == NULL) || (node->data != NULL))
         return -1;
-    
+
     /* 确认文件实际可读写的长度 */
-    if (count > (inode->size - inode->offs))
-        rLen = inode->size - inode->offs;
+    if (count > (inode->size - inode->readoff))
+        rLen = inode->size - inode->readoff;
     else
         rLen = count;
 
     kmemcpy(buf, node->data, rLen);
+    inode->readoff += rLen;
 
-    node->offs += rLen;
-    inode->offs = node->offs;
-
-    return 0;
+    return rLen;
 }
+/* 将缓冲区数据写入指定文件中 */
 int ramfs_write (struct Inode *inode, void *buf, unsigned int count)
 {
-    char *ptr;
-    struct ramfs_node *node;
+    char *memAddr;
     struct ramfs_sb *sb;
+    struct ramfs_node *node;
 
     if ((inode == NULL) || (buf == NULL) || (count == 0))
         return -1;
 
-    node = inode->data;
-    if (node == NULL)
+    if ((node = inode->data) == NULL)
         return -1;
-    sb = inode->data;
-    if (sb == NULL)
+
+    sb = inode->fs->data;
+    if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
         return -1;
 
     /* 当写入的数据大于文件大小时，扩大该文件的大小 */
-    if (count > (node->size - node->offs))
+    if (count > (node->size - inode->writeoff))
     {
-        /* 不做精确计算，直接扩张出够大的空间就行 */
-        ptr = (char *)kalloc(node->size + count);
-        kmemmove(ptr, node->data, node->size);
+        /* 不做精确计算，直接扩张出足够大的空间 */
+        memAddr = (char *)kalloc(node->size + count);
+        kmemmove(memAddr, node->data, node->size);
 
+        /* 递增超级块的记录 */
         sb->size += count;
 
-        node->data = ptr;
+        node->data = memAddr;
         node->size += count;
 
         inode->size = node->size;
     }
-    kmemcpy(&node->data[node->offs], buf, count);
+    kmemcpy(&node->data[inode->writeoff], buf, count);
 
-    node->offs += count;
-    inode->offs += count;
+    inode->writeoff += count;
 
     return count;
 }
-int ramfs_lseek (struct Inode *inode, unsigned int offs)
+/* 将文件系统缓存的数据写入磁盘 */
+int ramfs_flush (struct Inode *inode)
+{
+    return 0;
+}
+/* 修改文件节点内的偏移值 */
+int ramfs_lseek (struct Inode *inode, bool type, unsigned int offs)
 {
     struct ramfs_node *node;
 
     node = inode->data;
-    if (node == NULL)
+    if ((node == NULL) || (node->data != NULL))
         return -1;
 
-    if (offs <= (node->size - node->offs))
+    if (type)
     {
-        node->offs += offs;
-        inode->offs = node->offs;
+        if (offs <= (node->size - inode->writeoff))
+            inode->writeoff += offs;
+
+        return inode->writeoff;
     }
 
-    return node->offs;
+    if (offs <= (node->size - inode->readoff))
+            inode->readoff += offs;
+
+    return inode->readoff;
 }
+/* 获取目录节点下指定数量的子节点信息 */
 int ramfs_getdents (struct Inode *inode, struct Dirent *dirp, unsigned int count)
 {
-    return 0;
+    ListEntry_t *list;
+    unsigned int num = 0, end = 0, idx = 0;
+    struct ramfs_node *node, *next_node;
+
+    if ((inode == NULL) || (dirp == NULL))
+        return -1;
+
+    /* 获取 inode 对应的 ramfs 的 node 节点 */
+    if ((node = inode->data) == NULL)
+        return -1;
+
+    /* 记录要读取的文件对象的数量 */
+    num = count / sizeof(struct Dirent);
+    if (num == 0)
+        return -1;
+    end = inode->readoff + num;
+
+    /* 遍历目录下的所有文件对象 */
+    list_for_each(list, &node->sublist)
+    {
+        next_node = list_container_of(list, struct ramfs_node, siblist);
+
+        /* 确认是未读取过的文件对象 */
+        if (idx >= inode->readoff)
+        {
+            /* 添加要读取的信息 */
+            kstrcpy(dirp[num].name, next_node->name);
+            if (next_node->type == RAMFS_FILE)
+                dirp[num].type = I_FILE;
+            else if (next_node->type == RAMFS_DIR)
+                dirp[num].type = I_DIR;
+            dirp[num].namelen = kstrlen(next_node->name);
+            dirp[num].objsize = sizeof(struct Dirent);
+
+            num += 1;
+            inode->readoff += 1;
+        }
+
+        /* 限制本次读取的数量 */
+        if (++idx > end)
+            break;
+    }
+
+    return num * sizeof(struct Dirent);
 }
+
 
 /****************************************************
  *      ramfs 文件系统文件操作接口
- */
+ ***************************************************/
 /* 创建文件系统的超级块，并初始化 */
 int ramfs_mount (struct FileSystem *fs, unsigned long flag, void *data)
 {
     struct ramfs_sb *sb;
 
+    /* 创建当前文件系统的超级块 */
     sb = (struct ramfs_sb *)kalloc(sizeof(struct ramfs_sb));
     if (sb == NULL)
         return -1;
     kmemset(sb, 0, sizeof(struct ramfs_sb));
 
+    /* 初始化当前文件系统的超级块 */
     sb->magic = RAMFS_MAGIC;
     sb->size  = sizeof(struct ramfs_sb);
+    sb->flag  = flag;
 
     sb->root.type = RAMFS_DIR;
     sb->root.name[0] = '/';
@@ -255,6 +426,7 @@ int ramfs_mount (struct FileSystem *fs, unsigned long flag, void *data)
     list_init(&sb->root.siblist);
     list_init(&sb->root.sublist);
 
+    /* 将超级块与文件系统结构体建立联系 */
     fs->data = sb;
 
     return 0;
@@ -267,12 +439,18 @@ int ramfs_unmount (struct FileSystem *fs)
     if (fs == NULL)
         return -1;
     sb = fs->data;
-    if (sb == NULL)
+    if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
         return -1;
 
-    _free_sublist(&sb->root);
+    /* 破坏魔幻数，防止在卸载过程中被调用 */
+    sb->magic = 0;
+
+    /* 释放根目录链表下的所有子节点 */
+    _free_sublist(fs, &sb->root);
+    /* 释放超级块本身占用的内容 */
     kfree(sb);
 
+    /* 取消 inode 与文件系统的关联 */
     fs->data = NULL;
 
     return 0;
@@ -285,9 +463,10 @@ int ramfs_statfs (struct FileSystem *fs, struct statfs *buf)
     if ((fs == NULL) || (buf == NULL))
         return -1;
     sb = fs->data;
-    if (sb == NULL)
+    if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
         return -1;
 
+    /* 写入文件系统当前的信息 */
     buf->f_bsize  = 512;
     buf->f_blocks = (sb->size + 511)/512;
     buf->f_bfree  = 1;
@@ -297,28 +476,29 @@ int ramfs_statfs (struct FileSystem *fs, struct statfs *buf)
 /* 删除指定的文件或目录 */
 int ramfs_unlink (struct FileSystem *fs, char *path)
 {
-    struct ramfs_sb     *sb;
-    struct ramfs_node   *node;
+    struct ramfs_sb *sb;
+    struct ramfs_node *node;
 
-    if ((fs == NULL) || (path))
+    if ((fs == NULL) || (path == NULL))
         return -1;
     sb = fs->data;
-    if (sb == NULL)
+    if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
         return -1;
 
-    node = _path_parser(sb, path);
+    /* 获取路径所对应的文件节点 */
+    node = _path_getnode(sb, path);
     if (node == NULL)
         return -1;
 
+    /* 从文件系统中移除该节点 */
     kDISABLE_INTERRUPT();
     list_del (&node->siblist);
     kENABLE_INTERRUPT();
 
-    _free_sublist(node);
-
-    if (node->data != NULL)
-        kfree(node->data);
-    kfree(node);
+    /* 释放节点链表中的所有子节点 */
+    _free_sublist(fs, node);
+    /* 释放节点本身占用的内存空间 */
+    _free_ramfs_node(fs, node);
 
     return 0;
 }
@@ -328,97 +508,87 @@ int ramfs_stat (struct FileSystem *fs, char *path, struct stat *buf)
     struct ramfs_sb     *sb;
     struct ramfs_node   *node;
 
-    if ((fs == NULL) || (path))
+    if ((fs == NULL) || (path == NULL) || (buf == NULL))
         return -1;
     sb = fs->data;
-    if (sb == NULL)
+    if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
         return -1;
 
-    node = _path_parser(sb, path);
+    /* 获取文件路径所对应的节点 */
+    node = _path_getnode(sb, path);
     if (node == NULL)
         return -1;
 
+    /* 将节点信息写入缓冲区 */
     buf->size = node->size;
 
     return 0;
 }
-/* 修该指定路径的文件名 */
+/* 修改指定文件对象的名字 */
 int ramfs_rename (struct FileSystem *fs, char *oldpath, char *newpath)
 {
-    struct ramfs_sb     *sb;
-    struct ramfs_node   *node, *parent_node;
-    char   parent_path[RAMFS_PATH_MAT], new_name[RAMFS_NAME_LEN];
+    struct ramfs_sb *sb;
+    struct ramfs_node *node;
+    char parent_path[RAMFS_PATH_MAT], new_name[RAMFS_NAME_LEN];
 
-    if ((fs == NULL) || (oldpath))
+    if ((fs == NULL) || (oldpath == NULL) || (newpath == NULL))
         return -1;
     sb = fs->data;
-    if (sb == NULL)
+    if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
         return -1;
 
     /* 排除创建新的同名文件 */
-    node = _path_parser(sb, newpath);
-    if (node != NULL)
+    if (NULL != _path_getnode(sb, newpath))
         return -1;
 
     /* 获取旧文件路径的节点 */
-    node = _path_parser(sb, oldpath);
+    node = _path_getnode(sb, oldpath);
     if (node == NULL)
         return -1;
 
-    /* 获取新文件的信息 */
+    /* 获取新文件的名字 */
     kmemset(new_name, 0, RAMFS_NAME_LEN);
-    _path_separate (newpath, parent_path, new_name);
-    if (new_name[0] == '\0')
+    if (-1 == _path_getlast (newpath, parent_path, new_name))
         return -1;
-
-    /* 获取新文件路径的父节点 */
-    parent_node = _path_parser(sb, parent_path);
-    if(parent_node == NULL)
-        return -1;
-
-    /* 从同级的链表里移除 */
-    kDISABLE_INTERRUPT();
-    list_del_init(&node->siblist);
-    kENABLE_INTERRUPT();
 
     /* 修改名字 */
-    kstrcpy(node->name, new_name);
-
-    /* 将节点添加回父节点之后 */
     kDISABLE_INTERRUPT();
-    list_add_after(&parent_node->sublist, &node->siblist);
+    kstrcpy(node->name, new_name);
     kENABLE_INTERRUPT();
 
     return 0;
 }
-/* 通过传入的文件路径，解析文件的 inode 对象 */
+/* 通过传入的文件路径，解析文件对应的 ramfs_node 节点 */
 int ramfs_lookup (struct FileSystem *fs, struct Inode *inode, char *path)
 {
     struct ramfs_sb     *sb;
     struct ramfs_node   *node;
 
-    if ((fs == NULL) || (path))
+    if ((fs == NULL) || (inode == NULL) || (path == NULL))
         return -1;
     sb = fs->data;
-    if (sb == NULL)
+    if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
         return -1;
 
-    node = _path_parser(sb, path);
+    /* 获取路径对应的 ramfs_node 节点 */
+    node = _path_getnode(sb, path);
     if (node == NULL)
         return -1;
 
+    /* 初始化 inode 的内容 */
     if (node->type == RAMFS_DIR)
         inode->type = I_DIR;
     else
         inode->type = I_FILE;
-
+    inode->data = node; /* 非常重要的一步操作 */
+    inode->readoff = 0;
+    inode->writeoff = 0;
     inode->size = node->size;
-    inode->data = node;
 
     return 0;
 }
-/* 创建指定路径下与 inode 对应的 ramfs_node */
-int ramfs_create (struct FileSystem *fs, struct Inode *inode, char *path, int type)
+/* 创建文件路径下与 inode 对应的 ramfs_node */
+int ramfs_create (struct FileSystem *fs, struct Inode *inode, char *path)
 {
     struct ramfs_sb *sb;
     struct ramfs_node *node, *parent_node;
@@ -428,75 +598,96 @@ int ramfs_create (struct FileSystem *fs, struct Inode *inode, char *path, int ty
         return -1;
 
     sb = fs->data;
-    if (sb == NULL)
-        return -1;
-    
-    /* 获取父节点的 ramfs_node */
-    kmemset(parent_path, 0, RAMFS_PATH_MAT);
-    kmemset(node_name, 0, RAMFS_NAME_LEN);
-
-    _path_separate (path, parent_path, node_name);
-    if (node_name[0] == '\0')
+    if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
         return -1;
 
-    parent_node = _path_parser(sb, parent_path);
-    if (parent_node == NULL)
-        return -1;
-    
     /* 创建要加入文件系统的 ramfs_node 对象 */
     node = _alloc_ramfs_node();
     if (node == NULL)
         return -1;
 
+    /* 获取父节点的 ramfs_node 和要创建的节点名字 */
+    kmemset(parent_path, 0, RAMFS_PATH_MAT);
+    kmemset(node_name, 0, RAMFS_NAME_LEN);
+    if (-1 == _path_getlast (path, parent_path, node_name))
+        return -1;
+    if (NULL == (parent_node = _path_getnode(sb, parent_path)))
+        return -1;
+
     /* 递增当前超级块记录的内存空间大小 */
     sb->size += sizeof(struct ramfs_node);
 
+    /* 初始化新创建的节点 */
+    if (inode->type == I_FILE)
+        node->type = RAMFS_FILE;
+    else
+        node->type = RAMFS_DIR;
     kstrcpy(node->name, node_name);
     node->sb = sb;
 
-    /* 标记文件类型 */
-    if (inode->type == I_FILE)
-    {
-        node->type = RAMFS_FILE;
-    }
-    else
-    {
-        node->type = RAMFS_DIR;
-    }
+    /* 让 inode 与 ramfs_node 建立联系 */
+    inode->data = node;
 
-    /* 将创建的节点添加到文件系统中其父节点之后 */
+    /* 将创建的节点添加到其父节点的链表中 */
     kDISABLE_INTERRUPT();
     list_add_after(&parent_node->sublist, &node->siblist);
     kENABLE_INTERRUPT();
 
     return 0;
 }
+/* 释放与 inode 对应 ramfs_node 的链接 */
+int ramfs_free (struct FileSystem *fs, struct Inode *inode)
+{
+    struct ramfs_sb *sb;
+
+    if ((fs == NULL) || (inode == NULL))
+        return -1;
+
+    sb = fs->data;
+    if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
+        return -1;
+
+    /* ramfs_node 会继续存在于文件系统中 */
+    inode->data = NULL;
+
+    return 0;
+}
+
+
 /****************************************************
  *      ramfs 文件系统的结构体信息
- */
+ ***************************************************/
 /* ramfs 文件系统的文件操作接口 */
 struct FileOperation ramfs_fops =
 {
-    .open   = ramfs_open,
-    .close  = ramfs_close,
-    .ioctl  = ramfs_ioctl,
-    .read   = ramfs_read,
-    .write  = ramfs_write,
-    .lseek  = ramfs_lseek,
+    .open     = ramfs_open,
+    .close    = ramfs_close,
+    .ioctl    = ramfs_ioctl,
+    .read     = ramfs_read,
+    .write    = ramfs_write,
+    .flush    = ramfs_flush,
+    .lseek    = ramfs_lseek,
     .getdents = ramfs_getdents,
 };
 /* ramfs 文件系统的系统操作接口 */
 struct FileSystemOps ramfs_fsops =
 {
-    .mount      = ramfs_mount,
-    .unmount    = ramfs_unmount,
-    .statfs     = ramfs_statfs,
-    .unlink     = ramfs_unlink,
-    .stat       = ramfs_stat,
-    .rename     = ramfs_rename,
+    .mount   = ramfs_mount,
+    .unmount = ramfs_unmount,
+    .statfs  = ramfs_statfs,
+    .unlink  = ramfs_unlink,
+    .stat    = ramfs_stat,
+    .rename  = ramfs_rename,
+    .lookup  = ramfs_lookup,
+    .create  = ramfs_create,
+    .free    = ramfs_free,
 };
 
-/* ramfs 文件系统对外的接口，初始化当前文件系统 */
+
+/****************************************************
+ *      ramfs 文件系统对外的接口
+ ***************************************************/
+/* 初始化当前文件系统, 并注册到系统内核 */
 void dfs_ramfs_init (void)
 {
     fsdev_register("ramfs", &ramfs_fops, &ramfs_fsops, TRUE);

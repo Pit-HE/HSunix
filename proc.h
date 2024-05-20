@@ -99,13 +99,15 @@ typedef struct processControlBlock
   struct File **fdTab;            // 文件描述符的指针数组
   uint          fdLen;            // 记录当前文件描述符数组的长度(可以动态变化)
 
+  struct Inode *cwd;              // 进程工作路径的 inode
+
   uint64        stackAddr;        // Virtual address of kernel stack
   uint64        stackSize;        // Virtual address of kernel stack size
   uint64        memSize;          // Size of process memory (bytes)
   Pagetable_t  *pageTab;          // User page table
   Trapframe    *trapFrame;        // data page for trampoline.S
   Context       context;          // switch_to() here to run process
-  char          name[10];         // Process name (debugging)
+  char          name[20];         // Process name (debugging)
 }ProcCB;
 
 typedef struct cpuControlBlock

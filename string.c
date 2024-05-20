@@ -97,16 +97,14 @@ int kstrncmp(const char *p, const char *q, uint n)
   return (uchar)*p - (uchar)*q;
 }
 
+/* 拷贝字符串 */
 char *kstrdup(const char *s)
 {
     unsigned int len = kstrlen(s) + 1;
     char *tmp = (char *)kalloc(len);
 
-    if (!tmp)
-    {
+    if (tmp == NULL)
         return NULL;
-    }
-
     kmemcpy(tmp, s, len);
 
     return tmp;

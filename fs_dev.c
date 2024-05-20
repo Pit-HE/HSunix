@@ -35,7 +35,7 @@ static void free_fsdev (struct FileSystemDev *fsdev)
 {
     if (fsdev == NULL)
         return;
-    
+
     kmemset(fsdev->fs, 0, sizeof(struct FileSystem));
     kfree(fsdev->fs);
 
@@ -64,7 +64,7 @@ static struct FileSystemDev *dup_fsdev (struct FileSystemDev *old)
 
     if (old == NULL)
         return NULL;
-    
+
     new = alloc_fsdev();
     if (new == NULL)
         return NULL;
@@ -94,7 +94,7 @@ int fsdev_register (char *name, struct FileOperation *fops,
         kfree(fsdev);
         return -1;
     }
-    
+
     kmemset(fsdev, 0, sizeof(struct FileSystemDev));
     kmemset(fs, 0, sizeof(struct FileSystem));
 
@@ -119,7 +119,7 @@ int fsdev_register (char *name, struct FileOperation *fops,
 }
 
 /* 将实体文件系统挂载到可用区域 */
-int fsdev_mount (char *fsname, char *mount_name, 
+int fsdev_mount (char *fsname, char *mount_name,
         unsigned int flag, void *data)
 {
     int ret = 0;
@@ -133,12 +133,12 @@ int fsdev_mount (char *fsname, char *mount_name,
     reg_dev = find_fsdev(&gFsRegistList, fsname);
     if (reg_dev == NULL)
         return -1;
-    
+
     /* 判断该设备是否允许多次挂载 */
     if ((reg_dev->Multi == FALSE) &&
         (reg_dev->ref != 0))
         return -1;
-    
+
     /* 创建新的文件系统设备并拷贝注册链表中的设备信息 */
     new_dev = dup_fsdev(reg_dev);
     if (new_dev == NULL)
@@ -151,6 +151,7 @@ int fsdev_mount (char *fsname, char *mount_name,
     list_add_before(&gFsMountList, &new_dev->list);
     kENABLE_INTERRUPT();
 
+    /* 调用实体文件系统的挂载接口 */
     if (new_dev->fs->fsops->mount != NULL)
         ret = new_dev->fs->fsops->mount(new_dev->fs, flag, data);
 
@@ -176,6 +177,7 @@ int fsdev_unmount (char *name)
     reg_dev = find_fsdev(&gFsRegistList, fs_dev->fs->name);
     reg_dev->ref -= 1;
 
+    /* 调用实体文件系统的挂载接口 */
     if (fs_dev->fs->fsops->unmount != NULL)
         ret = fs_dev->fs->fsops->unmount(fs_dev->fs);
 

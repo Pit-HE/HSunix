@@ -1,5 +1,6 @@
 /*
- * 管理并操作文件描述符对象
+ *       管理并操作文件描述符对象
+ * ( 当前文件也负责处理部分 inode 的功能 )
  */
 #include "defs.h"
 #include "file.h"
@@ -10,7 +11,7 @@
  *
  * 返回值：NULL 为失败
  */
-struct File *file_alloc (void)
+struct File *alloc_fileobj (void)
 {
     struct File *file = NULL;
 
@@ -25,7 +26,7 @@ struct File *file_alloc (void)
 }
 
 /* 释放已申请的文件描述符 */
-void file_free (struct File *file)
+void free_fileobj (struct File *file)
 {
     if (file == NULL)
         return;
@@ -41,16 +42,6 @@ void file_free (struct File *file)
 
 /* 打开文件系统中要操作的对象，将其信息存入文件描述符
  *
- *
- * file: 要操作的文件描述符对象
- *
- * path:
- *      1、传入的字符串以斜杆('/')、点('.' 或 '..') 开头的则为文件系统对象
- *      2、传入的是纯粹字符串的则是非文件系统对象
- *
- * flags: 文件操作的类型
- *
- *
  * 返回值：-1表示失败
  */
 int file_open (struct File *file, char *path, uint flags)
@@ -64,20 +55,20 @@ int file_open (struct File *file, char *path, uint flags)
     if (file->magic != FILE_MAGIC)
         return -1;
 
-    /* 创建存放关键信息 inode */
-    inode = inode_alloc();
-    if (inode == NULL)
-        return -1;
-
     /* 判断要操作的对象类型 */
     if ((*path == '/') || (*path == '.'))
     {
         /* 操作的是文件系统对象 */
-        if (0 > path_parser(path, inode))
+        inode = path_parser(path);
+        if (inode == NULL)
             return -1;
     }
     else
     {
+        inode = inode_alloc();
+        if (inode == NULL)
+            return -1;
+
         /* 操作的是设备、管道等对象 */
         dev = dev_get(path);
         if (dev == NULL)
@@ -92,7 +83,6 @@ int file_open (struct File *file, char *path, uint flags)
     /* 初始化新打开的文件描述符 */
     file->inode  = inode;
     file->ref   += 1;
-    file->offset = 0;
     file->flags  = flags;
 
     if (inode->fops->open != NULL)
@@ -112,7 +102,7 @@ int file_close (struct File *file)
 
     if (file == NULL)
         return -1;
-    if ((file->magic != FILE_MAGIC) || (file->ref <= 0))
+    if ((file->ref <= 0) || (file->magic != FILE_MAGIC))
         return -1;
 
     file->ref -= 1;
@@ -141,10 +131,10 @@ int file_read (struct File *file, void *buf, uint len)
 
     if ((file == NULL) || (buf == NULL))
         return -1;
-    if ((file->magic != FILE_MAGIC) || (file->ref <= 0))
+    if ((file->ref <= 0) || (file->magic != FILE_MAGIC))
         return -1;
 
-    if ((file->flags != O_RDONLY) ||
+    if ((file->flags != O_RDONLY) &&
         ((file->flags & O_ACCMODE) != O_RDWR))
         return -1;
 
@@ -169,10 +159,10 @@ int file_write (struct File *file, void *buf, uint len)
 
     if ((file == NULL) || (buf == NULL))
         return -1;
-    if ((file->magic != FILE_MAGIC) || (file->ref <= 0))
+    if ((file->ref <= 0) || (file->magic != FILE_MAGIC))
         return -1;
 
-    if ((file->flags != O_WRONLY) ||
+    if ((file->flags != O_WRONLY) &&
         ((file->flags & O_ACCMODE) != O_RDWR))
         return -1;
 
@@ -186,21 +176,27 @@ int file_write (struct File *file, void *buf, uint len)
     return ret;
 }
 
-/* 将文件在内存中的缓存信息写入磁盘 */
-void file_flush (struct File *file)
+/* 将文件在内存中的缓存信息写入磁盘
+ *
+ * 返回值：-1表示失败
+ */
+int file_flush (struct File *file)
 {
+    int ret;
     struct Inode *inode;
 
     if (file == NULL)
-        return;
-    if ((file->magic != FILE_MAGIC) || (file->ref <= 0))
-        return;
+        return -1;
+    if ((file->ref <= 0) || (file->magic != FILE_MAGIC))
+        return -1;
 
     inode = file->inode;
     if ((inode == NULL) || (inode->magic != INODE_MAGIC))
-        return;
+        return -1;
 
     if (inode->fops->flush != NULL)
-        inode->fops->flush(inode);
+        ret = inode->fops->flush(inode);
+
+    return ret;
 }
 
