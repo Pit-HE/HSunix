@@ -286,7 +286,7 @@ int ramfs_lseek (struct Inode *inode, bool type, unsigned int offs)
     return inode->readoff;
 }
 /* 获取目录节点下指定数量的子节点信息 */
-int ramfs_getdents (struct Inode *inode, struct Dirent *dirp, unsigned int count)
+int ramfs_getdents (struct Inode *inode, struct dirent *dirp, unsigned int count)
 {
     ListEntry_t *list;
     unsigned int num = 0, end = 0, idx = 0;
@@ -300,7 +300,7 @@ int ramfs_getdents (struct Inode *inode, struct Dirent *dirp, unsigned int count
         return -1;
 
     /* 记录要读取的文件对象的数量 */
-    num = count / sizeof(struct Dirent);
+    num = count / sizeof(struct dirent);
     if (num == 0)
         return -1;
     end = inode->readoff + num;
@@ -316,11 +316,11 @@ int ramfs_getdents (struct Inode *inode, struct Dirent *dirp, unsigned int count
             /* 添加要读取的信息 */
             kstrcpy(dirp[num].name, next_node->name);
             if (next_node->type == RAMFS_FILE)
-                dirp[num].type = I_FILE;
+                dirp[num].type = INODE_FILE;
             else if (next_node->type == RAMFS_DIR)
-                dirp[num].type = I_DIR;
+                dirp[num].type = INODE_DIR;
             dirp[num].namelen = kstrlen(next_node->name);
-            dirp[num].objsize = sizeof(struct Dirent);
+            dirp[num].objsize = sizeof(struct dirent);
 
             num += 1;
             inode->readoff += 1;
@@ -331,7 +331,7 @@ int ramfs_getdents (struct Inode *inode, struct Dirent *dirp, unsigned int count
             break;
     }
 
-    return num * sizeof(struct Dirent);
+    return num * sizeof(struct dirent);
 }
 
 
@@ -516,9 +516,9 @@ int ramfs_lookup (struct FileSystem *fs, struct Inode *inode, char *path)
 
     /* 初始化 inode 的内容 */
     if (node->type == RAMFS_DIR)
-        inode->type = I_DIR;
+        inode->type = INODE_DIR;
     else
-        inode->type = I_FILE;
+        inode->type = INODE_FILE;
     inode->fs = fs;
     inode->data = node; /* 非常重要的一步操作 */
     inode->readoff = 0;
@@ -559,7 +559,7 @@ int ramfs_create (struct FileSystem *fs, struct Inode *inode, char *path)
     sb->size += sizeof(struct ramfs_node);
 
     /* 初始化新创建的节点 */
-    if (inode->type == I_FILE)
+    if (inode->type == INODE_FILE)
         node->type = RAMFS_FILE;
     else
         node->type = RAMFS_DIR;

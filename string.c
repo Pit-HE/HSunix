@@ -123,3 +123,27 @@ char *kstrcat(char *dest, const char *src)
 
     return dest;
 }
+
+/* 返回字符 chr 在字符串 string 中第一次出现的位置 */
+char *strchr (const char *str, int chr)
+{
+    while (*str && *str != chr)
+        str++;
+    if (*str == chr)
+        return((char*)str);
+    return((char *)0);
+}
+
+/* 返回字符 ch 在字符串 string 最后一次出现的位置 */
+char *kstrrchr (const char * str, int ch)
+{
+	char *start = (char *)str;
+
+	while (*str++);
+	while (--str != start && *str != (char)ch);
+
+	if (*str == (char)ch)
+			return( (char *)str );
+
+	return(NULL);
+}

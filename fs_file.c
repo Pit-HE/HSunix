@@ -58,7 +58,7 @@ int file_open (struct File *file, char *path, uint flags)
     if ((*path == '/') || (*path == '.'))
     {
         /* 获取该节点，若是没有则可以选择创建 */
-        inode = path_parser(path, flags, I_FILE);
+        inode = path_parser(path, flags, INODE_FILE);
         if (inode == NULL)
             return -1;
     }
@@ -73,7 +73,7 @@ int file_open (struct File *file, char *path, uint flags)
             return -1;
         inode->dev  = dev;
 
-        inode_init(inode, flags, &dev->opt, I_DEVICE);
+        inode_init(inode, flags, &dev->opt, INODE_DEVICE);
     }
 
     /* 初始化新打开的文件描述符 */

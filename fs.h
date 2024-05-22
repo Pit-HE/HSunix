@@ -20,12 +20,21 @@ struct stat
     int     mode;
 };
 
-void  vfs_init   (void);
-int   vfs_open   (const char *path, int flags);
-int   vfs_close  (int fd);
-int   vfs_write  (int fd, void *buf, int len);
-int   vfs_read   (int fd, void *buf, int len);
-int   vfs_pcbInit (ProcCB *pcb, char *path);
-int   vfs_pcbdeinit (ProcCB *pcb);
+/* 目录项 */
+struct dirent
+{
+    enum InodeType type;    /* 接收到的文件类型 */
+    uint namelen;           /* 实体文件系统支持的文件名长度 */
+    uint objsize;           /* 接收到的单个对象的长度 */
+    char name[128];         /* 文件的名字 */
+};
+
+void vfs_init   (void);
+int  vfs_open   (const char *path, int flags);
+int  vfs_close  (int fd);
+int  vfs_write  (int fd, void *buf, int len);
+int  vfs_read   (int fd, void *buf, int len);
+int  vfs_pcbInit (ProcCB *pcb, char *path);
+int  vfs_pcbdeinit (ProcCB *pcb);
 
 #endif
