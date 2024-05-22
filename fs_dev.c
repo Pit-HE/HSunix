@@ -2,21 +2,7 @@
  * 处理关于实体文件系统相关的操作
  */
 #include "defs.h"
-
-
-/* 管理注册到内核的每个实体文件系统
- * ( 文件系统分为注册和挂载两种模式 )
- */
-struct FileSystemDev
-{
-    ListEntry_t          list;      /* 链接到 gFsList */
-    char                 name[20];  /* 文件系统执行挂载时要设置专有名字 */
-    /* 在注册模式时表示被挂载次数，在挂载模式时表示被引用次数 */
-    unsigned int         ref;       /* 挂载计数/引用计数 */
-    bool                 Multi;     /* 单个文件系统实体是否允许挂载多次 */
-    struct FileSystem   *fs;        /* 记录传入的实体文件系统 */
-};
-
+#include "file.h"
 
 /* 以链表的形式记录每个注册的文件系统 */
 LIST_INIT_OBJ(gFsRegistList);
@@ -166,7 +152,7 @@ int fsdev_mount (char *fsname, char *mount_name,
         free_fsdev(new_dev);
         return -1;
     }
-    inode_init(root, flag, new_dev->fs->fops, I_DIR);
+    inode_init(root, flag, new_dev->fs->fops, INODE_DIR);
     root->fs = new_dev->fs;
     /* 将根文件节点链接到文件系统 */
     new_dev->fs->root = root;

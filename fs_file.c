@@ -58,7 +58,7 @@ int file_open (struct File *file, char *path, uint flags)
     /* 判断要操作的对象类型, 设备还是文件系统 */
     if ((*path == '/') || (*path == '.'))
     {
-        inode = path_parser(path, flags, I_FILE);
+        inode = path_parser(path, flags, INODE_FILE);
         if (inode == NULL)
             return -1;
     }
@@ -73,7 +73,7 @@ int file_open (struct File *file, char *path, uint flags)
             return -1;
         inode->dev  = dev;
 
-        inode_init(inode, flags, &dev->opt, I_DEVICE);
+        inode_init(inode, flags, &dev->opt, INODE_DEVICE);
     }
 
     /* 初始化新打开的文件描述符 */
@@ -206,7 +206,7 @@ int file_setpwd (ProcCB *pcb, char *path)
         return -1;
 
     /* 获取文件路径所对应的inode */
-    pcb->pwd->inode = path_parser(path, O_RDWR,I_FILE);
+    pcb->pwd->inode = path_parser(path, O_RDWR,INODE_FILE);
     if (pcb->pwd->inode == NULL)
         return -1;
 

@@ -20,6 +20,15 @@ struct stat
     int     mode;
 };
 
+/* 目录项 */
+struct dirent
+{
+    enum InodeType type;    /* 接收到的文件类型 */
+    uint namelen;           /* 实体文件系统支持的文件名长度 */
+    uint objsize;           /* 接收到的单个对象的长度 */
+    char name[128];         /* 文件的名字 */
+};
+
 void vfs_init   (void);
 int  vfs_open   (const char *path, int flags);
 int  vfs_close  (int fd);
