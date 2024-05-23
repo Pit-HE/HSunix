@@ -1,4 +1,6 @@
-
+/*
+ * 磁盘数据缓冲模块，隔离磁盘读写与内存读写的差异
+ */
 #include "defs.h"
 #include "file.h"
 #include "fs_buf.h"

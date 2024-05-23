@@ -19,8 +19,6 @@ int fdTab_alloc (ProcCB *pcb)
     pcb->fdLen = 20;
     ret = 1;
 
-    kmemset (pcb->fdTab, 0, sizeof(struct File *) * 20);
-
     /* 标准输入 */
     pcb->fdTab[0] = file_alloc();
     file_open(pcb->fdTab[0], "console", O_RDONLY);
@@ -81,7 +79,6 @@ int fd_alloc (void)
         tab = (struct File **)kalloc(sizeof(struct File*)*(pcb->fdLen + 5));
         if (tab != NULL)
         {
-            kmemset(tab, 0, sizeof(struct File*)*(pcb->fdLen + 5));
             /* 为空闲的描述数组成员分配空的描述符结构体 */
             pcb->fdTab[pcb->fdLen] = file_alloc();
             fd = pcb->fdLen;

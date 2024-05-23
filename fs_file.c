@@ -18,7 +18,6 @@ struct File *file_alloc (void)
     file = (struct File *)kalloc(sizeof(struct File));
     if (file == NULL)
         return file;
-    kmemset(file, 0, sizeof(struct File));
 
     file->magic = FILE_MAGIC;
 
@@ -35,7 +34,6 @@ void file_free (struct File *file)
     if (file->ref != 0)
         return;
 
-    kmemset(file, 0, sizeof(struct File));
     kfree(file);
 }
 

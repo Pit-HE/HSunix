@@ -144,8 +144,8 @@ int path_createinode (struct Inode *inode, char *path)
     path_getlast(path, parent_path, NULL);
     if (-1 == fs->fsops->lookup(fs, inode, parent_path))
         return -1;
-    
-    /* 父节点存在，则表明该文件可以创建 */ 
+
+    /* 父节点存在，则表明该文件可以创建 */
     fs->fsops->create(fs, inode, path);
 
     return 0;
@@ -214,6 +214,11 @@ struct Inode *path_parser (char *path,
     return inode;
 }
 
+/* 格式化传入的文件路径，处理其中的 '.' 与 ".." */
+char *path_formater (char *path)
+{
+    return NULL;
+}
 
 /* 挂载系统默认使用的文件系统 */
 int path_init (void)

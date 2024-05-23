@@ -10,7 +10,6 @@ struct Inode *inode_alloc (void)
     inode = (struct Inode *)kalloc(sizeof(struct Inode));
     if (inode == NULL)
         return NULL;
-    kmemset(inode, 0, sizeof(struct Inode));
 
     inode->magic = INODE_MAGIC;
 
@@ -23,8 +22,12 @@ void inode_free (struct Inode *inode)
         return;
     if (inode->magic != INODE_MAGIC)
         return;
+    if (inode->ref > 0)
+    {
+        inode->ref -= 1;
+        return;
+    }
 
-    kmemset(inode, 0, sizeof(struct Inode));
     kfree(inode);
 }
 

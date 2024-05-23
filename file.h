@@ -16,6 +16,7 @@ struct FileSystem;
 
 #define INODE_MAGIC     0xDEA5
 #define FILE_MAGIC      0xFE5A
+#define DIRITEM_MAGIC   0xD55D
 
 
 /* 标记文件描述符的类型 */
@@ -81,6 +82,7 @@ struct FileSystemOps
     int (*free)     (struct FileSystem *fs, struct Inode *inode);
 };
 
+
 /* 描述文件系统信息的结构体 */
 struct FileSystem
 {
@@ -91,14 +93,15 @@ struct FileSystem
     void                    *data;      /* 私有数据域 */
 };
 
+
 /* 管理注册到内核的每个实体文件系统
  * ( 文件系统分为注册和挂载两种模式 )
  */
-struct FileSystemDev
+struct FsDevice
 {
     ListEntry_t          list;      /* 链接到 gFsList */
     char                *path;      /* 文件系统挂载的路径 */
-    char                 name[20];  /* 文件系统挂载时要设置专有名字 */
+    char                 name[20];  /* 文件系统挂载时要设置的专有名字 */
     /* 在注册模式时表示被挂载次数，在挂载模式时表示被引用次数 */
     unsigned int         ref;       /* 挂载计数/引用计数 */
     bool                 Multi;     /* 单个文件系统实体是否允许挂载多次 */
@@ -117,6 +120,7 @@ struct Inode
     uint                        lock;       /* 锁 */
     uint                        valid;      /* 是否已经从磁盘读取数据 */
     uint                        addr;       /* 存放磁盘地址的缓冲区 */
+    uint                        ref;        /* 引用计数 */
     uint                        writeoff;   /* 文件打开后写指针的偏移 */
     uint                        readoff;    /* 文件打开后读指针的偏移 */
     struct FileOperation       *fops;       /* 文件系统对象的操作接口 */
@@ -128,23 +132,31 @@ struct Inode
 /* 文件描述符 */
 struct File
 {
-    uint                magic;      /* 魔幻数 */
-    uint                ref;        /* 引用计数 */
-    uint                flags;      /* 文件可操作权限 */
-    struct Inode       *inode;      /* 占有的 inode */
+    uint                magic;  /* 魔幻数 */
+    uint                ref;    /* 引用计数 */
+    uint                flags;  /* 文件可操作权限 */
+    struct Inode       *inode;  /* 占有的 inode */
 };
+
 
 /* file system directory item
  * 虚拟文件系统内部使用的目录项
  */
-struct DirectoryItem
+struct DirItem
 {
-    ListEntry_t           hashlist;   /* 用于挂载的链表对象 */
-    uint                  flag;       /* 目录项的操作模式 */
-    uint                  ref;        /* 目录项引用计数 */
-    char                 *path;       /* 目录项的相对路径 */
-    struct Inode         *inode;      /* 目录项所对应的 inode 节点 */
-    struct FileSystemDev *fsdev;      /* 目录项所属的已挂载文件系统 */
+    uint                  magic;    /* 魔幻数 */
+    enum{
+        DITEM_MOUNT = 0x01,
+        DITEM_ALLOC = 0x02,
+        DITEM_HASH  = 0x04,
+        DITEM_OPEN  = 0x08,
+        DITEM_CLOSE = 0x10,
+    }state;                         /* 状态 */
+    uint                  ref;      /* 引用计数 */
+    char                 *path;     /* 相对路径 (不包含所属文件系统的挂载路径) */
+    struct Inode         *inode;    /* 对应的 inode 节点 */
+    struct FsDevice      *fsdev;    /* 所属的已挂载文件系统 */
+    ListEntry_t           list;     /* 用于挂载的链表对象 */
 };
 
 
@@ -176,20 +188,19 @@ char *path_getfirst (char *path, char *name);
 int path_getlast (char *path, char *parentPath, char *name);
 struct Inode *path_parser (char *path,
     unsigned int flags, enum InodeType type);
+char *path_formater (char *path);
 int path_init (void);
 
 /**********************************/
 void ditem_init (void);
-unsigned int ditem_hash(
-        struct FileSystemDev *fsdev, char *path);
-struct DirectoryItem *ditem_alloc (char *name);
-int ditem_free (struct DirectoryItem *dir);
-struct DirectoryItem *ditem_get (
-        struct FileSystemDev *fsdev, char *path, uint flag);
-void ditem_put (struct DirectoryItem *ditem);
-void ditem_add (struct DirectoryItem *ditem);
-char *ditem_ap (struct FileSystemDev *fsdev, char *path);
-char *ditem_pathname (struct DirectoryItem *ditem);
+struct DirItem *ditem_alloc (
+        struct FsDevice *fsdev, char *path);
+int  ditem_free (struct DirItem *dir);
+void ditem_add (struct DirItem *ditem);
+struct DirItem *ditem_get (struct FsDevice *fsdev,
+         char *path, uint flag);
+void ditem_put (struct DirItem *ditem);
+char *ditem_path (struct DirItem *ditem);
 
 /**********************************/
 int fsdev_register (char *name, struct FileOperation *fops,

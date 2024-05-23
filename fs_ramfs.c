@@ -4,7 +4,7 @@
  * 1、允许在虚拟文件系统内挂载多个实体对象
  * 2、允许在上一个 ramfs 的文件路径中挂载新的 ramfs
  */
-#include "dfs_ramfs.h"
+#include "fs_ramfs.h"
 #include "defs.h"
 #include "fcntl.h"
 
@@ -20,7 +20,6 @@ struct ramfs_node *_alloc_ramfs_node (void)
     node = (struct ramfs_node *)kalloc(sizeof(struct ramfs_node));
     if (node == NULL)
         return NULL;
-    kmemset(node, 0, sizeof(struct ramfs_node));
 
     list_init(&node->siblist);
     list_init(&node->sublist);
@@ -49,7 +48,6 @@ void _free_ramfs_node (struct FileSystem *fs, struct ramfs_node *node)
 
     sb->size -= sizeof(struct ramfs_node) + node->size;
 
-    kmemset(node, 0, sizeof(struct ramfs_node));
     kfree(node);
 }
 
@@ -347,7 +345,6 @@ int ramfs_mount (struct FileSystem *fs, unsigned long flag, void *data)
     sb = (struct ramfs_sb *)kalloc(sizeof(struct ramfs_sb));
     if (sb == NULL)
         return -1;
-    kmemset(sb, 0, sizeof(struct ramfs_sb));
 
     /* 初始化当前文件系统的超级块 */
     sb->magic = RAMFS_MAGIC;

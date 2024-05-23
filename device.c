@@ -44,7 +44,6 @@ void dev_free (struct Device *dev)
     if (dev->ref != 0)
         return;
 
-    kmemset(dev, 0, sizeof(struct Device));
     kfree(dev);
 }
 

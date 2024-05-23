@@ -99,6 +99,7 @@ void kfree (void *obj)
     if ((objHear->next != (kmNode *)SL_HEADCODE) ||
             (objHear->blkNum == 0U))
         goto exit_kfree;
+    kmemset(obj, 5, objHear->blkNum);
 
     /* 当链表中只有一个内存块时 */
     curHear = smallMemFreeHeader.next;
@@ -213,6 +214,7 @@ void *kalloc (int size)
             oldHear->blkNum = objsize;
             oldHear->next = (kmNode *)SL_HEADCODE;
             retAddr = (void*)++oldHear;
+            kmemset(retAddr, 0, size);
             break;
         }
 

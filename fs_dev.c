@@ -9,12 +9,12 @@ LIST_INIT_OBJ(gFsRegistList);
 /* 以链表的形式记录每个挂载的文件系统 */
 LIST_INIT_OBJ(gFsMountList);
 
-static struct FileSystemDev *alloc_fsdev (void)
+static struct FsDevice *alloc_fsdev (void)
 {
-    struct FileSystemDev *fsdev;
+    struct FsDevice *fsdev;
     struct FileSystem *fs;
 
-    fsdev = (struct FileSystemDev *)kalloc(sizeof(struct FileSystemDev));
+    fsdev = (struct FsDevice *)kalloc(sizeof(struct FsDevice));
     if (fsdev == NULL)
         return NULL;
     fs = (struct FileSystem *)kalloc(sizeof(struct FileSystem));
@@ -23,44 +23,39 @@ static struct FileSystemDev *alloc_fsdev (void)
         kfree(fsdev);
         return NULL;
     }
-    kmemset(fsdev, 0, sizeof(struct FileSystemDev));
-    kmemset(fs, 0, sizeof(struct FileSystem));
 
     fsdev->fs = fs;
     list_init (&fsdev->list);
 
     return fsdev;
 }
-static void free_fsdev (struct FileSystemDev *fsdev)
+static void free_fsdev (struct FsDevice *fsdev)
 {
     if (fsdev == NULL)
         return;
 
-    kmemset(fsdev->fs, 0, sizeof(struct FileSystem));
     kfree(fsdev->fs);
-
-    kmemset(fsdev, 0, sizeof(struct FileSystemDev));
     kfree(fsdev);
 }
 
 /* 从链表中查找指定已注册的文件系统 */
-static struct FileSystemDev *find_fsdev (ListEntry_t *list, char *name)
+static struct FsDevice *find_fsdev (ListEntry_t *list, char *name)
 {
-    struct FileSystemDev   *fsdev;
+    struct FsDevice   *fsdev;
     ListEntry_t     *ptr;
 
     list_for_each(ptr, list)
     {
-        fsdev = list_container_of(ptr, struct FileSystemDev, list);
+        fsdev = list_container_of(ptr, struct FsDevice, list);
         if (0 == kstrcmp(fsdev->name, name))
             break;
     }
     return fsdev;
 }
 /* 拷贝注册链表中的文件系统设备，创建新的文件系统设备用于挂载 */
-static struct FileSystemDev *dup_fsdev (struct FileSystemDev *old)
+static struct FsDevice *dup_fsdev (struct FsDevice *old)
 {
-    struct FileSystemDev *new;
+    struct FsDevice *new;
 
     if (old == NULL)
         return NULL;
@@ -82,10 +77,10 @@ static struct FileSystemDev *dup_fsdev (struct FileSystemDev *old)
 int fsdev_register (char *name, struct FileOperation *fops,
         struct FileSystemOps *fsops, unsigned int multi)
 {
-    struct FileSystemDev *fsdev;
+    struct FsDevice *fsdev;
     struct FileSystem *fs;
 
-    fsdev = (struct FileSystemDev *)kalloc(sizeof(struct FileSystemDev));
+    fsdev = (struct FsDevice *)kalloc(sizeof(struct FsDevice));
     if (fsdev == NULL)
         return -1;
     fs = (struct FileSystem *)kalloc(sizeof(struct FileSystem));
@@ -94,9 +89,6 @@ int fsdev_register (char *name, struct FileOperation *fops,
         kfree(fsdev);
         return -1;
     }
-
-    kmemset(fsdev, 0, sizeof(struct FileSystemDev));
-    kmemset(fs, 0, sizeof(struct FileSystem));
 
     /* 初始化文件系统对象的信息 */
     fs->fops  = fops;
@@ -124,7 +116,7 @@ int fsdev_mount (char *fsname, char *mount_name,
 {
     int ret = 0;
     struct Inode *root;
-    struct FileSystemDev *reg_dev, *new_dev;
+    struct FsDevice *reg_dev, *new_dev;
 
     /* 避免重复挂载 */
     if (find_fsdev(&gFsMountList, mount_name))
@@ -175,7 +167,7 @@ int fsdev_mount (char *fsname, char *mount_name,
 int fsdev_unmount (char *name)
 {
     int ret = 0;
-    struct FileSystemDev *fs_dev, *reg_dev;
+    struct FsDevice *fs_dev, *reg_dev;
 
     fs_dev = find_fsdev(&gFsMountList, name);
     if (fs_dev == NULL)
@@ -203,7 +195,7 @@ int fsdev_unmount (char *name)
 /* 获取实体文件系统的结构体 */
 struct FileSystem *fsdev_get (char *name)
 {
-    struct FileSystemDev *fsdev;
+    struct FsDevice *fsdev;
 
     fsdev = find_fsdev(&gFsMountList, name);
     fsdev->ref += 1;
@@ -214,7 +206,7 @@ struct FileSystem *fsdev_get (char *name)
 /* 释放已获取的实体文件系统 */
 void fsdev_put (char *name)
 {
-    struct FileSystemDev *fsdev;
+    struct FsDevice *fsdev;
 
     fsdev = find_fsdev(&gFsMountList, name);
     fsdev->ref -= 1;

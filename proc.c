@@ -119,7 +119,6 @@ ProcCB *allocProcCB (void)
     pcb = (ProcCB *)kalloc(sizeof(ProcCB));
     if (pcb == NULL)
         goto _exit_allocProcCB;
-    kmemset(pcb, 0, sizeof(ProcCB));
 
     /* 申请存放进程trap信息的内存空间 */
     pcb->trapFrame = (Trapframe *)kalloc(sizeof(Trapframe));
@@ -129,7 +128,6 @@ ProcCB *allocProcCB (void)
         pcb = NULL;
         goto _exit_allocProcCB;
     }
-    kmemset(pcb->trapFrame, 0, sizeof(Trapframe));
 
     /* 为进程申请在用户模式中使用的栈 */
     pcb->trapFrame->sp = (uint64)kalloc(2048);
@@ -165,7 +163,7 @@ ProcCB *allocProcCB (void)
     pcb->pid = allocPid();
     pcb->state = USED;
 
-    
+
 
     list_init(&pcb->list);
     list_init(&pcb->regist);
@@ -240,7 +238,6 @@ void proc_init (void)
     /* Init processs */
     kInitProcCB = allocProcCB();
     stack = (char *)kalloc(2048);
-    kmemset(stack, 0, 2048);
     kstrcpy(kInitProcCB->name, "init");
     kInitProcCB->context.ra = (uint64)init_main;
     kInitProcCB->stackAddr  = (uint64)stack;
@@ -251,7 +248,6 @@ void proc_init (void)
     /* Idle processs */
     kIdleProcCB = allocProcCB();
     stack = (char *)kalloc(2048);
-    kmemset(stack, 0, 2048);
     kstrcpy(kIdleProcCB->name, "idle");
     kIdleProcCB->context.ra = (uint64)idle_main;
     kIdleProcCB->stackAddr  = (uint64)stack;
@@ -263,7 +259,6 @@ void proc_init (void)
     /* test process */
     pcb = allocProcCB();
     stack = (char *)kalloc(2048);
-    kmemset(stack, 0, 2048);
     kstrcpy(pcb->name, "test");
     pcb->context.ra = (uint64)test_main;
     pcb->stackAddr  = (uint64)stack;
@@ -276,7 +271,6 @@ void proc_init (void)
      */
     pcb = allocProcCB();
     stack = (char *)kalloc(2048);
-    kmemset(stack, 0, 2048);
     kstrcpy(pcb->name, "user");
     void user_ret (void);
     pcb->context.ra = (uint64)user_ret;

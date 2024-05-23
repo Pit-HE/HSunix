@@ -97,7 +97,7 @@ int kstrncmp(const char *p, const char *q, uint n)
   return (uchar)*p - (uchar)*q;
 }
 
-/* 拷贝字符串 */
+/* 申请新的内存空间拷贝字符串 */
 char *kstrdup(const char *s)
 {
     unsigned int len = kstrlen(s) + 1;

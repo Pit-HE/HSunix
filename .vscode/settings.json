@@ -18,7 +18,7 @@
     "fs.h": "c",
     "file.h": "c",
     "fcntl.h": "c",
-    "dfs_ramfs.h": "c"
+    "fs_ramfs.h": "c"
   },
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",
