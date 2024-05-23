@@ -125,6 +125,117 @@ int path_getlast (char *path, char *parentPath, char *name)
     return 0;
 }
 
+/* 格式化传入的文件路径，处理其中的 '.' 与 ".." */
+char *path_formater (char *directory, char *path)
+{
+    char *fullpath;
+    char *dst0, *dst, *src;
+
+    if (path[0] != '/') /* it's a absolute path, use it directly */
+    {
+        fullpath = (char *)kalloc(kstrlen(directory) + kstrlen(path) + 2);
+
+        if (fullpath == NULL)
+            return NULL;
+
+        kstrcpy(fullpath, directory);
+        fullpath[kstrlen(directory)] = '/';
+        kstrcat(fullpath, path);
+    }
+    else
+    {
+        fullpath = kstrdup(path); /* copy string */
+
+        if (fullpath == NULL)
+            return NULL;
+    }
+
+    src = fullpath;
+    dst = fullpath;
+
+    dst0 = dst;
+    while (1)
+    {
+        char c = *src;
+
+        if (c == '.')
+        {
+            if (!src[1])
+                src++; /* '.' and ends */
+            else if (src[1] == '/')
+            {
+                /* './' case */
+                src += 2;
+
+                while ((*src == '/') && (*src != '\0'))
+                    src++;
+                continue;
+            }
+            else if (src[1] == '.')
+            {
+                if (!src[2])
+                {
+                    /* '..' and ends case */
+                    src += 2;
+                    goto up_one;
+                }
+                else if (src[2] == '/')
+                {
+                    /* '../' case */
+                    src += 3;
+
+                    while ((*src == '/') && (*src != '\0'))
+                        src++;
+                    goto up_one;
+                }
+            }
+        }
+
+        /* copy up the next '/' and erase all '/' */
+        while ((c = *src++) != '\0' && c != '/')
+            *dst++ = c;
+
+        if (c == '/')
+        {
+            *dst++ = '/';
+            while (c == '/')
+                c = *src++;
+
+            src--;
+        }
+        else if (!c)
+            break;
+
+        continue;
+
+    up_one:
+        dst--;
+        if (dst < dst0)
+        {
+            kfree(fullpath);
+            return NULL;
+        }
+        while (dst0 < dst && dst[-1] != '/')
+            dst--;
+    }
+
+    *dst = '\0';
+
+    /* remove '/' in the end of path if exist */
+    dst--;
+    if ((dst != fullpath) && (*dst == '/'))
+        *dst = '\0';
+
+    /* final check fullpath is not empty, for the special path of lwext "/.." */
+    if ('\0' == fullpath[0])
+    {
+        fullpath[0] = '/';
+        fullpath[1] = '\0';
+    }
+
+    return fullpath;
+}
+
 
 /* 当文件路径没有对应的 inode 时则创建新的节点
  * ( 未处理文件路径中间缺少多个中间文件夹的情况 )
@@ -186,38 +297,9 @@ struct Inode *path_parser (char *path,
     if ((fs == NULL) || (abs_path == NULL))
         return NULL;
 
-    /* 确认文件路径对应的 inode 是否存在 */
-    if (fs->fsops->lookup != NULL)
-    {
-        if (-1 == fs->fsops->lookup(fs, inode, abs_path))
-        {
-            /* 是否要创建新的节点 */
-            if ((flags & O_CREAT) != O_CREAT)
-            {
-                inode_free(inode);
-                return NULL;
-            }
 
-            /* 初始化要创建的 inode 节点 */
-            inode_init(inode, flags, fs->fops, type);
-            inode->fs = fs;
-
-            /* 在实体文件系统中创建与 inode 对应的节点 */
-            if (-1 == path_createinode(inode, abs_path))
-            {
-                inode_free(inode);
-                return NULL;
-            }
-        }
-    }
 
     return inode;
-}
-
-/* 格式化传入的文件路径，处理其中的 '.' 与 ".." */
-char *path_formater (char *path)
-{
-    return NULL;
 }
 
 /* 挂载系统默认使用的文件系统 */

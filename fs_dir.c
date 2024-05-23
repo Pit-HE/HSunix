@@ -209,8 +209,6 @@ struct DirItem *ditem_get (struct FsDevice *fsdev,
  */
 void ditem_put (struct DirItem *ditem)
 {
-    struct Inode *inode;
-
     if (ditem == NULL)
         return;
     if (ditem->magic != DIRITEM_MAGIC)
@@ -235,7 +233,7 @@ char *ditem_path (struct DirItem *ditem)
         return NULL;
 
     fsdev_len = kstrlen(ditem->fsdev->path);
-    ditem_len += kstrlen(ditem->path);
+    ditem_len = kstrlen(ditem->path);
 
     path = (char *)kalloc(fsdev_len + ditem_len + 3);
     if (path == NULL)

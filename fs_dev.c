@@ -4,6 +4,7 @@
 #include "defs.h"
 #include "file.h"
 
+/* 以链表的形式记录 struct FsDevice 结构体对象 */
 /* 以链表的形式记录每个注册的文件系统 */
 LIST_INIT_OBJ(gFsRegistList);
 /* 以链表的形式记录每个挂载的文件系统 */
@@ -52,6 +53,7 @@ static struct FsDevice *find_fsdev (ListEntry_t *list, char *name)
     }
     return fsdev;
 }
+
 /* 拷贝注册链表中的文件系统设备，创建新的文件系统设备用于挂载 */
 static struct FsDevice *dup_fsdev (struct FsDevice *old)
 {
@@ -210,4 +212,24 @@ void fsdev_put (char *name)
 
     fsdev = find_fsdev(&gFsMountList, name);
     fsdev->ref -= 1;
+}
+
+struct FileSystem *fsdev_lookup (char *path)
+{
+    ListEntry_t *list;
+    struct FsDevice *fsdev;
+
+    if (path == NULL)
+        return NULL;
+    if (*path == '\0')
+        return NULL;
+
+    list_for_each(list, &gFsMountList)
+    {
+        fsdev = list_container_of(list, struct FsDevice, list);
+        if (0 == kstrncmp(fsdev->path, path, kstrlen(fsdev->path)))
+            return fsdev->fs;
+    }
+
+    return NULL;
 }

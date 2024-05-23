@@ -188,7 +188,7 @@ char *path_getfirst (char *path, char *name);
 int path_getlast (char *path, char *parentPath, char *name);
 struct Inode *path_parser (char *path,
     unsigned int flags, enum InodeType type);
-char *path_formater (char *path);
+char *path_formater (char *directory, char *path);
 int path_init (void);
 
 /**********************************/
