@@ -12,11 +12,15 @@ struct stat;
 struct statfs;
 struct dirent;
 struct FileSystem;
+struct FsDevice;
 
 
 #define INODE_MAGIC     0xDEA5
 #define FILE_MAGIC      0xFE5A
 #define DIRITEM_MAGIC   0xD55D
+
+#define  FS_NAME_LEN 32
+
 
 
 /* 标记文件描述符的类型 */
@@ -54,62 +58,60 @@ struct FileOperation
 struct FileSystemOps
 {
     /* mount and unmount file system */
-    int (*mount)    (struct FileSystem *fs, unsigned long flag, void *data);
-    int (*unmount)  (struct FileSystem *fs);
+    int (*mount)    (struct FsDevice *fsdev, unsigned long flag, void *data);
+    int (*unmount)  (struct FsDevice *fsdev);
 
     /* make a file system */
     int (*mkfs)     (uint dev_id, char *fs_name);
 
     /* 获取文件系统的信息 */
-    int (*statfs)   (struct FileSystem *fs, struct statfs *buf);
+    int (*statfs)   (struct FsDevice *fsdev, struct statfs *buf);
 
     /* 删除指定路径的文件或目录 */
-    int (*unlink)   (struct FileSystem *fs, char *path);
+    int (*unlink)   (struct FsDevice *fsdev, char *path);
 
     /* 获取文件的信息 */
-    int (*stat)     (struct FileSystem *fs, char *path, struct stat *buf);
+    int (*stat)     (struct FsDevice *fsdev, char *path, struct stat *buf);
 
     /* 重命名指定文件 */
-    int (*rename)   (struct FileSystem *fs, char *oldpath, char *newpath);
+    int (*rename)   (struct FsDevice *fsdev, char *oldpath, char *newpath);
 
     /* 在实体文件系统中查找 inode 所对应的对象 */
-    int (*lookup)   (struct FileSystem *fs, struct Inode *inode, char *path);
+    int (*lookup)   (struct FsDevice *fsdev, struct Inode *inode, char *path);
 
     /* 在实体文件系统中创建 inode 所需的对象 */
-    int (*create)   (struct FileSystem *fs, struct Inode *inode, char *path);
+    int (*create)   (struct FsDevice *fsdev, struct Inode *inode, char *path);
 
     /* 释放在实体文件中与 inode 对应的对象 */
-    int (*free)     (struct FileSystem *fs, struct Inode *inode);
+    int (*free)     (struct FsDevice *fsdev, struct Inode *inode);
 };
 
 
 /* 描述文件系统信息的结构体 */
 struct FileSystem
 {
-    char                     name[20];  /* 文件系统的名字 */
-    struct Inode            *root;      /* 文件系统的根节点 */
+    char                     name[FS_NAME_LEN];
     struct FileOperation    *fops;      /* 文件系统中文件的操作接口 */
     struct FileSystemOps    *fsops;     /* 文件系统的操作接口 */
-    void                    *data;      /* 私有数据域 */
 };
 
 
 /* 管理注册到内核的每个实体文件系统
- * ( 文件系统分为注册和挂载两种模式 )
  */
 struct FsDevice
 {
-    ListEntry_t          list;      /* 链接到 gFsList */
+    ListEntry_t          list;      /* 链接到 gFsDevList */
     char                *path;      /* 文件系统挂载的路径 */
-    char                 name[20];  /* 文件系统挂载时要设置的专有名字 */
     /* 在注册模式时表示被挂载次数，在挂载模式时表示被引用次数 */
     unsigned int         ref;       /* 挂载计数/引用计数 */
-    bool                 Multi;     /* 单个文件系统实体是否允许挂载多次 */
     struct FileSystem   *fs;        /* 记录传入的实体文件系统 */
+    void                *data;      /* 私有数据域，存放临时的数据 */
 };
 
 
-/* 文件系统的 index node */
+/*         文件系统的 index node 
+ * ( 主要作用是记录实体文件系统对象的信息 )
+ */
 struct Inode
 {
     uint                        magic;      /* 魔幻数 */
@@ -139,8 +141,9 @@ struct File
 };
 
 
-/* file system directory item
- * 虚拟文件系统内部使用的目录项
+/*    file system directory item
+ *    虚拟文件系统内部使用的目录项
+ * ( 主要作用是记录 inode 对象的路径 )
  */
 struct DirItem
 {
@@ -153,7 +156,8 @@ struct DirItem
         DITEM_CLOSE = 0x10,
     }state;                         /* 状态 */
     uint                  ref;      /* 引用计数 */
-    char                 *path;     /* 相对路径 (不包含所属文件系统的挂载路径) */
+    /* 相对路径 (不包含所属文件系统的挂载路径) */
+    char                 *path;
     struct Inode         *inode;    /* 对应的 inode 节点 */
     struct FsDevice      *fsdev;    /* 所属的已挂载文件系统 */
     ListEntry_t           list;     /* 用于挂载的链表对象 */
@@ -184,11 +188,11 @@ int  file_write     (struct File *file, void *buf, uint len);
 int  file_flush     (struct File *file);
 
 /**********************************/
-char *path_getfirst (char *path, char *name);
-int path_getlast (char *path, char *parentPath, char *name);
+char *fstr_getfirst (char *path, char *name);
+int fstr_getlast (char *path, char *parentPath, char *name);
 struct Inode *path_parser (char *path,
     unsigned int flags, enum InodeType type);
-char *path_formater (char *directory, char *path);
+char *fstr_formater (char *directory, char *path);
 int path_init (void);
 
 /**********************************/
@@ -205,10 +209,10 @@ char *ditem_path (struct DirItem *ditem);
 /**********************************/
 int fsdev_register (char *name, struct FileOperation *fops,
         struct FileSystemOps *fsops, unsigned int multi);
-int fsdev_mount (char *fsname, char *mount_name,
+int fsdev_mount (char *fsname, char *path,
         unsigned int flag, void *data);
-int fsdev_unmount (char *name);
-struct FileSystem *fsdev_get (char *name);
-void fsdev_put (char *name);
+int fsdev_unmount (char *path);
+struct FsDevice *fsdev_get (char *path);
+void fsdev_put (char *path);
 
 #endif

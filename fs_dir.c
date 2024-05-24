@@ -188,7 +188,7 @@ struct DirItem *ditem_get (struct FsDevice *fsdev,
     inode_init(inode, flag, fsdev->fs->fops, 0);
 
     /* 查找与路径匹配的 inode */
-    if (-1 == fsdev->fs->fsops->lookup(fsdev->fs, inode, path))
+    if (-1 == fsdev->fs->fsops->lookup(fsdev, inode, path))
     {
         ditem_free(ditem);
         inode_free(inode);

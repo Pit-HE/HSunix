@@ -246,11 +246,11 @@ static void _tc_ramfsPathParser (char *path)
 
     kprintf ("PATH: %s\r\n", path);
 
-    pStr = path_getfirst(path, file);
+    pStr = fstr_getfirst(path, file);
     kprintf ("first pStr = %s \r\n", pStr);
     kprintf ("first file = %s\r\n", file);
 
-    path_getlast (path, parent, file);
+    fstr_getlast (path, parent, file);
     kprintf("last path = %s\r\n", parent);
     kprintf("last file = %s\r\n", file);
 }
