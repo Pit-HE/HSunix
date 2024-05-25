@@ -11,17 +11,17 @@
 
 void main (void)
 {
-    kmem_init();
-    dev_init();
-    console_init();
-    // kvm_init();
-    trap_init();
-    plic_init();
-    plic_inithart();
-    cli_init();
-    vfs_init();
-    proc_init();
-    timer_init();
+    init_kmem();
+    init_dev();
+    init_console();
+    // init_kvm();
+    init_trap();
+    init_plic();
+    init_plichart();
+    init_cli();
+    init_vfs();
+    init_proc();
+    init_timer();
 
     self_inspection();
     kprintf("Start OS ...\r\n");

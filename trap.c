@@ -17,7 +17,7 @@ extern void userret (void);
 extern void trampoline (void);
 
 /****************************************/
-void trap_init(void)
+void init_trap(void)
 {
     /* 设置特权模式下发生中断时的函数入口 */
     w_stvec((uint64)kernelvec);

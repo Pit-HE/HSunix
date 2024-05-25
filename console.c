@@ -97,7 +97,7 @@ void console_isr (int c)
     kRingbuf_putChar(&consState.rb, (char)c);
     do_resume(&consState.rb);
 }
-void console_init (void)
+void init_console (void)
 {
     struct Device *dev;
 

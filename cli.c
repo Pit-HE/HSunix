@@ -11,7 +11,7 @@ typedef struct cli_manage_info
 }cliInfo_t;
 cliInfo_t cliState;
 
-void cli_init (void)
+void init_cli (void)
 {
     char *buf;
 

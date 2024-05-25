@@ -195,7 +195,7 @@ int fsdev_unmount (char *path)
     return ret;
 }
 
-/* 获取实体文件系统的结构体 */
+/* 获取实体文件系统的结构体 (传入的必须是绝对路径) */
 struct FsDevice *fsdev_get (char *path)
 {
     struct FsDevice *fsdev;
@@ -207,11 +207,13 @@ struct FsDevice *fsdev_get (char *path)
 }
 
 /* 释放已获取的实体文件系统 */
-void fsdev_put (char *path)
+void fsdev_put (struct FsDevice *fsdev)
 {
-    struct FsDevice *fsdev;
+    if (fsdev == NULL)
+        return;
+    if (fsdev->ref == 0)
+        return;
 
-    fsdev = find_fsdev(path);
     fsdev->ref -= 1;
 }
 

@@ -39,13 +39,21 @@ void file_free (struct File *file)
 
 /* 打开文件系统中要操作的对象，将其信息存入文件描述符
  *
+ * file: 要操作的文件对象 (用于存储当前函数获取到的信息)
+ * path: 要操作的文件路径对象所在的路径 (绝对路径/相对路径)
+ * flag: 要执行的操作(O_CREAT、O_RDWR、O_DIRECTORY... )
+ * mode: 该文件对象的权限
+ * 
  * 返回值：-1表示失败
  */
-int file_open (struct File *file, char *path, uint flags)
+int file_open (struct File *file, char *path, 
+        unsigned int flag, unsigned int mode)
 {
     int ret = 0;
-    struct Device *dev;
-    struct Inode *inode;
+    struct Device *dev = NULL;
+    struct Inode *inode = NULL;
+    struct FsDevice *fsdev = NULL;
+    struct DirItem *ditem = NULL;
 
     if ((file == NULL) || (path == NULL))
         return -1;
@@ -55,12 +63,25 @@ int file_open (struct File *file, char *path, uint flags)
     /* 判断要操作的对象类型, 设备还是文件系统 */
     if ((*path == '/') || (*path == '.'))
     {
-        /* 获取该节点，若是没有则可以选择创建 */
-        inode = path_parser(path, flags, INODE_FILE);
-        if (inode == NULL)
+        /* 将文件路径转化为绝对路径 */
+        path = path_parser(NULL, path);
+
+        /* 获取该路径下所对应的文件系统 */
+        fsdev = fsdev_get(path);
+        if (fsdev == NULL)
             return -1;
+
+        /* 获取该路径下所对应的目录项 (若不存在则创建) */
+        ditem = ditem_get(fsdev, path, flag, mode);
+        if (ditem == NULL)
+        {
+            fsdev_put(fsdev);
+            return -1;
+        }
+
+        inode = ditem->inode;
     }
-    else
+    else /* 操作注册的设备 */
     {
         inode = inode_alloc();
         if (inode == NULL)
@@ -68,16 +89,22 @@ int file_open (struct File *file, char *path, uint flags)
 
         dev = dev_get(path);
         if (dev == NULL)
+        {
+            inode_free(inode);
             return -1;
-        inode->dev  = dev;
+        }
+        inode_init(inode, flag, &dev->opt, S_IRWXU);
 
-        inode_init(inode, flags, &dev->opt, INODE_DEVICE);
+        inode->dev  = dev;
+        inode->type = INODE_DEVICE;
     }
 
     /* 初始化新打开的文件描述符 */
-    file->inode  = inode;
-    file->ref   += 1;
-    file->flags  = flags;
+    file->inode = inode;
+    file->ref  += 1;
+    file->flags = flag;
+    file->fops  = inode->fops;
+    file->ditem = ditem;
 
     if (inode->fops->open != NULL)
         ret = inode->fops->open(inode);
@@ -85,7 +112,7 @@ int file_open (struct File *file, char *path, uint flags)
     return ret;
 }
 
-/* 关闭已打开的文件系统对象，注销已打开的文件描述符
+/* 关闭已打开的文件对象，注销已打开的文件描述符
  *
  * 返回值：-1表示失败
  */
@@ -102,13 +129,22 @@ int file_close (struct File *file)
     file->ref -= 1;
 
     inode = file->inode;
-    if ((inode == NULL) || (inode->magic != INODE_MAGIC))
+    if (inode == NULL)
         return -1;
 
-    if (inode->fops->close != NULL)
-        ret = inode->fops->close(inode);
+    if (file->fops->close != NULL)
+        ret = file->fops->close(inode);
 
-    /* 释放 open 中申请的 inode */
+    /* 释放文件对象占用的资源 */
+    if (inode->type == INODE_DEVICE)
+    {
+        dev_put(file->inode->dev);
+    }
+    else
+    {
+        fsdev_put(file->ditem->fsdev);
+        ditem_put(file->ditem);
+    }
     inode_free(inode);
 
     return ret;
@@ -118,10 +154,10 @@ int file_close (struct File *file)
  *
  * 返回值：-1表示失败，其他值表示实际读取的长度
  */
-int file_read (struct File *file, void *buf, uint len)
+int file_read (struct File *file, 
+    void *buf, unsigned int len)
 {
     int ret = 0;
-    struct Inode *inode;
 
     if ((file == NULL) || (buf == NULL))
         return -1;
@@ -132,12 +168,8 @@ int file_read (struct File *file, void *buf, uint len)
         ((file->flags & O_ACCMODE) != O_RDWR))
         return -1;
 
-    inode = file->inode;
-    if ((inode == NULL) || (inode->magic != INODE_MAGIC))
-        return -1;
-
-    if (inode->fops->read != NULL)
-        ret = inode->fops->read(inode, buf, len);
+    if (file->fops->read != NULL)
+        ret = file->fops->read(file->inode, buf, len);
 
     return ret;
 }
@@ -146,10 +178,10 @@ int file_read (struct File *file, void *buf, uint len)
  *
  * 返回值：-1表示失败，其他值表示实际写入的长度
  */
-int file_write (struct File *file, void *buf, uint len)
+int file_write (struct File *file, 
+    void *buf, unsigned int len)
 {
     int ret = 0;
-    struct Inode *inode;
 
     if ((file == NULL) || (buf == NULL))
         return -1;
@@ -160,12 +192,8 @@ int file_write (struct File *file, void *buf, uint len)
         ((file->flags & O_ACCMODE) != O_RDWR))
         return -1;
 
-    inode = file->inode;
-    if ((inode == NULL) || (inode->magic != INODE_MAGIC))
-        return -1;
-
-    if (inode->fops->write != NULL)
-        ret = inode->fops->write(inode, buf, len);
+    if (file->fops->write != NULL)
+        ret = file->fops->write(file->inode, buf, len);
 
     return ret;
 }
@@ -177,19 +205,14 @@ int file_write (struct File *file, void *buf, uint len)
 int file_flush (struct File *file)
 {
     int ret;
-    struct Inode *inode;
 
     if (file == NULL)
         return -1;
     if ((file->ref <= 0) || (file->magic != FILE_MAGIC))
         return -1;
 
-    inode = file->inode;
-    if ((inode == NULL) || (inode->magic != INODE_MAGIC))
-        return -1;
-
-    if (inode->fops->flush != NULL)
-        ret = inode->fops->flush(inode);
+    if (file->fops->flush != NULL)
+        ret = file->fops->flush(file->inode);
 
     return ret;
 }

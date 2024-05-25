@@ -1,6 +1,7 @@
 
 #include "defs.h"
 #include "file.h"
+#include "fcntl.h"
 
 
 struct Inode *inode_alloc (void)
@@ -31,15 +32,21 @@ void inode_free (struct Inode *inode)
     kfree(inode);
 }
 
-int inode_init (struct Inode *inode, unsigned int flags,
-        struct FileOperation *fops, enum InodeType type)
+int inode_init (struct Inode *inode, unsigned int flag,
+        struct FileOperation *fops, unsigned int mode)
 {
     if ((inode == NULL) || (fops == NULL))
         return -1;
 
-    inode->flags = flags;
+    inode->flags = flag;
     inode->fops  = fops;
-    inode->type  = type;
+    inode->mode  = mode;
+    inode->ref  += 1;
+
+    if (flag & O_DIRECTORY)
+        inode->type = INODE_DIR;
+    else
+        inode->type = INODE_FILE;
 
     return 0;
 }

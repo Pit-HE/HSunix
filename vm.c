@@ -341,7 +341,7 @@ int copyin (Pagetable_t *pagetable, char *dst, uint64 srcva, uint64 len)
 }
 
 /* 初始化虚拟内存管理模块 */
-void kvm_init (void)
+void init_kvm (void)
 {
     kernel_pgtab = kallocPhyPage();
     kmemset(kernel_pgtab, 0, PGSIZE);

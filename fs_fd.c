@@ -16,20 +16,20 @@ int fdTab_alloc (ProcCB *pcb)
     pcb->fdTab = (struct File **)kalloc(sizeof(struct File *) * 20);
     if (pcb->fdTab == NULL)
         return ret;
-    pcb->fdLen = 20;
+    pcb->fdCnt = 20;
     ret = 1;
 
     /* 标准输入 */
     pcb->fdTab[0] = file_alloc();
-    file_open(pcb->fdTab[0], "console", O_RDONLY);
+    file_open(pcb->fdTab[0], "console", O_RDONLY, S_IRWXU);
 
     /* 标准输出 */
     pcb->fdTab[1] = file_alloc();
-    file_open(pcb->fdTab[1], "console", O_WRONLY);
+    file_open(pcb->fdTab[1], "console", O_WRONLY, S_IRWXU);
 
     /* 标准错误 */
     pcb->fdTab[2] = file_alloc();
-    file_open(pcb->fdTab[2], "console", O_RDONLY | O_WRONLY);
+    file_open(pcb->fdTab[2], "console", O_RDONLY | O_WRONLY, S_IRWXU);
 
     return ret;
 }
@@ -39,7 +39,7 @@ void fdTab_free (ProcCB *pcb)
     int i;
 
     /* 释放数组中拥有的文件描述符 */
-    for(i=0; i<pcb->fdLen; i++)
+    for(i=0; i<pcb->fdCnt; i++)
     {
         if (pcb->fdTab[i] != NULL)
         {
@@ -61,7 +61,7 @@ int fd_alloc (void)
     ProcCB *pcb = getProcCB();
 
     /* 遍历文件描述符指针数组，寻找空闲的数组元素 */
-    for(i=0; i<pcb->fdLen; i++)
+    for(i=0; i<pcb->fdCnt; i++)
     {
         if (pcb->fdTab[i] == NULL)
         {
@@ -73,23 +73,23 @@ int fd_alloc (void)
     }
 
     /* 已无可用空间，则扩张进程的文件描述符指针数组 */
-    if ((fd == -1) && (i == pcb->fdLen))
+    if ((fd == -1) && (i == pcb->fdCnt))
     {
         /* 申请新的文件描述符指针数组 */
-        tab = (struct File **)kalloc(sizeof(struct File*)*(pcb->fdLen + 5));
+        tab = (struct File **)kalloc(sizeof(struct File*)*(pcb->fdCnt + 5));
         if (tab != NULL)
         {
             /* 为空闲的描述数组成员分配空的描述符结构体 */
-            pcb->fdTab[pcb->fdLen] = file_alloc();
-            fd = pcb->fdLen;
+            pcb->fdTab[pcb->fdCnt] = file_alloc();
+            fd = pcb->fdCnt;
 
             /* 记录原有的描述符信息 */
             kDISABLE_INTERRUPT();
-            kmemcpy(tab, pcb->fdTab, pcb->fdLen);
+            kmemcpy(tab, pcb->fdTab, pcb->fdCnt);
             kfree(pcb->fdTab);
 
             pcb->fdTab = tab;
-            pcb->fdLen += 5;
+            pcb->fdCnt += 5;
             kENABLE_INTERRUPT();
         }
     }
@@ -102,7 +102,7 @@ void fd_free (int fd)
 {
     ProcCB *pcb = getProcCB();
 
-    if ((fd < 0) || (fd > pcb->fdLen))
+    if ((fd < 0) || (fd > pcb->fdCnt))
         return;
 
     file_free(pcb->fdTab[fd]);
@@ -116,7 +116,7 @@ struct File *fd_get (int fd)
 {
     ProcCB *pcb = getProcCB();
 
-    if ((fd < 0) || (fd > pcb->fdLen))
+    if ((fd < 0) || (fd > pcb->fdCnt))
         return NULL;
 
     return pcb->fdTab[fd];

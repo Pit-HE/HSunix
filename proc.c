@@ -225,7 +225,7 @@ exit_findProcCB:
 
 
 
-void proc_init (void)
+void init_proc (void)
 {
     char *stack;
     ProcCB *pcb;

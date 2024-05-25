@@ -225,7 +225,7 @@ void tc_fsDevice (void)
     kstrcpy(wbuf, "Hello World !\r\n");
 
     /* 查看设备打开与读写流程是否正常 */
-    fd = vfs_open("console", O_WRONLY);
+    fd = vfs_open("console", O_WRONLY, S_IRWXU);
     vfs_write (fd, wbuf, kstrlen(wbuf));
     vfs_read(fd, rbuf, 1);
     vfs_close(fd);
@@ -246,11 +246,11 @@ static void _tc_ramfsPathParser (char *path)
 
     kprintf ("PATH: %s\r\n", path);
 
-    pStr = fstr_getfirst(path, file);
+    pStr = path_getfirst(path, file);
     kprintf ("first pStr = %s \r\n", pStr);
     kprintf ("first file = %s\r\n", file);
 
-    fstr_getlast (path, parent, file);
+    path_getlast (path, parent, file);
     kprintf("last path = %s\r\n", parent);
     kprintf("last file = %s\r\n", file);
 }

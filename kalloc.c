@@ -255,7 +255,7 @@ static void smallMemFormat (void)
 }
 
 /* 初始化整个物理内存管理模块 */
-void kmem_init (void)
+void init_kmem (void)
 {
     phyPageFreeHeader.blkNum = 0;
     phyPageFreeHeader.next = NULL;

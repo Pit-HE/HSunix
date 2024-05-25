@@ -29,8 +29,9 @@ struct dirent
     char name[128];         /* 文件的名字 */
 };
 
-void vfs_init   (void);
-int  vfs_open   (const char *path, int flags);
+void init_vfs   (void);
+int  vfs_open   (char *path,
+    unsigned int flags, unsigned int mode);
 int  vfs_close  (int fd);
 int  vfs_write  (int fd, void *buf, int len);
 int  vfs_read   (int fd, void *buf, int len);

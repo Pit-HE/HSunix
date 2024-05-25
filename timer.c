@@ -6,7 +6,7 @@
 static ListEntry_t kSleepList;
 
 
-void timer_init (void)
+void init_timer (void)
 {
     list_init (&kSleepList);
 }

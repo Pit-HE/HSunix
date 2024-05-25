@@ -5,13 +5,13 @@
 #include "riscv.h"
 #include "defs.h"
 
-void plic_init (void)
+void init_plic (void)
 {
     /* Set uart interrupt priority */
     *(uint32*)(PLIC + 4*UART0_IRQ) = 1;
 }
 
-void plic_inithart (void)
+void init_plichart (void)
 {
     /* Enable uart interrupt */
     *(uint32*)(PLIC_SENABLE(getCpuID())) = (1 << UART0_IRQ);

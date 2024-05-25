@@ -8,13 +8,13 @@
 
 
 /* 初始化虚拟文件系统 */
-void vfs_init (void)
+void init_vfs (void)
 {
-    path_init();
+    init_ditem();
 }
 
 /* 文件系统对外接口：打开指定路径的文件 */
-int vfs_open (const char *path, int flags)
+int vfs_open (char *path, unsigned int flags, unsigned int mode)
 {
     int fd;
     struct File *file = NULL;
@@ -33,7 +33,7 @@ int vfs_open (const char *path, int flags)
         return -1;
     }
 
-    if (0 > file_open(file, (char *)path, flags))
+    if (0 > file_open(file, (char *)path, flags, mode))
     {
         kErr_printf("fail: vfs_open open file !\r\n");
         return -1;
@@ -123,22 +123,22 @@ int vfs_pcbInit (ProcCB *pcb, char *path)
         return -1;
 
     /* 创建进程工作路径的字符串 */
-    pcb->pwd = (char *)kalloc(kstrlen(path)+1);
-    if ( pcb->pwd == NULL)
+    pcb->cwd = (char *)kalloc(kstrlen(path)+1);
+    if ( pcb->cwd == NULL)
         return -1;
-    kstrcpy(pcb->pwd, path);
+    kstrcpy(pcb->cwd, path);
 
     /* 设置进程的根节点 */
     pcb->root = file_alloc();
     if (pcb->root == NULL)
     {
-        kfree(pcb->pwd);
+        kfree(pcb->cwd);
         return -1;
     }
-    if (-1 == file_open(pcb->root, path, O_RDWR))
+    if (-1 == file_open(pcb->root, path, O_RDWR, S_IRUSR))
     {
         file_free(pcb->root);
-        kfree(pcb->pwd);
+        kfree(pcb->cwd);
         return -1;
     }
 
@@ -147,7 +147,7 @@ int vfs_pcbInit (ProcCB *pcb, char *path)
     {
         file_close(pcb->root);
         file_free(pcb->root);
-        kfree(pcb->pwd);
+        kfree(pcb->cwd);
         return -1;
     }
 
@@ -162,7 +162,7 @@ int vfs_pcbdeinit (ProcCB *pcb)
 
     file_close(pcb->root);
     file_free(pcb->root);
-    kfree(pcb->pwd);
+    kfree(pcb->cwd);
 
     return 0;
 }

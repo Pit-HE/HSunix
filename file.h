@@ -62,7 +62,7 @@ struct FileSystemOps
     int (*unmount)  (struct FsDevice *fsdev);
 
     /* make a file system */
-    int (*mkfs)     (uint dev_id, char *fs_name);
+    int (*mkfs)     (unsigned int dev_id, char *fs_name);
 
     /* 获取文件系统的信息 */
     int (*statfs)   (struct FsDevice *fsdev, struct statfs *buf);
@@ -114,18 +114,19 @@ struct FsDevice
  */
 struct Inode
 {
-    uint                        magic;      /* 魔幻数 */
+    unsigned int                magic;      /* 魔幻数 */
     struct Device              *dev;        /* 操作的设备 */
     enum InodeType              type;       /* 类型 */
-    uint                        flags;      /* 操作权限 (O_RDWR\O_RDONLY\O_WRONLY) */
-    uint                        size;       /* 占用的磁盘大小 */
-    uint                        lock;       /* 锁 */
-    uint                        valid;      /* 是否已经从磁盘读取数据 */
-    uint                        addr;       /* 存放磁盘地址的缓冲区 */
-    uint                        ref;        /* 引用计数 */
-    uint                        writeoff;   /* 文件打开后写指针的偏移 */
-    uint                        readoff;    /* 文件打开后读指针的偏移 */
-    struct FileOperation       *fops;       /* 文件系统对象的操作接口 */
+    unsigned int                flags;      /* 操作类型 */
+    unsigned int                mode;       /* 访问的权限 */
+    unsigned int                size;       /* 占用的磁盘大小 */
+    unsigned int                lock;       /* 锁 */
+    unsigned int                valid;      /* 是否已经从磁盘读取数据 */
+    unsigned int                addr;       /* 存放磁盘地址的缓冲区 */
+    unsigned int                ref;        /* 引用计数 */
+    unsigned int                writeoff;   /* 文件打开后写指针的偏移 */
+    unsigned int                readoff;    /* 文件打开后读指针的偏移 */
+    struct FileOperation       *fops;       /* 文件对象的操作接口 */
     struct FileSystem          *fs;         /* 所属的文件系统 */
     void                       *data;       /* 私有数据域(例如用于：记录实体文件系统的文件操作结构体) */
 };
@@ -134,10 +135,12 @@ struct Inode
 /* 文件描述符 */
 struct File
 {
-    uint                magic;  /* 魔幻数 */
-    uint                ref;    /* 引用计数 */
-    uint                flags;  /* 文件可操作权限 */
-    struct Inode       *inode;  /* 占有的 inode */
+    unsigned int            magic;  /* 魔幻数 */
+    unsigned int            ref;    /* 引用计数 */
+    unsigned int            flags;  /* 文件可操作权限 */
+    struct FileOperation   *fops;   /* 文件对象的操作接口 */
+    struct Inode           *inode;  /* 占有的 inode */
+    struct DirItem         *ditem;  /* 占有的目录项 */
 };
 
 
@@ -147,7 +150,8 @@ struct File
  */
 struct DirItem
 {
-    uint                  magic;    /* 魔幻数 */
+    unsigned int          magic;    /* 魔幻数 */
+    ListEntry_t           list;     /* 用于挂载的链表对象 */
     enum{
         DITEM_MOUNT = 0x01,
         DITEM_ALLOC = 0x02,
@@ -155,12 +159,11 @@ struct DirItem
         DITEM_OPEN  = 0x08,
         DITEM_CLOSE = 0x10,
     }state;                         /* 状态 */
-    uint                  ref;      /* 引用计数 */
+    unsigned int                  ref;      /* 引用计数 */
     /* 相对路径 (不包含所属文件系统的挂载路径) */
     char                 *path;
     struct Inode         *inode;    /* 对应的 inode 节点 */
     struct FsDevice      *fsdev;    /* 所属的已挂载文件系统 */
-    ListEntry_t           list;     /* 用于挂载的链表对象 */
 };
 
 
@@ -175,34 +178,38 @@ int  fd_copy     (int fd);
 /**********************************/
 struct Inode *inode_alloc (void);
 void inode_free (struct Inode *inode);
-int inode_init (struct Inode *inode, unsigned int flags,
-        struct FileOperation *fops, enum InodeType type);
+int inode_init (struct Inode *inode, unsigned int flag,
+        struct FileOperation *fops, unsigned int mode);
 
 /**********************************/
 struct File *file_alloc (void);
 void file_free   (struct File *file);
-int  file_open      (struct File *file, char *path, uint flags);
+int  file_open      (struct File *file, char *path, 
+    unsigned int flags, unsigned int mode);
 int  file_close     (struct File *file);
-int  file_read      (struct File *file, void *buf, uint len);
-int  file_write     (struct File *file, void *buf, uint len);
+int  file_read      (struct File *file, 
+    void *buf, unsigned int len);
+int  file_write     (struct File *file, 
+    void *buf, unsigned int len);
 int  file_flush     (struct File *file);
 
 /**********************************/
-char *fstr_getfirst (char *path, char *name);
-int fstr_getlast (char *path, char *parentPath, char *name);
-struct Inode *path_parser (char *path,
-    unsigned int flags, enum InodeType type);
-char *fstr_formater (char *directory, char *path);
-int path_init (void);
+char *path_getfirst (char *path, char *name);
+int path_getlast (char *path, char *parentPath, char *name);
+struct Inode *parse_getinode (char *path,
+    unsigned int flag, unsigned int mode);
+char *path_formater (char *path);
+char *path_parser (char *directory, char *filepath);
+int path_setcwd (char *path);
+char *path_getcwd (void);
 
 /**********************************/
-void ditem_init (void);
+void init_ditem (void);
 struct DirItem *ditem_alloc (
         struct FsDevice *fsdev, char *path);
 int  ditem_free (struct DirItem *dir);
-void ditem_add (struct DirItem *ditem);
-struct DirItem *ditem_get (struct FsDevice *fsdev,
-         char *path, uint flag);
+struct DirItem *ditem_get (struct FsDevice *fsdev, char *path,
+          unsigned int flag, unsigned int mode);
 void ditem_put (struct DirItem *ditem);
 char *ditem_path (struct DirItem *ditem);
 
@@ -213,6 +220,6 @@ int fsdev_mount (char *fsname, char *path,
         unsigned int flag, void *data);
 int fsdev_unmount (char *path);
 struct FsDevice *fsdev_get (char *path);
-void fsdev_put (char *path);
+void fsdev_put (struct FsDevice *fsdev);
 
 #endif

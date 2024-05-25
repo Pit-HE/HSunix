@@ -22,7 +22,7 @@ void uart_intrrupt  (void);
 
 
 /******************** console ********************/
-void console_init       (void);
+void init_console       (void);
 void console_isr        (int c);
 int  console_wString    (char *src);
 int  console_wCmd       (char *src, int len);
@@ -50,11 +50,11 @@ void *kallocPhyPage (void);
 void  kfreePhyPage  (void *pa);
 void *kalloc        (int size);
 void  kfree         (void *obj);
-void  kmem_init     (void);
+void  init_kmem     (void);
 
 
 /******************** vm ********************/
-void    kvm_init    (void);
+void    init_kvm    (void);
 Pagetable_t *uvm_create (void);
 void    uvm_unmap   (Pagetable_t *pagetable, uint64 va, uint64 npages, bool free);
 uint64  uvm_alloc   (Pagetable_t *pagetable, uint64 oldaddr, uint64 newaddr, int flag);
@@ -66,7 +66,7 @@ int     copyin      (Pagetable_t *pagetable, char *dst, uint64 srcva, uint64 len
 
 
 /******************** trap ********************/
-void trap_init      (void);
+void init_trap      (void);
 void trap_userfunc  (void);
 void trap_userret   (void);
 void kerneltrap     (void);
@@ -84,7 +84,7 @@ void    wakeProcCB  (ProcCB *pcb);
 void    dumpProcCB  (void);
 void    scheduler   (void);
 void    defuncter   (void);
-void    proc_init   (void);
+void    init_proc   (void);
 void    do_yield    (void);
 void    do_suspend  (void *obj);
 void    do_resume   (void *obj);
@@ -97,8 +97,8 @@ int     KillState   (ProcCB *pcb);
 void    wakeProcCB  (ProcCB *pcb);
 
 /******************** plic ********************/
-void plic_init      (void);
-void plic_inithart  (void);
+void init_plic      (void);
+void init_plichart  (void);
 int  plic_claim     (void);
 void plic_complete  (int irq);
 
@@ -137,7 +137,7 @@ int  kRingbuf_putState  (ringbuf_t *rb);
 int  kRingbuf_getState  (ringbuf_t *rb);
 
 /******************** cli ***********************/
-void cli_init (void);
+void init_cli (void);
 void cli_main (void);
 
 
@@ -148,7 +148,7 @@ void test_main (void);
 
 
 /******************** timer *********************/
-void     timer_init (void);
+void     init_timer (void);
 timer_t *timer_add  (ProcCB *pcb, int expires);
 void     timer_del  (timer_t *timer);
 void     timer_run  (void);
@@ -159,7 +159,7 @@ int do_exec(char *path, char **argv);
 
 
 /******************** device ********************/
-void dev_init (void);
+void init_dev (void);
 struct Device *dev_alloc (const char *name);
 void dev_free (struct Device *dev);
 void dev_register (struct Device *dev);

@@ -3,6 +3,7 @@
  */
 #include "defs.h"
 #include "file.h"
+#include "fcntl.h"
 
 
 
@@ -45,7 +46,7 @@ static char *ditem_pathformat(
     return path;
 }
 
-/* 查找指定的目录项 */
+/* 查找指定的目录项是否已经存在 */
 static struct DirItem *ditem_find (
         struct FsDevice *fsdev, char *path)
 {
@@ -128,7 +129,7 @@ int ditem_free (struct DirItem *dir)
 }
 
 /* 将目录项添加到模块的哈希数组中 */
-void ditem_add (struct DirItem *ditem)
+static void ditem_add (struct DirItem *ditem)
 {
     int hash;
 
@@ -145,13 +146,13 @@ void ditem_add (struct DirItem *ditem)
     kENABLE_INTERRUPT();
 }
 
-/* 获取指定路径下的目录项, 若不存在则创建它 */
-struct DirItem *ditem_get (struct FsDevice *fsdev,
-        char *path, uint flag)
+/* 获取已存在的目录项 (传入的必须是绝对路径) */
+struct DirItem *ditem_get (struct FsDevice *fsdev, char *path,
+         unsigned int flag, unsigned int mode)
 {
     char *ditem_path;
-    struct Inode *inode;
     struct DirItem *ditem;
+    struct Inode *inode;
 
     if ((fsdev == NULL) || (path == NULL))
         return NULL;
@@ -169,37 +170,43 @@ struct DirItem *ditem_get (struct FsDevice *fsdev,
         return ditem;
     }
 
-    /* 确认实体文件系统是可查找的 */
-    if (fsdev->fs->fsops->lookup == NULL)
+    /*****************************************
+     *  处理目录项未创建的情况
+    *****************************************/
+    if ((fsdev->fs->fsops->lookup == NULL) ||
+        (fsdev->fs->fsops->create == NULL))
         return NULL;
 
-    /* 申请新的目录项 */
-    ditem = ditem_alloc(fsdev, ditem_path);
+    /* 创建新的目录项 */
+    ditem = ditem_alloc(fsdev, path);
     if (ditem == NULL)
         return NULL;
 
-    /* 处理该目录项还未存在的情况 */
+    /* 申请新的 inode 节点 */
     inode = inode_alloc();
     if (inode == NULL)
     {
         ditem_free(ditem);
         return NULL;
     }
-    inode_init(inode, flag, fsdev->fs->fops, 0);
+    inode_init(inode, flag, fsdev->fs->fops, mode);
 
     /* 查找与路径匹配的 inode */
     if (-1 == fsdev->fs->fsops->lookup(fsdev, inode, path))
     {
-        ditem_free(ditem);
-        inode_free(inode);
-        return NULL;
-    }
-    inode->ref += 1;
+        /* 在磁盘上创建对应的 inode 对象 */
+        if (-1 == fsdev->fs->fsops->create(fsdev, inode, path))
+        {
+            inode_free(inode);
+            ditem_free(ditem);
+            return NULL;
+        }
 
-    /* 将目录项与 inode 建立联系 */
+        ditem_add(ditem);
+    }
+
     ditem->inode = inode;
     ditem->ref += 1;
-    ditem_add(ditem);
 
     return ditem;
 }
@@ -248,7 +255,7 @@ char *ditem_path (struct DirItem *ditem)
 }
 
 /* 初始化虚拟文件系统的目录项管理模块 */
-void ditem_init (void)
+void init_ditem (void)
 {
     int i;
 
@@ -256,5 +263,7 @@ void ditem_init (void)
     {
         list_init(&ditem_hashlist[i]);
     }
+
+    fsdev_mount("ramfs", "/", O_RDWR, NULL);
 }
 

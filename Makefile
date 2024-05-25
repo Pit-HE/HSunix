@@ -49,9 +49,10 @@ kernel: $(obj) kernel.ld
 
 all:kernel 
 qemu:
-	$(QEMU) $(QEMUOPTS) -S -gdb tcp::25000
+	$(QEMU) $(QEMUOPTS)
 debug:
-	make all clean qemu
+	make all clean
+	$(QEMU) $(QEMUOPTS) -S -gdb tcp::25000
 clean:
 	rm -rf *.d *.o *.asm *.out *.sym initcode
 

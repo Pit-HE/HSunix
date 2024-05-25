@@ -11,7 +11,7 @@
 ListEntry_t     gDevList;
 
 
-void dev_init (void)
+void init_dev (void)
 {
     list_init(&gDevList);
 }

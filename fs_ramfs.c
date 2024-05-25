@@ -80,9 +80,9 @@ int _free_sublist (struct FsDevice *fsdev, struct ramfs_node *node)
  * path: 要解析的路径
  * name：存放第一个节点字符的缓冲区
  */
-static char *ramfs_fstr_getfirst (char *path, char *name)
+static char *ramfs_path_getfirst (char *path, char *name)
 {
-    return fstr_getfirst(path, name);
+    return path_getfirst(path, name);
 }
 
 /* 解析路径中最后一个节点的名字，并返回该节点前的父节点路径
@@ -93,9 +93,9 @@ static char *ramfs_fstr_getfirst (char *path, char *name)
  *
  * 返回值：-1为失败
  */
-static int ramfs_fstr_getlast (char *path, char *parentPath, char *name)
+static int ramfs_path_getlast (char *path, char *parentPath, char *name)
 {
-    return fstr_getlast(path, parentPath, name);
+    return path_getlast(path, parentPath, name);
 }
 
 /* 获取文件路径所对应的节点 ( 传入的必须是绝对路径 ) */
@@ -111,7 +111,7 @@ struct ramfs_node *_path_getnode (struct ramfs_sb *sb, char *path)
     cur_path = path;
     cur_node = &sb->root;
 
- _loop_path_parser:
+ _loop_parse_getinode:
     /* 读取到了最后一个文件 */
     if (*cur_path == '\0')
         return cur_node;
@@ -121,7 +121,7 @@ struct ramfs_node *_path_getnode (struct ramfs_sb *sb, char *path)
         return NULL;
 
     /* 获取当前 cur_path 路径下的第一个文件对象的名字 */
-    cur_path = ramfs_fstr_getfirst(cur_path, first_name);
+    cur_path = ramfs_path_getfirst(cur_path, first_name);
     if (first_name[0] == '\0')
         return NULL;    // 避免传入的路径仅为斜杠的情况
 
@@ -134,7 +134,7 @@ struct ramfs_node *_path_getnode (struct ramfs_sb *sb, char *path)
         if (0 == kstrcmp(sub_node->name, first_name))
         {
             cur_node = sub_node;
-            goto _loop_path_parser;
+            goto _loop_parse_getinode;
         }
     }
 
@@ -481,7 +481,7 @@ int ramfs_rename (struct FsDevice *fsdev, char *oldpath, char *newpath)
 
     /* 获取新文件的名字 */
     kmemset(new_name, 0, RAMFS_NAME_LEN);
-    if (-1 == ramfs_fstr_getlast (newpath, parent_path, new_name))
+    if (-1 == ramfs_path_getlast (newpath, parent_path, new_name))
         return -1;
 
     /* 修改名字 */
@@ -544,7 +544,7 @@ int ramfs_create (struct FsDevice *fsdev, struct Inode *inode, char *path)
     /* 获取父节点的 ramfs_node 和要创建的节点名字 */
     kmemset(parent_path, 0, RAMFS_PATH_MAT);
     kmemset(node_name, 0, RAMFS_NAME_LEN);
-    if (-1 == ramfs_fstr_getlast (path, parent_path, node_name))
+    if (-1 == ramfs_path_getlast (path, parent_path, node_name))
         return -1;
     if (NULL == (parent_node = _path_getnode(sb, parent_path)))
         return -1;

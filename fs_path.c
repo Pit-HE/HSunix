@@ -1,83 +1,300 @@
 /*
- * 对文件的路径字符串进行解析的模块
+ * 提供虚拟文件系统处理文件路径字符串的功能接口
  */
 #include "defs.h"
 #include "file.h"
 #include "fcntl.h"
 
-/* 记录操作系统上电默认使用的文件系统 */
-struct FsDevice *default_fs = NULL;
 
 
-/* 当文件路径没有对应的 inode 时则创建新的节点
- * ( 未处理文件路径中间缺少多个中间文件夹的情况 )
+/* 解析路径中第一个节点的名字, 并返回剩下的路径内容
+ *
+ * path: 要解析的路径
+ * name：存放第一个节点字符的缓冲区
  */
-int path_createinode (struct DirItem *ditem, char *path)
+char *path_getfirst (char *path, char *name)
 {
-    char parent_path[256];
-    struct FsDevice *fsdev = ditem->fsdev;
+    char *ptr = path;
 
-    /* 创建文件路径所对应的文件节点 */
-    if (fsdev->fs->fsops->create == NULL)
-        return -1;
-    if (fsdev->fs->fsops->lookup == NULL)
-        return -1;
-
-    /* 确认该文件路径中的父节点是否存在 */
-    fstr_getlast(path, parent_path, NULL);
-    if (-1 == fsdev->fs->fsops->lookup(fsdev, ditem->inode, parent_path))
-        return -1;
-
-    /* 父节点存在，则表明该文件可以创建 */
-    fsdev->fs->fsops->create(fsdev, ditem->inode, path);
-
-    return 0;
-}
-
-
-/* 获取文件路径所对应的 inode */
-struct Inode *path_parser (char *path,
-    unsigned int flags, enum InodeType type)
-{
-    struct FileSystem *fs;
-    ProcCB *pcb = getProcCB();
-    struct Inode *inode = NULL;
-    char *abs_path; // 绝对路径
-
-    if ((path == NULL) || (pcb == NULL))
+    if (path == NULL)
         return NULL;
 
-    if (*path == '/')
+    /* 跳过文件路径上的斜杠 */
+    while(*ptr == '/')
+        ptr++;
+
+    if (name != NULL)
     {
-        abs_path = path;
-        fs = default_fs->fs;
+        /* 获取第一个节点的字符串 */
+        while(*ptr != '/' && *ptr)
+            *name++ = *ptr++;
+        /* 标记字符串的结束 */
+        *name = '\0';
     }
     else
     {
-        abs_path = (char *)kalloc(kstrlen(pcb->pwd) + kstrlen(path) + 1);
-        if (abs_path == NULL)
-            return NULL;
-        kstrcpy(abs_path, pcb->pwd);
-        kstrcat(abs_path, path);
-
-        fs = pcb->root->inode->fs;
+        while(*ptr != '/' && *ptr)
+            ptr++;
     }
-    if ((fs == NULL) || (abs_path == NULL))
-        return NULL;
 
-    return inode;
+    /* 每次 ptr 都会停在文件路径的斜杠上 */
+    return ptr;
 }
 
-/* 挂载系统默认使用的文件系统 */
-int path_init (void)
+/* 解析路径中最后一个节点的名字，并返回该节点前的父节点路径
+ *
+ * path: 要解析的路径
+ * parentPath: 存放父节点路径的缓冲区
+ * name：最后一个节点的名字
+ *
+ * 返回值：-1为失败
+ */
+int path_getlast (char *path, char *parentPath, char *name)
 {
-    if (-1 == fsdev_mount("ramfs", "/", O_RDWR, NULL))
+ #if 0
+    char *p_path, *q_path;
+
+    if ((path == NULL) || (parentPath == NULL) || (name == NULL))
+        return -1;
+    p_path = q_path = path;
+
+    // /* 跳过根目录的斜杠，以及处理只传入根目录的情况 */
+    // while(*p_path == '/')
+    //     p_path++;
+    // if (*p_path == '\0')
+    // {
+    //     parentPath[0] = '/';
+    //     parentPath[1] = '\0';
+    //     return 0;
+    // }
+
+    // while(1)
+    // {
+    //     while(*p_path != '/' && *p_path)
+    //         p_path++;
+
+    //     if (*p_path != '\0')
+    //     {
+    //         p_path += 1;    /* 跳过斜杠 */
+    //         q_path = p_path;
+    //     }
+    //     else
+    //     {
+    //         /* q_path 已停留在子文件名的开头
+    //          * p_path 已停留在字符串的结尾处
+    //          */
+    //         if (q_path == path)
+    //         {
+    //             parentPath[0] = '/';
+    //             parentPath[1] = '\0';
+    //             q_path += 1;
+    //         }
+    //         else
+    //         {
+    //             kmemcpy(parentPath, path, q_path - path - 1);
+    //             parentPath[q_path - path - 1] = '\0';
+    //         }
+    //         kmemcpy(name, q_path, p_path - q_path);
+    //         name[p_path - q_path] = '\0';
+    //         break;
+    //     }
+    // }
+ #else
+    char *p_path;
+
+    if ((path == NULL) || (parentPath == NULL) || (name == NULL))
         return -1;
 
-    default_fs = fsdev_get("/");
-    if (default_fs == NULL)
-        return -1;
+    p_path = kstrrchr(path, '/');
+
+    if (p_path == path)
+    {
+        parentPath[0] = '/';
+        parentPath[1] = '\0';
+    }
+    else
+    {
+        kmemcpy(parentPath, path, p_path - path - 1);
+        parentPath[p_path - path - 1] = '\0';
+    }
+    kstrcpy(name, p_path + 1);
+ #endif
 
     return 0;
 }
 
+/* 格式化传入的文件路径，处理其中的 '.' 与 ".." */
+char *path_formater (char *path)
+{
+    char *dst0, *dst, *src;
+
+    src = path;
+    dst = path;
+
+    dst0 = dst;
+    while (1)
+    {
+        char c = *src;
+
+        if (c == '.')
+        {
+            if (!src[1])
+                src++; /* '.' and ends */
+            else if (src[1] == '/')
+            {
+                /* './' case */
+                src += 2;
+
+                while ((*src == '/') && (*src != '\0'))
+                    src++;
+                continue;
+            }
+            else if (src[1] == '.')
+            {
+                if (!src[2])
+                {
+                    /* '..' and ends case */
+                    src += 2;
+                    goto up_one;
+                }
+                else if (src[2] == '/')
+                {
+                    /* '../' case */
+                    src += 3;
+
+                    while ((*src == '/') && (*src != '\0'))
+                        src++;
+                    goto up_one;
+                }
+            }
+        }
+
+        /* copy up the next '/' and erase all '/' */
+        while ((c = *src++) != '\0' && c != '/')
+            *dst++ = c;
+
+        if (c == '/')
+        {
+            *dst++ = '/';
+            while (c == '/')
+                c = *src++;
+
+            src--;
+        }
+        else if (!c)
+            break;
+
+        continue;
+
+    up_one:
+        dst--;
+        if (dst < dst0)
+        {
+            kfree(path);
+            return NULL;
+        }
+        while (dst0 < dst && dst[-1] != '/')
+            dst--;
+    }
+
+    *dst = '\0';
+
+    /* remove '/' in the end of path if exist */
+    dst--;
+    if ((dst != path) && (*dst == '/'))
+        *dst = '\0';
+
+    /* final check fullpath is not empty, for the special path of lwext "/.." */
+    if ('\0' == path[0])
+    {
+        path[0] = '/';
+        path[1] = '\0';
+    }
+
+    return path;
+}
+
+/* 解析传入的路径信息，将其转化为绝对路径作为返回值
+ * 1、directory == NULL & filepath 为相对路径时，使用当前工作路径组成绝对路径
+ * 2、directory == NULL & filepath 为绝对路径时，直接使用 filepath 作为绝对路径
+ * 3、directory != NULL & filepath 为相对路径时，将两者组合称为绝对路径
+ * 4、directory != NULL & filepath 为绝对路径时，直接使用 filepath 作为绝对路径
+ */
+char *path_parser (char *directory, char *filepath)
+{
+    char *path;
+
+    if (filepath == NULL)
+        return NULL;
+    /* 使用当前进程的工作路径 */
+    if (directory == NULL)
+        directory = getProcCB()->cwd;
+    /* 不允许直接操作相对路径 */
+    if ((directory == NULL) && (filepath[0] != '/'))
+        return NULL;
+
+    if (filepath[0] != '/') /* it's a absolute path, use it directly */
+    {
+        path = (char *)kalloc(kstrlen(directory) + kstrlen(filepath) + 2);
+
+        if (path == NULL)
+            return NULL;
+
+        kstrcpy(path, directory);
+        path[kstrlen(directory)] = '/';
+        kstrcat(path, filepath);
+    }
+    else
+    {
+        path = kstrdup(filepath); /* copy string */
+
+        if (path == NULL)
+            return NULL;
+    }
+
+    /* 处理文件路径中的 '.' 与 '..' */
+    return path_formater(path);
+}
+
+/* 设置进程的当前工作路径
+ * ( 传入的必须是绝对路径 )
+ */
+int path_setcwd (char *path)
+{
+    ProcCB *pcb;
+    char *cwd, *old_cwd;
+
+    if ((path == NULL) || (path[0] != '/'))
+        return -1;
+    pcb = getProcCB();
+
+    /* 格式化该路径 */
+    path_formater(path);
+
+    cwd = (char *)kalloc(kstrlen(path) + 1);
+    if (cwd == NULL)
+        return -1;
+    kstrcpy(cwd, path);
+
+    kDISABLE_INTERRUPT();
+    old_cwd = pcb->cwd;
+    pcb->cwd = cwd;
+    kENABLE_INTERRUPT();
+
+    kfree(old_cwd);
+
+    return 0;
+}
+
+/* 获取进程的当前工作路径 */
+char *path_getcwd (void)
+{
+    char *cwd;
+    ProcCB *pcb = getProcCB();
+
+    cwd = (char *)kalloc(kstrlen(pcb->cwd) + 1);
+    if (cwd != NULL)
+        kstrcpy(cwd, pcb->cwd);
+
+    return cwd;
+}

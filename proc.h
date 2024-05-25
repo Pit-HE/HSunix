@@ -97,9 +97,9 @@ typedef struct processControlBlock
   ListEntry_t   list;             // Manage process state switch
 
   struct File **fdTab;            // 文件描述符的指针数组
-  uint          fdLen;            // 记录当前文件描述符数组的长度(可以动态变化)
+  uint          fdCnt;            // 记录当前文件描述符数组的长度(可以动态变化)
   struct File  *root;             // 进程工作路径所属的文件节点
-  char         *pwd;              // 进程的工作路径
+  char         *cwd;              // 进程的工作路径
 
   uint64        stackAddr;        // Virtual address of kernel stack
   uint64        stackSize;        // Virtual address of kernel stack size
