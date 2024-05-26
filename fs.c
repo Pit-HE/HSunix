@@ -10,6 +10,9 @@
 /* 初始化虚拟文件系统 */
 void init_vfs (void)
 {
+    void dfs_ramfs_init (void);
+    dfs_ramfs_init();
+
     init_ditem();
 }
 

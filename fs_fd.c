@@ -20,16 +20,16 @@ int fdTab_alloc (ProcCB *pcb)
     ret = 1;
 
     /* 标准输入 */
-    pcb->fdTab[0] = file_alloc();
-    file_open(pcb->fdTab[0], "console", O_RDONLY, S_IRWXU);
+    pcb->fdTab[STD_INPUT] = file_alloc();
+    file_open(pcb->fdTab[STD_INPUT], "console", O_RDONLY, S_IRWXU);
 
     /* 标准输出 */
-    pcb->fdTab[1] = file_alloc();
-    file_open(pcb->fdTab[1], "console", O_WRONLY, S_IRWXU);
+    pcb->fdTab[STD_OUTPUT] = file_alloc();
+    file_open(pcb->fdTab[STD_OUTPUT], "console", O_WRONLY, S_IRWXU);
 
     /* 标准错误 */
-    pcb->fdTab[2] = file_alloc();
-    file_open(pcb->fdTab[2], "console", O_RDONLY | O_WRONLY, S_IRWXU);
+    pcb->fdTab[STD_ERROR] = file_alloc();
+    file_open(pcb->fdTab[STD_ERROR], "console", O_RDONLY | O_WRONLY, S_IRWXU);
 
     return ret;
 }
@@ -72,8 +72,8 @@ int fd_alloc (void)
         }
     }
 
-    /* 已无可用空间，则扩张进程的文件描述符指针数组 */
-    if ((fd == -1) && (i == pcb->fdCnt))
+    /*** 已无可用数组元素，则扩张进程的文件描述符指针数组 ***/
+    if (fd == -1)
     {
         /* 申请新的文件描述符指针数组 */
         tab = (struct File **)kalloc(sizeof(struct File*)*(pcb->fdCnt + 5));
@@ -106,6 +106,7 @@ void fd_free (int fd)
         return;
 
     file_free(pcb->fdTab[fd]);
+    pcb->fdTab[fd] = NULL;
 }
 
 /* 通过文件描述符编号获得对应的结构体

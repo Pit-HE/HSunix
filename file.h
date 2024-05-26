@@ -159,7 +159,7 @@ struct DirItem
         DITEM_OPEN  = 0x08,
         DITEM_CLOSE = 0x10,
     }state;                         /* 状态 */
-    unsigned int                  ref;      /* 引用计数 */
+    unsigned int          ref;      /* 引用计数 */
     /* 相对路径 (不包含所属文件系统的挂载路径) */
     char                 *path;
     struct Inode         *inode;    /* 对应的 inode 节点 */

@@ -125,7 +125,7 @@ char *kstrcat(char *dest, const char *src)
 }
 
 /* 返回字符 chr 在字符串 string 中第一次出现的位置 */
-char *strchr (const char *str, int chr)
+char *kstrchr (const char *str, int chr)
 {
     while (*str && *str != chr)
         str++;
@@ -143,7 +143,7 @@ char *kstrrchr (const char * str, int ch)
 	while (--str != start && *str != (char)ch);
 
 	if (*str == (char)ch)
-			return( (char *)str );
+        return( (char *)str );
 
-	return(NULL);
+	return((char *)0);
 }

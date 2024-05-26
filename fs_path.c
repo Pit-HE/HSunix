@@ -51,60 +51,12 @@ char *path_getfirst (char *path, char *name)
  */
 int path_getlast (char *path, char *parentPath, char *name)
 {
- #if 0
-    char *p_path, *q_path;
-
-    if ((path == NULL) || (parentPath == NULL) || (name == NULL))
-        return -1;
-    p_path = q_path = path;
-
-    // /* 跳过根目录的斜杠，以及处理只传入根目录的情况 */
-    // while(*p_path == '/')
-    //     p_path++;
-    // if (*p_path == '\0')
-    // {
-    //     parentPath[0] = '/';
-    //     parentPath[1] = '\0';
-    //     return 0;
-    // }
-
-    // while(1)
-    // {
-    //     while(*p_path != '/' && *p_path)
-    //         p_path++;
-
-    //     if (*p_path != '\0')
-    //     {
-    //         p_path += 1;    /* 跳过斜杠 */
-    //         q_path = p_path;
-    //     }
-    //     else
-    //     {
-    //         /* q_path 已停留在子文件名的开头
-    //          * p_path 已停留在字符串的结尾处
-    //          */
-    //         if (q_path == path)
-    //         {
-    //             parentPath[0] = '/';
-    //             parentPath[1] = '\0';
-    //             q_path += 1;
-    //         }
-    //         else
-    //         {
-    //             kmemcpy(parentPath, path, q_path - path - 1);
-    //             parentPath[q_path - path - 1] = '\0';
-    //         }
-    //         kmemcpy(name, q_path, p_path - q_path);
-    //         name[p_path - q_path] = '\0';
-    //         break;
-    //     }
-    // }
- #else
     char *p_path;
 
     if ((path == NULL) || (parentPath == NULL) || (name == NULL))
         return -1;
 
+    /* 获取最后一个'/'的位置 */
     p_path = kstrrchr(path, '/');
 
     if (p_path == path)
@@ -114,12 +66,12 @@ int path_getlast (char *path, char *parentPath, char *name)
     }
     else
     {
-        kmemcpy(parentPath, path, p_path - path - 1);
-        parentPath[p_path - path - 1] = '\0';
+        kmemcpy(parentPath, path, p_path - path);
+        parentPath[p_path - path] = '\0';
     }
-    kstrcpy(name, p_path + 1);
- #endif
 
+    /* 拷贝时跳过'/' */
+    kstrcpy(name, p_path + 1);
     return 0;
 }
 
@@ -233,10 +185,9 @@ char *path_parser (char *directory, char *filepath)
     if ((directory == NULL) && (filepath[0] != '/'))
         return NULL;
 
-    if (filepath[0] != '/') /* it's a absolute path, use it directly */
+    if (filepath[0] != '/')
     {
         path = (char *)kalloc(kstrlen(directory) + kstrlen(filepath) + 2);
-
         if (path == NULL)
             return NULL;
 
@@ -246,8 +197,7 @@ char *path_parser (char *directory, char *filepath)
     }
     else
     {
-        path = kstrdup(filepath); /* copy string */
-
+        path = kstrdup(filepath);
         if (path == NULL)
             return NULL;
     }

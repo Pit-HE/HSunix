@@ -7,6 +7,10 @@
 #include "fcntl.h"
 #include "fs.h"
 
+extern void tc_fs_power (void);
+extern void tc_fs_process (void);
+
+
 /* 测试虚拟内存管理模块是否正常 */
 void tc_virtualmemory (void)
 {
@@ -212,74 +216,18 @@ void tc_timer (void)
 }
 
 
-/* 测试文件系统的设备操作
- * ( 注：该用例需要在进程中调用 )
- */
-void tc_fsDevice (void)
-{
-    int fd;
-    char rbuf[20];
-    char wbuf[20];
 
-    kmemset(wbuf, 0, 20);
-    kstrcpy(wbuf, "Hello World !\r\n");
-
-    /* 查看设备打开与读写流程是否正常 */
-    fd = vfs_open("console", O_WRONLY, S_IRWXU);
-    vfs_write (fd, wbuf, kstrlen(wbuf));
-    vfs_read(fd, rbuf, 1);
-    vfs_close(fd);
-
-    /* 测试进程的标准输入 */
-    vfs_read(0, rbuf, 1);
-
-    /* 测试进程的标准输出 */
-    vfs_write(1, wbuf, kstrlen(wbuf));
-}
-
-
-/* 测试 ramfs 文件系统的函数接口 */
-#if 1
-static void _tc_ramfsPathParser (char *path)
-{
-    char parent[256], file[128], *pStr = NULL;
-
-    kprintf ("PATH: %s\r\n", path);
-
-    pStr = path_getfirst(path, file);
-    kprintf ("first pStr = %s \r\n", pStr);
-    kprintf ("first file = %s\r\n", file);
-
-    path_getlast (path, parent, file);
-    kprintf("last path = %s\r\n", parent);
-    kprintf("last file = %s\r\n", file);
-}
-void tc_ramfs_api (void)
-{
- #if 1
-    /* 测试 ramfs 中字符串处理的接口 */
-    char path[256];
-
-    kstrcpy(path, "/home/HSunix/kernel");
-    _tc_ramfsPathParser(path);
-
-    kstrcpy(path, "/usr");
-    _tc_ramfsPathParser(path);
-
-    kstrcpy(path, "/");
-    _tc_ramfsPathParser(path);
- #elif 0
-
- #endif
-}
-#endif
-
-/* 系统自检接口 */
-void self_inspection (void)
+/* 系统上电自检接口 */
+void power_selfInspection (void)
 {
     // tc_virtualmemory();
     // tc_kalloc();
     // tc_ringbuff();
     // tc_timer();
-    tc_ramfs_api();
+    tc_fs_power();
+}
+
+void proc_selfInspection (void)
+{
+    tc_fs_process();
 }

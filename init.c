@@ -2,8 +2,12 @@
 #include "defs.h"
 
 
+
 void init_main (void)
 {
+    if (-1 == vfs_pcbInit(getProcCB(), "/"))
+        kError(eSVC_Process, E_STATUS);
+
     kprintf("sh: ");
 
     while(1)
@@ -14,6 +18,9 @@ void init_main (void)
 
 void idle_main (void)
 {
+    if (-1 == vfs_pcbInit(getProcCB(), "/"))
+        kError(eSVC_Process, E_STATUS);
+
     while(1)
     {
         scheduler();
@@ -70,11 +77,15 @@ void test_main (void)
         }
     }
  #elif 1
+    if (-1 == vfs_pcbInit(getProcCB(), "/"))
+        kError(eSVC_Process, E_STATUS);
+
+    /* 调用测试用例执行测试 */
+    extern void proc_selfInspection (void);
+    proc_selfInspection();
+
     while(1)
     {
-        extern void tc_fsDevice (void);
-        tc_fsDevice();
-
         do_sleep(100);
     }
  #endif

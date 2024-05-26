@@ -31,7 +31,7 @@ CFLAGS += -fno-pie -no-pie
 
 LDFLAGS = -z max-page-size=4096
 
-QEMUOPTS = -machine virt -bios none -kernel kernel -m 200M -smp $(CPUS) -nographic
+QEMUOPTS = -machine virt -bios none -kernel kernel -m 160M -smp $(CPUS) -nographic
 
 
 
@@ -47,14 +47,18 @@ kernel: $(obj) kernel.ld
 	$(OBJDUMP) -S kernel > kernel.asm
 	$(OBJDUMP) -t kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > kernel.sym
 
-all:kernel 
+all:kernel
+
+flush:
+	rm -rf *.d *.o *.asm *.out *.sym initcode
 qemu:
 	$(QEMU) $(QEMUOPTS)
 debug:
-	make all clean
+	make all flush
 	$(QEMU) $(QEMUOPTS) -S -gdb tcp::25000
 clean:
-	rm -rf *.d *.o *.asm *.out *.sym initcode
+	make flush
+	rm -rf kernel
 
 .PHONY: all clean debug qemu
 

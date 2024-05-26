@@ -51,26 +51,32 @@ static struct DirItem *ditem_find (
         struct FsDevice *fsdev, char *path)
 {
     int index;
-    ListEntry_t *list;
-    struct DirItem *ditem;
+    char *str = NULL;
+    ListEntry_t *list = NULL;
+    struct DirItem *ditem = NULL;
 
     if ((fsdev == NULL) || (path == NULL))
         return NULL;
 
     /* 去除字符串中包含的文件系统挂载路径 */
-    path = ditem_pathformat(fsdev, path);
-    if (path == NULL)
-       *path = '/';
+    str = ditem_pathformat(fsdev, path);
+    if (*str == '\0')
+    {
+       /* 处理传入的是文件系统挂载目录的情况
+        * ( 挂载路径的目录项名字为 '/' )
+        */
+       str = kstrchr(path, '/');
+    }
 
     /* 获取所寻目录项的哈希值 */
-    index = ditem_hash(fsdev, path);
+    index = ditem_hash(fsdev, str);
 
-    /* 遍历链表，获取指定的目录项 */
+    /* 遍历哈希数组成员的链表，获取指定的目录项 */
     list_for_each(list, &ditem_hashlist[index])
     {
         ditem = list_container_of(list, struct DirItem, list);
         if ((ditem->fsdev == fsdev) &&
-            (0 == kstrcmp(ditem->path, path)))
+            (0 == kstrcmp(ditem->path, str)))
         {
             return ditem;
         }
@@ -82,7 +88,7 @@ static struct DirItem *ditem_find (
 struct DirItem *ditem_alloc (
         struct FsDevice *fsdev, char *path)
 {
-    struct DirItem *ditem;
+    struct DirItem *ditem = NULL;
 
     if ((fsdev == NULL) || (path == NULL))
         return NULL;
@@ -93,8 +99,16 @@ struct DirItem *ditem_alloc (
 
     /* 跳过 path 中包含的关于文件系统挂载的路径 */
     path = ditem_pathformat(fsdev, path);
+    if (*path == '\0')
+    {
+        /* 处理传入的是文件系统挂载目录的情况
+         * ( 设置文件系统挂载路径目录项的path )
+         */
+        ditem->path = kstrdup("/");
+    }
+    else
+        ditem->path = kstrdup(path);
 
-    ditem->path = kstrdup(path);
     if (ditem->path == NULL)
     {
         kfree (ditem);
@@ -108,7 +122,7 @@ struct DirItem *ditem_alloc (
     ditem->fsdev = fsdev;
     list_init(&ditem->list);
 
-    return NULL;
+    return ditem;
 }
 
 /* 释放已经申请的目录项的内存空间 */
@@ -150,20 +164,14 @@ static void ditem_add (struct DirItem *ditem)
 struct DirItem *ditem_get (struct FsDevice *fsdev, char *path,
          unsigned int flag, unsigned int mode)
 {
-    char *ditem_path;
-    struct DirItem *ditem;
-    struct Inode *inode;
+    struct DirItem *ditem = NULL;
+    struct Inode *inode = NULL;
 
     if ((fsdev == NULL) || (path == NULL))
         return NULL;
 
-    /* 去除 path 中可能包含的文件系统挂载的路径 */
-    ditem_path = ditem_pathformat(fsdev, path);
-    if (*ditem_path == '\0')
-        *ditem_path = '/';
-
     /* 确认目录项是否已经存在 */
-    ditem = ditem_find(fsdev, ditem_path);
+    ditem = ditem_find(fsdev, path);
     if (ditem != NULL)
     {
         ditem->ref += 1;

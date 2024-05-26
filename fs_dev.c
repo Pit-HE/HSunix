@@ -28,8 +28,8 @@ LIST_INIT_OBJ(gFsDevList);
 /* 查找已注册的文件系统 */
 static struct FsObject *find_fsobj (char *name)
 {
-    struct FsObject *fsobj;
-    ListEntry_t *ptr;
+    struct FsObject *fsobj = NULL;
+    ListEntry_t *ptr = NULL;
 
     if (name == NULL)
         return NULL;
@@ -52,14 +52,15 @@ static struct FsDevice *alloc_fsdev (char *path)
         return NULL;
     
     /* 设置文件系统的挂载路径 */
-    fsdev->path = (char *)kalloc(kstrlen(path));
+    fsdev->path = (char *)kalloc(kstrlen(path) + 1);
     if (fsdev->path == NULL)
     {
         kfree(fsdev);
         return NULL;
     }
 
-    list_init (&fsdev->list);
+    kstrcpy(fsdev->path, path);
+    list_init(&fsdev->list);
 
     return fsdev;
 }
@@ -75,8 +76,8 @@ static void free_fsdev (struct FsDevice *fsdev)
 /* 查找已挂载的文件系统设备 */
 static struct FsDevice *find_fsdev (char *path)
 {
-    struct FsDevice *fsdev;
-    ListEntry_t *ptr;
+    struct FsDevice *fsdev = NULL;
+    ListEntry_t *ptr = NULL;
 
     if (path == NULL)
         return NULL;
@@ -84,10 +85,10 @@ static struct FsDevice *find_fsdev (char *path)
     list_for_each(ptr, &gFsDevList)
     {
         fsdev = list_container_of(ptr, struct FsDevice, list);
-        if (0 == kstrcmp(fsdev->path, path))
-            break;
+        if (0 == kstrncmp(fsdev->path, path, kstrlen(fsdev->path)))
+            return fsdev;
     }
-    return fsdev;
+    return NULL;
 }
 
 
@@ -133,8 +134,8 @@ int fsdev_mount (char *fsname, char *path,
         unsigned int flag, void *data)
 {
     int ret = 0;
-    struct FsObject *fsobj;
-    struct FsDevice *fsdev;
+    struct FsObject *fsobj = NULL;
+    struct FsDevice *fsdev = NULL;
 
     /* 同一个路径只允许挂载一个文件系统 */
     if (find_fsdev(path))

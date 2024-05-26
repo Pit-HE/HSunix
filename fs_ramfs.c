@@ -101,12 +101,21 @@ static int ramfs_path_getlast (char *path, char *parentPath, char *name)
 /* 获取文件路径所对应的节点 ( 传入的必须是绝对路径 ) */
 struct ramfs_node *_path_getnode (struct ramfs_sb *sb, char *path)
 {
-    ListEntry_t *list;
-    struct ramfs_node *cur_node, *sub_node;
-    char first_name[RAMFS_NAME_LEN], *cur_path;
+    ListEntry_t *list = NULL;
+    struct ramfs_node *cur_node = NULL;
+    struct ramfs_node *sub_node = NULL;
+    char first_name[RAMFS_NAME_LEN];
+    char *cur_path = NULL, *tmp_path = NULL;
 
     if ((sb == NULL) || (path == NULL))
         return NULL;
+
+    /* 处理获取文件系统挂载路径的情况 */
+    tmp_path = path;
+    while(*tmp_path == '/' && *tmp_path)
+        tmp_path++;
+    if (*tmp_path == '\0')
+        return &sb->root;
 
     cur_path = path;
     cur_node = &sb->root;
@@ -148,7 +157,7 @@ struct ramfs_node *_path_getnode (struct ramfs_sb *sb, char *path)
 /* 开启指定的文件，使其能被文件系统的接口所操作 */
 int ramfs_open (struct Inode *inode)
 {
-    struct ramfs_node *node;
+    struct ramfs_node *node = NULL;
 
     if ((inode == NULL) || (inode->magic != INODE_MAGIC))
         return -1;
@@ -204,7 +213,7 @@ int ramfs_read (struct Inode *inode, void *buf, unsigned int count)
         return -1;
 
     node = inode->data;
-    if ((node == NULL) || (node->data != NULL))
+    if ((node == NULL) || (node->data == NULL))
         return -1;
 
     /* 确认文件实际可读写的长度 */
@@ -494,8 +503,8 @@ int ramfs_rename (struct FsDevice *fsdev, char *oldpath, char *newpath)
 /* 查找指定路径下的 ramfs_node 对象，传入的 path 必须是绝对路径 */
 int ramfs_lookup (struct FsDevice *fsdev, struct Inode *inode, char *path)
 {
-    struct ramfs_sb     *sb;
-    struct ramfs_node   *node;
+    struct ramfs_sb     *sb = NULL;
+    struct ramfs_node   *node = NULL;
 
     if ((fsdev == NULL) || (inode == NULL) || (path == NULL))
         return -1;

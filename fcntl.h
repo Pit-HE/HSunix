@@ -22,6 +22,9 @@
 #define S_IWUSR     0x00000200  /* 用户写 */
 #define S_IXUSR     0x00000100  /* 用户执行 */
 
-
+/* 标准文件 */
+#define STD_INPUT   0
+#define STD_OUTPUT  1
+#define STD_ERROR   2
 
 #endif

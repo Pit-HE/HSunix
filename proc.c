@@ -139,15 +139,6 @@ ProcCB *allocProcCB (void)
         goto _exit_allocProcCB;
     }
 
-    if (-1 == vfs_pcbInit(pcb, "/"))
-    {
-        kfree ((void*)pcb->trapFrame->sp);
-        kfree (pcb->trapFrame);
-        kfree (pcb);
-        pcb = NULL;
-        goto _exit_allocProcCB;
-    }
-
     // pcb->pageTab = uvm_create();
     // if (pcb->pageTab == NULL)
     // {
@@ -162,8 +153,6 @@ ProcCB *allocProcCB (void)
 
     pcb->pid = allocPid();
     pcb->state = USED;
-
-
 
     list_init(&pcb->list);
     list_init(&pcb->regist);
@@ -254,7 +243,6 @@ void init_proc (void)
     kIdleProcCB->stackSize  = (uint64)2048;
     kIdleProcCB->context.sp = (uint64)(stack + 2048);
     wakeProcCB(kIdleProcCB);
-    setCpuCB(kIdleProcCB);
 
     /* test process */
     pcb = allocProcCB();
@@ -269,18 +257,23 @@ void init_proc (void)
     /* 只要注释以下的进程创建，
      * 便能关闭用户模式切换的测试功能,之后系统正常工作
      */
-    pcb = allocProcCB();
-    stack = (char *)kalloc(2048);
-    kstrcpy(pcb->name, "user");
-    void user_ret (void);
-    pcb->context.ra = (uint64)user_ret;
-    pcb->stackAddr  = (uint64)stack;
-    pcb->stackSize  = (uint64)2048;
-    pcb->context.sp = (uint64)(stack + 2048);
-    /* 设置进程在用户模式下执行的函数 */
-    void user_processEntry (void);
-    pcb->trapFrame->epc = (uint64)user_processEntry;
-    wakeProcCB(pcb);
+    // pcb = allocProcCB();
+    // stack = (char *)kalloc(2048);
+    // kstrcpy(pcb->name, "user");
+    // void user_ret (void);
+    // pcb->context.ra = (uint64)user_ret;
+    // pcb->stackAddr  = (uint64)stack;
+    // pcb->stackSize  = (uint64)2048;
+    // pcb->context.sp = (uint64)(stack + 2048);
+    // /* 设置进程在用户模式下执行的函数 */
+    // void user_processEntry (void);
+    // pcb->trapFrame->epc = (uint64)user_processEntry;
+    // wakeProcCB(pcb);
+
+
+
+    /* 设置当前 CPU 的默认进程 */
+    setCpuCB(kIdleProcCB);
 }
 
 /* 就绪进程调度器 */

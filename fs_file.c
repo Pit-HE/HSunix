@@ -34,6 +34,7 @@ void file_free (struct File *file)
     if (file->ref != 0)
         return;
 
+    file->magic = 0;
     kfree(file);
 }
 
@@ -52,8 +53,9 @@ int file_open (struct File *file, char *path,
     int ret = 0;
     struct Device *dev = NULL;
     struct Inode *inode = NULL;
-    struct FsDevice *fsdev = NULL;
     struct DirItem *ditem = NULL;
+    struct FsDevice *fsdev = NULL;
+    
 
     if ((file == NULL) || (path == NULL))
         return -1;
@@ -139,13 +141,13 @@ int file_close (struct File *file)
     if (inode->type == INODE_DEVICE)
     {
         dev_put(file->inode->dev);
+        inode_free(file->inode);
     }
     else
     {
         fsdev_put(file->ditem->fsdev);
         ditem_put(file->ditem);
     }
-    inode_free(inode);
 
     return ret;
 }

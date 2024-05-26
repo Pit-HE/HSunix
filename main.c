@@ -23,7 +23,7 @@ void main (void)
     init_proc();
     init_timer();
 
-    self_inspection();
+    power_selfInspection();
     kprintf("Start OS ...\r\n");
 
     idle_main();
