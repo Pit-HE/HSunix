@@ -53,7 +53,7 @@ void _free_ramfs_node (struct FsDevice *fsdev,
     kfree(node);
 }
 
-/* 释放目录节点下的所有子节点 */
+/* 释放目录节点下的所有子节点 (需要使用递归) */
 int _free_sublist (struct FsDevice *fsdev, 
         struct ramfs_node *node)
 {
@@ -671,6 +671,12 @@ struct FileSystemOps ramfs_fsops =
 void dfs_ramfs_init (void)
 {
     fsdev_register("ramfs", &ramfs_fops, 
+        &ramfs_fsops, TRUE);
+
+    /* 注册两个实体文件系统，
+     * 方便测试虚拟文件系统的多级挂载功能
+     */
+    fsdev_register("tmpfs", &ramfs_fops, 
         &ramfs_fsops, TRUE);
 }
 

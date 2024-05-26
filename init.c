@@ -1,6 +1,9 @@
+/*
+ * init 进程相关的源码
+ */
 
 #include "defs.h"
-
+#include "fcntl.h"
 
 
 void init_main (void)

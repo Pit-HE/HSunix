@@ -271,7 +271,6 @@ void init_proc (void)
     // wakeProcCB(pcb);
 
 
-
     /* 设置当前 CPU 的默认进程 */
     setCpuCB(kIdleProcCB);
 }

@@ -19,10 +19,10 @@ struct FsObject
  */
 LIST_INIT_OBJ(gFsObjectList);
 
-/* 以链表的形式记录每个挂载的文件系统设备 
- * ( 挂载的是 struct FsDevice )
+/*   以树形图记录每个挂载的文件系统设备 
+ * ( 记录的第一个是系统默认的根文件系统 )
  */
-LIST_INIT_OBJ(gFsDevList);
+struct FsDevice *root_fsdev;
 
 
 /* 查找已注册的文件系统 */
@@ -60,7 +60,9 @@ static struct FsDevice *alloc_fsdev (char *path)
     }
 
     kstrcpy(fsdev->path, path);
-    list_init(&fsdev->list);
+
+    list_init(&fsdev->siblist);
+    list_init(&fsdev->sublist);
 
     return fsdev;
 }
@@ -73,27 +75,86 @@ static void free_fsdev (struct FsDevice *fsdev)
     kfree(fsdev);
 }
 
-/* 查找已挂载的文件系统设备 */
+/* 从树状图查找已挂载的文件系统设备 */
 static struct FsDevice *find_fsdev (char *path)
 {
-    struct FsDevice *fsdev = NULL;
+    struct FsDevice *fsdev = root_fsdev;
+    struct FsDevice *nextdev = NULL;
     ListEntry_t *ptr = NULL;
+    int path_len;
 
-    if (path == NULL)
+    if ((path == NULL) || (fsdev == NULL))
         return NULL;
 
-    list_for_each(ptr, &gFsDevList)
+    /* 确认找的不是根文件系统 */
+    if (0 == kstrncmp(fsdev->path, path, kstrlen(path)))
+        return fsdev;
+
+    /* 确保子级链表不为空 */
+    while(! list_empty(&fsdev->sublist))
     {
-        fsdev = list_container_of(ptr, 
-                    struct FsDevice, list);
-        if (0 == kstrncmp(fsdev->path, path, 
-                        kstrlen(fsdev->path)))
-            return fsdev;
+        /* 遍历子级链表 */
+        list_for_each(ptr, &fsdev->sublist)
+        {
+            nextdev = list_container_of(ptr, struct FsDevice, siblist);
+            path_len = kstrlen(nextdev->path);
+            if (! kstrncmp(nextdev->path, path, path_len) &&
+                (path[path_len] == '\0' || path[path_len] == '/'))
+            {
+                fsdev = nextdev;
+                break;
+            }
+        }
+
+        /* 处理遍历链表结束都未找到目标的情况 */
+        if (fsdev != nextdev)
+            break;
     }
-    return NULL;
+   
+    return fsdev;
 }
 
+/* 将文件系统设备添加到管理树中 */
+static int insert_fsdev (struct FsDevice *parent,
+                struct FsDevice *child)
+{
+    if (child == NULL)
+        return -1;
+    
+    if (parent == NULL)
+    {
+        /* 不存在父节点，则设置为系统默认的文件系统 */
+        if (root_fsdev == NULL)
+        {
+            root_fsdev = child;
+            root_fsdev->parent = NULL;
+        }
+    }
+    else
+    {
+        /* 将文件系统设备添加到父设备之后，建立树状图 */
+        child->parent = parent;
+        kDISABLE_INTERRUPT();
+        list_add_before(&parent->sublist, &child->siblist);
+        kENABLE_INTERRUPT();
+    }
+    
+    return 0;
+}
 
+/* 将文件系统设备从管理树中移除 */
+static int remove_fsdev (struct FsDevice *fsdev)
+{
+    /* 该文件系统设备是否还有挂载有子设备 */
+    if (list_empty(&fsdev->sublist))
+    {
+        list_del(&fsdev->siblist);
+    }
+    else
+        return -1;
+
+    return 0;
+}
 
 /* 将文件系统注册到内核中 ( 由实体文件系统初始化时调用 ) */
 int fsdev_register (char *name, struct FileOperation *fops,
@@ -133,17 +194,14 @@ int fsdev_register (char *name, struct FileOperation *fops,
     return 0;
 }
 
-/* 将实体文件系统挂载到可用区域 */
+/* 将实体文件系统挂载到可用区域 (传入的必须是绝对路径) */
 int fsdev_mount (char *fsname, char *path,
         unsigned int flag, void *data)
 {
     int ret = 0;
     struct FsObject *fsobj = NULL;
-    struct FsDevice *fsdev = NULL;
-
-    /* 同一个路径只允许挂载一个文件系统 */
-    if (find_fsdev(path))
-        return -1;
+    struct FsDevice *chi_fsdev = NULL;
+    struct FsDevice *per_fsdev = NULL;
 
     /* 查找已注册的文件系统 */
     fsobj = find_fsobj(fsname);
@@ -155,22 +213,32 @@ int fsdev_mount (char *fsname, char *path,
         (fsobj->ref != 0))
         return -1;
 
-    /* 创建新的文件系统设备 */
-    fsdev = alloc_fsdev(path);
-    if (fsdev == NULL)
+    /* 查找文件系统要挂载时的父对象 */
+    per_fsdev = find_fsdev(path);
+
+    /* 不允许在同一路径上重复挂载文件系统 */
+    if ((per_fsdev != NULL) &&
+        kstrlen(per_fsdev->path) == kstrlen(path))
         return -1;
 
-    /* 将根文件节点链接到文件系统 */
-    fsdev->fs = fsobj->fs;
+    /* 创建新的文件系统设备 */
+    chi_fsdev = alloc_fsdev(path);
+    if (chi_fsdev == NULL)
+        return -1;
+
+    /* 将文件系统对象链接到文件系统设备 */
+    chi_fsdev->fs = fsobj->fs;
     fsobj->ref += 1;    
 
-    kDISABLE_INTERRUPT();
-    list_add_before(&gFsDevList, &fsdev->list);
-    kENABLE_INTERRUPT();
+    /* 将新文件系统挂载到其父文件系统之下 */
+    insert_fsdev(per_fsdev, chi_fsdev);
 
     /* 调用实体文件系统的挂载接口 */
-    if (fsdev->fs->fsops->mount != NULL)
-        ret = fsdev->fs->fsops->mount(fsdev, flag, data);
+    if (chi_fsdev->fs->fsops->mount != NULL)
+    {
+        ret = chi_fsdev->fs->fsops->mount(chi_fsdev, 
+                flag, data);
+    }
 
     return ret;
 }
@@ -187,9 +255,7 @@ int fsdev_unmount (char *path)
     if (fsdev->ref != 0)
         return -1;
 
-    kDISABLE_INTERRUPT();
-    list_del_init(&fsdev->list);
-    kENABLE_INTERRUPT();
+    remove_fsdev(fsdev);
 
     /* 调用实体文件系统的挂载接口 */
     if (fsdev->fs->fsops->unmount != NULL)

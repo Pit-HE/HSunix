@@ -51,11 +51,15 @@ all:kernel
 
 flush:
 	rm -rf *.d *.o *.asm *.out *.sym initcode
+
 qemu:
+	make all flush
 	$(QEMU) $(QEMUOPTS)
+
 debug:
 	make all flush
 	$(QEMU) $(QEMUOPTS) -S -gdb tcp::25000
+
 clean:
 	make flush
 	rm -rf kernel

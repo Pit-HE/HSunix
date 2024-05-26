@@ -17,8 +17,8 @@ void init_vfs (void)
     /* 初始化虚拟文件系统的目录项模块 */
     init_ditem();
 
-    /* 挂载第一个实体文件系统 */
-    fsdev_mount("ramfs", "/", O_RDWR, NULL);
+    /* 设置根文件系统 */
+    vfs_mount("ramfs", "/", O_RDWR, NULL);
 }
 
 /* 文件系统对外接口：打开指定路径的文件 */
@@ -126,6 +126,7 @@ int vfs_pcbInit (ProcCB *pcb, char *path)
 {
     if (pcb == NULL)
         return -1;
+
     /* 传入的必须是绝对路径 */
     if ((path == NULL) || (*path != '/'))
         return -1;
@@ -174,4 +175,21 @@ int vfs_pcbdeinit (ProcCB *pcb)
     kfree(pcb->cwd);
 
     return 0;
+}
+
+/* 对外提供的文件系统挂载接口
+ *  ( 传入的必须是绝对路径 )
+ */
+int vfs_mount(char *fsname, char *path, 
+        unsigned int flag, void *data)
+{
+    int ret;
+
+    if ((fsname == NULL) || (path == NULL))
+        return -1;
+
+    /* 挂载第一个实体文件系统 */
+    ret = fsdev_mount(fsname, path, flag, data);
+
+    return ret;
 }

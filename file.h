@@ -101,7 +101,11 @@ struct FileSystem
  */
 struct FsDevice
 {
-    ListEntry_t          list;      /* 链接到 gFsDevList */
+    struct FsDevice     *parent;    /* 记录其父文件系统 */
+
+    ListEntry_t          siblist;   /* 链接同级节点 */
+    ListEntry_t          sublist;   /* 链接子级节点 */
+
     char                *path;      /* 文件系统挂载的路径 */
     /* 在注册模式时表示被挂载次数，在挂载模式时表示被引用次数 */
     unsigned int         ref;       /* 挂载计数/引用计数 */
@@ -179,48 +183,40 @@ int  fd_copy     (int fd);
 /**********************************/
 struct Inode *inode_alloc (void);
 void inode_free (struct Inode *inode);
-int inode_init (struct Inode *inode, unsigned int flag,
-        struct FileOperation *fops, unsigned int mode);
+int  inode_init (struct Inode *inode, unsigned int flag, struct FileOperation *fops, unsigned int mode);
 
 /**********************************/
 struct File *file_alloc (void);
-void file_free   (struct File *file);
-int  file_open      (struct File *file, char *path, 
-    unsigned int flags, unsigned int mode);
-int  file_close     (struct File *file);
-int  file_read      (struct File *file, 
-    void *buf, unsigned int len);
-int  file_write     (struct File *file, 
-    void *buf, unsigned int len);
-int  file_flush     (struct File *file);
+void file_free  (struct File *file);
+int  file_open  (struct File *file, char *path, unsigned int flags, unsigned int mode);
+int  file_close (struct File *file);
+int  file_read  (struct File *file, void *buf, unsigned int len);
+int  file_write (struct File *file, void *buf, unsigned int len);
+int  file_flush (struct File *file);
 
 /**********************************/
 char *path_getfirst (char *path, char *name);
-int path_getlast (char *path, char *parentPath, char *name);
-struct Inode *parse_getinode (char *path,
-    unsigned int flag, unsigned int mode);
+int   path_getlast  (char *path, char *parentPath, char *name);
+struct Inode *parse_getinode (char *path,unsigned int flag, unsigned int mode);
 char *path_formater (char *path);
 char *path_parser (char *directory, char *filepath);
-int path_setcwd (char *path);
+int   path_setcwd (char *path);
 char *path_getcwd (void);
 
 /**********************************/
-void init_ditem (void);
-struct DirItem *ditem_alloc (
-        struct FsDevice *fsdev, char *path);
-int  ditem_free (struct DirItem *dir);
-struct DirItem *ditem_get (struct FsDevice *fsdev, char *path,
-          unsigned int flag, unsigned int mode);
-void ditem_put (struct DirItem *ditem);
+void  init_ditem (void);
+struct DirItem *ditem_alloc (struct FsDevice *fsdev, char *path);
+int   ditem_free (struct DirItem *dir);
+struct DirItem *ditem_create (struct FsDevice *fsdev, char *path, unsigned int flag, unsigned int mode);
+struct DirItem *ditem_get (struct FsDevice *fsdev, char *path);
+void  ditem_put  (struct DirItem *ditem);
 char *ditem_path (struct DirItem *ditem);
 
 /**********************************/
-int fsdev_register (char *name, struct FileOperation *fops,
-        struct FileSystemOps *fsops, unsigned int multi);
-int fsdev_mount (char *fsname, char *path,
-        unsigned int flag, void *data);
-int fsdev_unmount (char *path);
+int  fsdev_register (char *name, struct FileOperation *fops,struct FileSystemOps *fsops, unsigned int multi);
+int  fsdev_mount    (char *fsname, char *path,unsigned int flag, void *data);
+int  fsdev_unmount  (char *path);
 struct FsDevice *fsdev_get (char *path);
-void fsdev_put (struct FsDevice *fsdev);
+void fsdev_put      (struct FsDevice *fsdev);
 
 #endif

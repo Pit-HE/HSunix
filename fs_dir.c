@@ -160,9 +160,9 @@ static void ditem_add (struct DirItem *ditem)
     kENABLE_INTERRUPT();
 }
 
-/* 获取已存在的目录项 (传入的必须是绝对路径) */
-struct DirItem *ditem_get (struct FsDevice *fsdev, char *path,
-         unsigned int flag, unsigned int mode)
+/* 创建新的目录项 (传入的必须是绝对路径) */
+struct DirItem *ditem_create (struct FsDevice *fsdev, 
+        char *path, unsigned int flag, unsigned int mode)
 {
     struct DirItem *ditem = NULL;
     struct Inode *inode = NULL;
@@ -170,17 +170,6 @@ struct DirItem *ditem_get (struct FsDevice *fsdev, char *path,
     if ((fsdev == NULL) || (path == NULL))
         return NULL;
 
-    /* 确认目录项是否已经存在 */
-    ditem = ditem_find(fsdev, path);
-    if (ditem != NULL)
-    {
-        ditem->ref += 1;
-        return ditem;
-    }
-
-    /*****************************************
-     *  处理目录项未创建的情况
-    *****************************************/
     if ((fsdev->fs->fsops->lookup == NULL) ||
         (fsdev->fs->fsops->create == NULL))
         return NULL;
@@ -215,6 +204,22 @@ struct DirItem *ditem_get (struct FsDevice *fsdev, char *path,
 
     ditem->inode = inode;
     ditem->ref += 1;
+
+    return ditem;
+}
+
+/* 获取已存在的目录项 (传入的必须是绝对路径) */
+struct DirItem *ditem_get (struct FsDevice *fsdev, char *path)
+{
+    struct DirItem *ditem = NULL;
+
+    if ((fsdev == NULL) || (path == NULL))
+        return NULL;
+
+    /* 确认目录项是否已经存在 */
+    ditem = ditem_find(fsdev, path);
+    if (ditem != NULL)
+        ditem->ref += 1;
 
     return ditem;
 }

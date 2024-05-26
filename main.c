@@ -19,9 +19,9 @@ void main (void)
     init_plic();
     init_plichart();
     init_cli();
-    init_vfs();
-    init_proc();
     init_timer();
+    init_proc();
+    init_vfs();
 
     power_selfInspection();
     kprintf("Start OS ...\r\n");

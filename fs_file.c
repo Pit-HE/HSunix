@@ -73,12 +73,17 @@ int file_open (struct File *file, char *path,
         if (fsdev == NULL)
             return -1;
 
-        /* 获取该路径下所对应的目录项 (若不存在则创建) */
-        ditem = ditem_get(fsdev, path, flag, mode);
+        /* 获取该路径下所对应的目录项 */
+        ditem = ditem_get(fsdev, path);
         if (ditem == NULL)
         {
-            fsdev_put(fsdev);
-            return -1;
+            /* 若不存在则创建 */
+            ditem = ditem_create(fsdev, path, flag, mode);
+            if (ditem == NULL)
+            {
+                fsdev_put(fsdev);
+                return -1;
+            }
         }
 
         inode = ditem->inode;

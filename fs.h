@@ -31,11 +31,12 @@ struct dirent
 
 void init_vfs   (void);
 int  vfs_open   (char *path,
-    unsigned int flags, unsigned int mode);
+        unsigned int flags, unsigned int mode);
 int  vfs_close  (int fd);
 int  vfs_write  (int fd, void *buf, int len);
 int  vfs_read   (int fd, void *buf, int len);
-int  vfs_pcbInit (ProcCB *pcb, char *path);
+int  vfs_pcbInit   (ProcCB *pcb, char *path);
 int  vfs_pcbdeinit (ProcCB *pcb);
-
+int  vfs_mount  (char *fsname, char *path, 
+        unsigned int flag, void *data);
 #endif

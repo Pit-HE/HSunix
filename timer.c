@@ -1,4 +1,7 @@
-
+/*
+ * 软件定时器模块，
+ * 用于实现指定进程休眠的时长
+ */
 #include "defs.h"
 
 
@@ -11,10 +14,11 @@ void init_timer (void)
     list_init (&kSleepList);
 }
 
+/* 添加软件定时器模块 */
 timer_t *timer_add (ProcCB *pcb, int expires)
 {
-    timer_t *pTimer, *timer;
-    ListEntry_t *plist;
+    timer_t *pTimer = NULL, *timer = NULL;
+    ListEntry_t *plist = NULL;
 
     if ((pcb == NULL) || (expires == 0))
         kError(eSVC_Timer, E_PARAM);
@@ -48,9 +52,10 @@ timer_t *timer_add (ProcCB *pcb, int expires)
     return timer;
 }
 
+/* 删除软件定时器对象 */
 void timer_del (timer_t *timer)
 {
-    timer_t *pTimer;
+    timer_t *pTimer = NULL;
 
     if (timer == NULL)
         return;
@@ -64,7 +69,8 @@ void timer_del (timer_t *timer)
         {
             if (timer->list.next != &kSleepList)
             {
-                pTimer = list_container_of(timer->list.next, timer_t, list);
+                pTimer = list_container_of(timer->list.next, 
+                            timer_t, list);
                 pTimer->expires += timer->expires;
             }
         }
@@ -74,11 +80,12 @@ void timer_del (timer_t *timer)
     kENABLE_INTERRUPT();
 }
 
+/* 由定时器中断调用，实时处理软件定时器链表 */
 void timer_run (void)
 {
-    ListEntry_t *pList;
-    timer_t *pTimer;
-    ProcCB *pcb;
+    ListEntry_t *pList = NULL;
+    timer_t *pTimer = NULL;
+    ProcCB *pcb = NULL;
 
     pList = kSleepList.next;
 
@@ -99,7 +106,8 @@ void timer_run (void)
             {
                 if (pTimer->list.next != &kSleepList)
                 {
-                    pTimer = list_container_of(pTimer->list.next, timer_t, list);
+                    pTimer = list_container_of(pTimer->list.next, 
+                                timer_t, list);
                     pTimer->expires += pTimer->expires;
                 }
             }
