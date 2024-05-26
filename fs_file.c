@@ -206,7 +206,7 @@ int file_write (struct File *file,
  */
 int file_flush (struct File *file)
 {
-    int ret;
+    int ret = 0;
 
     if (file == NULL)
         return -1;

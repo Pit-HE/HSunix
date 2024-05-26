@@ -50,7 +50,8 @@ struct FileOperation
     /* 设置文件的偏移量 */
     int (*lseek)    (struct Inode *inode, bool type, unsigned int offs);
     /* 获取目录信息 */
-    int (*getdents) (struct Inode *inode, struct dirent *dirp, unsigned int count);
+    int (*getdents) (struct Inode *inode, struct dirent *dirp, 
+                        unsigned int count);
 };
 
 
@@ -128,7 +129,7 @@ struct Inode
     unsigned int                readoff;    /* 文件打开后读指针的偏移 */
     struct FileOperation       *fops;       /* 文件对象的操作接口 */
     struct FileSystem          *fs;         /* 所属的文件系统 */
-    void                       *data;       /* 私有数据域(例如用于：记录实体文件系统的文件操作结构体) */
+    void                       *data;       /* 私有数据域 */
 };
 
 

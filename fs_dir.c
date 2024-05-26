@@ -51,9 +51,9 @@ static struct DirItem *ditem_find (
         struct FsDevice *fsdev, char *path)
 {
     int index;
-    char *str = NULL;
     ListEntry_t *list = NULL;
     struct DirItem *ditem = NULL;
+    char *str = NULL, root_path[] = {"/"};
 
     if ((fsdev == NULL) || (path == NULL))
         return NULL;
@@ -65,7 +65,7 @@ static struct DirItem *ditem_find (
        /* 处理传入的是文件系统挂载目录的情况
         * ( 挂载路径的目录项名字为 '/' )
         */
-       str = kstrchr(path, '/');
+       str = root_path;
     }
 
     /* 获取所寻目录项的哈希值 */
@@ -238,7 +238,7 @@ void ditem_put (struct DirItem *ditem)
 /* 获取目录项的绝对路径 */
 char *ditem_path (struct DirItem *ditem)
 {
-    char *path;
+    char *path = NULL;
     int fsdev_len, ditem_len;
 
 
@@ -271,7 +271,5 @@ void init_ditem (void)
     {
         list_init(&ditem_hashlist[i]);
     }
-
-    fsdev_mount("ramfs", "/", O_RDWR, NULL);
 }
 

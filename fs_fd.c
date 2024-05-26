@@ -130,8 +130,8 @@ struct File *fd_get (int fd)
 int fd_copy (int fd)
 {
     int newfd;
-    ProcCB *pcb;
-    struct File *f;
+    ProcCB *pcb = NULL;
+    struct File *f = NULL;
 
     f = fd_get(fd);
     if (f == NULL)

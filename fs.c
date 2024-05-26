@@ -10,10 +10,15 @@
 /* 初始化虚拟文件系统 */
 void init_vfs (void)
 {
+    /* 初始化实体 ramfs 文件系统 */
     void dfs_ramfs_init (void);
     dfs_ramfs_init();
 
+    /* 初始化虚拟文件系统的目录项模块 */
     init_ditem();
+
+    /* 挂载第一个实体文件系统 */
+    fsdev_mount("ramfs", "/", O_RDWR, NULL);
 }
 
 /* 文件系统对外接口：打开指定路径的文件 */
@@ -49,7 +54,7 @@ int vfs_open (char *path, unsigned int flags, unsigned int mode)
 int vfs_close (int fd)
 {
     int ret;
-    struct File *file;
+    struct File *file = NULL;
 
     file = fd_get(fd);
     if (file < 0)
@@ -74,7 +79,7 @@ int vfs_close (int fd)
 int vfs_write (int fd, void *buf, int len)
 {
     int ret;
-    struct File *file;
+    struct File *file = NULL;
 
     file = fd_get(fd);
     if (file < 0)
@@ -97,7 +102,7 @@ int vfs_write (int fd, void *buf, int len)
 int vfs_read (int fd, void *buf, int len)
 {
     int ret;
-    struct File *file;
+    struct File *file = NULL;
 
     file = fd_get(fd);
     if (file < 0)
@@ -138,7 +143,8 @@ int vfs_pcbInit (ProcCB *pcb, char *path)
         kfree(pcb->cwd);
         return -1;
     }
-    if (-1 == file_open(pcb->root, path, O_RDWR, S_IRUSR))
+    if (-1 == file_open(pcb->root, path, \
+                O_RDWR, S_IRUSR))
     {
         file_free(pcb->root);
         kfree(pcb->cwd);

@@ -8,10 +8,10 @@
 /* 用于记录注册的文件系统信息 */
 struct FsObject
 {
-    ListEntry_t          list;      /* 链接到 gFsObjectList */
-    bool                 Multi;     /* 单个文件系统实体是否允许挂载多次 */
-    unsigned char        ref;       /* 挂载的次数 */
-    struct FileSystem   *fs;        /* 记录传入的实体文件系统 */
+    ListEntry_t          list;  /* 链接到 gFsObjectList */
+    bool                 Multi; /* 文件系统实体是否允许挂载多次 */
+    unsigned char        ref;   /* 挂载的次数 */
+    struct FileSystem   *fs;    /* 记录传入的实体文件系统 */
 };
 
 /* 以链表的形式记录每个注册的文件系统 
@@ -84,8 +84,10 @@ static struct FsDevice *find_fsdev (char *path)
 
     list_for_each(ptr, &gFsDevList)
     {
-        fsdev = list_container_of(ptr, struct FsDevice, list);
-        if (0 == kstrncmp(fsdev->path, path, kstrlen(fsdev->path)))
+        fsdev = list_container_of(ptr, 
+                    struct FsDevice, list);
+        if (0 == kstrncmp(fsdev->path, path, 
+                        kstrlen(fsdev->path)))
             return fsdev;
     }
     return NULL;
@@ -100,10 +102,12 @@ int fsdev_register (char *name, struct FileOperation *fops,
     struct FsObject *fsobj;
     struct FileSystem *fs;
 
-    fsobj = (struct FsObject *)kalloc(sizeof(struct FsObject));
+    fsobj = (struct FsObject *)kalloc(sizeof
+                (struct FsObject));
     if (fsobj == NULL)
         return -1;
-    fs = (struct FileSystem *)kalloc(sizeof(struct FileSystem));
+    fs = (struct FileSystem *)kalloc(sizeof
+                (struct FileSystem));
     if (fs == NULL)
     {
         kfree(fsobj);

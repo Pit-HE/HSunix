@@ -51,7 +51,7 @@ char *path_getfirst (char *path, char *name)
  */
 int path_getlast (char *path, char *parentPath, char *name)
 {
-    char *p_path;
+    char *p_path = NULL;
 
     if ((path == NULL) || (parentPath == NULL) || (name == NULL))
         return -1;
@@ -78,7 +78,9 @@ int path_getlast (char *path, char *parentPath, char *name)
 /* 格式化传入的文件路径，处理其中的 '.' 与 ".." */
 char *path_formater (char *path)
 {
-    char *dst0, *dst, *src;
+    char *dst0 = NULL;
+    char *dst = NULL;
+    char *src = NULL;
 
     src = path;
     dst = path;
@@ -174,7 +176,7 @@ char *path_formater (char *path)
  */
 char *path_parser (char *directory, char *filepath)
 {
-    char *path;
+    char *path = NULL;
 
     if (filepath == NULL)
         return NULL;
@@ -211,8 +213,8 @@ char *path_parser (char *directory, char *filepath)
  */
 int path_setcwd (char *path)
 {
-    ProcCB *pcb;
-    char *cwd, *old_cwd;
+    ProcCB *pcb = NULL;
+    char *cwd = NULL, *old_cwd = NULL;
 
     if ((path == NULL) || (path[0] != '/'))
         return -1;
@@ -239,7 +241,7 @@ int path_setcwd (char *path)
 /* 获取进程的当前工作路径 */
 char *path_getcwd (void)
 {
-    char *cwd;
+    char *cwd = NULL;
     ProcCB *pcb = getProcCB();
 
     cwd = (char *)kalloc(kstrlen(pcb->cwd) + 1);
