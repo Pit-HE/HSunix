@@ -7,6 +7,7 @@
 #include "fs_ramfs.h"
 #include "defs.h"
 #include "fcntl.h"
+#include "fs.h"
 
 
 /****************************************************
@@ -162,11 +163,16 @@ struct ramfs_node *_path_getnode (struct ramfs_sb *sb,
  *      ramfs 文件系统文件操作接口
  ***************************************************/
 /* 开启指定的文件，使其能被文件系统的接口所操作 */
-int ramfs_open (struct Inode *inode)
+int ramfs_open (struct File *file)
 {
+    struct Inode *inode;
     struct ramfs_node *node = NULL;
 
-    if ((inode == NULL) || (inode->magic != INODE_MAGIC))
+    if ((file == NULL) || (file->magic != FILE_MAGIC))
+        return -1;
+    
+    inode = file->inode;
+    if (inode == NULL)
         return -1;
 
     /* 在调用该函数前，虚拟文件系统应调用 lookup 接口，
@@ -179,7 +185,7 @@ int ramfs_open (struct Inode *inode)
     if (inode->flags & O_APPEND)
     {
         /* 在文件末尾继续写入 */
-        inode->writeoff = node->size;
+        file->off = node->size;
     }
     else
     {
@@ -190,36 +196,39 @@ int ramfs_open (struct Inode *inode)
             node->data = NULL;
             node->size = 0;
         }
-        inode->writeoff = 0;
+        file->off = 0;
     }
 
     /* 同步 inode 与 ramfs_node 的信息 */
     inode->size = node->size;
-    inode->readoff = 0;
 
     return 0;
 }
 /* 关闭已打开的文件 */
-int ramfs_close (struct Inode *inode)
+int ramfs_close (struct File *file)
 {
     /* 不做任何操作，因为文件需要继续保存与文件系统中 */
     return 0;
 }
 /* 用于设置指定文件的功能 */
-int ramfs_ioctl (struct Inode *inode, int cmd, 
-        void *args)
+int ramfs_ioctl (struct File *file, int cmd, void *args)
 {
     return 0;
 }
 /* 将缓冲区数据从指定文件中读取 */
-int ramfs_read (struct Inode *inode, void *buf, 
+int ramfs_read (struct File *file, void *buf, 
         unsigned int count)
 {
     unsigned int rLen;
+    struct Inode *inode;
     struct ramfs_node *node = NULL;
 
-    if ((inode == NULL) || (buf == NULL) || 
+    if ((file == NULL) || (buf == NULL) || 
         (count == 0))
+        return -1;
+
+    inode = file->inode;
+    if (inode == NULL)
         return -1;
 
     node = inode->data;
@@ -227,37 +236,37 @@ int ramfs_read (struct Inode *inode, void *buf,
         return -1;
 
     /* 确认文件实际可读写的长度 */
-    if (count > (inode->size - inode->readoff))
-        rLen = inode->size - inode->readoff;
+    if (count > (inode->size - file->off))
+        rLen = inode->size - file->off;
     else
         rLen = count;
 
     kmemcpy(buf, node->data, rLen);
-    inode->readoff += rLen;
+    file->off += rLen;
 
     return rLen;
 }
 /* 将缓冲区数据写入指定文件中 */
-int ramfs_write (struct Inode *inode, void *buf, 
+int ramfs_write (struct File *file, void *buf, 
         unsigned int count)
 {
     char *memAddr = NULL;
     struct ramfs_sb *sb = NULL;
     struct ramfs_node *node = NULL;
 
-    if ((inode == NULL) || (buf == NULL) || 
-        (count == 0))
+    if ((file == NULL) || (buf == NULL) || 
+        (count == 0) || (file->inode == NULL))
         return -1;
 
-    if ((node = inode->data) == NULL)
+    if ((node = file->inode->data) == NULL)
         return -1;
 
-    sb = ((struct ramfs_node*)inode->data)->sb;
+    sb = ((struct ramfs_node*)file->inode->data)->sb;
     if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
         return -1;
 
     /* 当写入的数据大于文件大小时，扩大该文件的大小 */
-    if (count > (node->size - inode->writeoff))
+    if (count > (node->size - file->off))
     {
         /* 不做精确计算，直接扩张出足够大的空间 */
         memAddr = (char *)kalloc(node->size + count);
@@ -269,44 +278,57 @@ int ramfs_write (struct Inode *inode, void *buf,
         node->data = memAddr;
         node->size += count;
 
-        inode->size = node->size;
+        file->inode->size = node->size;
     }
-    kmemcpy(&node->data[inode->writeoff], buf, count);
+    kmemcpy(&node->data[file->off], buf, count);
 
-    inode->writeoff += count;
+    file->off += count;
 
     return count;
 }
 /* 将文件系统缓存的数据写入磁盘 */
-int ramfs_flush (struct Inode *inode)
+int ramfs_flush (struct File *file)
 {
     return 0;
 }
 /* 修改文件节点内的偏移值 */
-int ramfs_lseek (struct Inode *inode, 
-        bool type, unsigned int offs)
+int ramfs_lseek (struct File *file, 
+        unsigned int offs, unsigned int type)
 {
+    int ret = -1;
     struct ramfs_node *node = NULL;
 
-    node = inode->data;
+    if ((file == NULL) || (file->inode == NULL))
+        return -1;
+
+    node = file->inode->data;
     if ((node == NULL) || (node->data != NULL))
         return -1;
 
-    if (type)
+    switch (type)
     {
-        if (offs <= (node->size - inode->writeoff))
-            inode->writeoff += offs;
-
-        return inode->writeoff;
+        case SEEK_SET:
+            if (offs < file->inode->size)
+                ret = file->off = offs;
+            break;
+        case SEEK_CUR:
+            if ((file->off + offs) < (file->inode->size))
+                ret = file->off + offs;
+            break;
+        case SEEK_END:
+            ret = file->off = node->size;
+            break;
+        case SEEK_DATA:
+            break;
+        case SEEK_HOLE:
+            break;
+        default: break;
     }
 
-    if (offs <= (node->size - inode->readoff))
-            inode->readoff += offs;
-
-    return inode->readoff;
+    return ret;
 }
 /* 获取目录节点下指定数量的子节点信息 */
-int ramfs_getdents (struct Inode *inode, 
+int ramfs_getdents (struct File *file, 
         struct dirent *dirp, unsigned int count)
 {
     ListEntry_t *list = NULL;
@@ -314,18 +336,19 @@ int ramfs_getdents (struct Inode *inode,
     struct ramfs_node *node = NULL;
     struct ramfs_node *next_node = NULL;
 
-    if ((inode == NULL) || (dirp == NULL))
+    if ((file == NULL) || (dirp == NULL) ||
+        (file->inode == NULL))
         return -1;
 
     /* 获取 inode 对应的 ramfs 的 node 节点 */
-    if ((node = inode->data) == NULL)
+    if ((node = file->inode->data) == NULL)
         return -1;
 
     /* 记录要读取的文件对象的数量 */
     num = count / sizeof(struct dirent);
     if (num == 0)
         return -1;
-    end = inode->readoff + num;
+    end = file->off + num;
 
     /* 遍历目录下的所有文件对象 */
     list_for_each(list, &node->sublist)
@@ -334,7 +357,7 @@ int ramfs_getdents (struct Inode *inode,
                 struct ramfs_node, siblist);
 
         /* 确认是未读取过的文件对象 */
-        if (idx >= inode->readoff)
+        if (idx >= file->off)
         {
             /* 添加要读取的信息 */
             kstrcpy(dirp[num].name, next_node->name);
@@ -346,7 +369,7 @@ int ramfs_getdents (struct Inode *inode,
             dirp[num].objsize = sizeof(struct dirent);
 
             num += 1;
-            inode->readoff += 1;
+            file->off += 1;
         }
 
         /* 限制本次读取的数量 */
@@ -354,6 +377,7 @@ int ramfs_getdents (struct Inode *inode,
             break;
     }
 
+    /* 返回读取到的总内存大小 */
     return num * sizeof(struct dirent);
 }
 
@@ -551,8 +575,6 @@ int ramfs_lookup (struct FsDevice *fsdev,
         inode->type = INODE_FILE;
     inode->fs = fsdev->fs;
     inode->data = node; /* 非常重要的一步操作 */
-    inode->readoff = 0;
-    inode->writeoff = 0;
     inode->size = node->size;
     inode->flags = node->flags;
 

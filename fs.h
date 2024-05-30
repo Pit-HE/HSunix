@@ -4,7 +4,10 @@
 
 #include "proc.h"
 
-/* 记录文件系统的信息 */
+
+/* 记录用户可以读取到的文件系统信息
+ * ( 虚拟文件系统对外接口使用的文件系统信息结构体 )
+ */
 struct statfs
 {
     unsigned int f_bsize;  /* block size */
@@ -12,7 +15,10 @@ struct statfs
     unsigned int f_bfree;  /* free blocks in file system */
 };
 
-/* 记录文件或目录的信息 */
+
+/* 记录用户可以读取到的文件信息 
+ * ( 虚拟文件系统对外接口使用的文件信息结构体 )
+ */
 struct stat
 {
     int     dev;
@@ -20,23 +26,25 @@ struct stat
     int     mode;
 };
 
-/* 目录项 */
-struct dirent
-{
-    enum InodeType type; /* 接收到的文件类型 */
-    uint namelen;        /* 实体文件系统支持的文件名长度 */
-    uint objsize;        /* 接收到的单个对象的长度 */
-    char name[128];      /* 文件的名字 */
-};
+#define SEEK_SET	0	/* 设置值为距离文件开始位置的绝对值 */
+#define SEEK_CUR	1	/* 在当前位置修改偏移值 */
+#define SEEK_END	2	/* 移动到文件末尾 */
+#define SEEK_DATA	3	/* seek to the next data */
+#define SEEK_HOLE	4	/* seek to the next hole */
+#define SEEK_MAX	SEEK_HOLE
+
+
+int  vfs_pcbInit   (ProcCB *pcb, char *path);
+int  vfs_pcbdeinit (ProcCB *pcb);
 
 void init_vfs   (void);
-int  vfs_open   (char *path,
-        unsigned int flags, unsigned int mode);
+int  vfs_open   (char *path,unsigned int flags, unsigned int mode);
 int  vfs_close  (int fd);
 int  vfs_write  (int fd, void *buf, int len);
 int  vfs_read   (int fd, void *buf, int len);
-int  vfs_pcbInit   (ProcCB *pcb, char *path);
-int  vfs_pcbdeinit (ProcCB *pcb);
-int  vfs_mount  (char *fsname, char *path, 
-        unsigned int flag, void *data);
+int  vfs_mount  (char *fsname, char *path, unsigned int flag, void *data);
+
+
+
+
 #endif

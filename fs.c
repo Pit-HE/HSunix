@@ -44,6 +44,7 @@ int vfs_open (char *path, unsigned int flags, unsigned int mode)
     if (0 > file_open(file, (char *)path, flags, mode))
     {
         kErr_printf("fail: vfs_open open file !\r\n");
+        fd_free(fd);
         return -1;
     }
 

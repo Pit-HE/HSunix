@@ -114,7 +114,7 @@ int file_open (struct File *file, char *path,
     file->ditem = ditem;
 
     if (inode->fops->open != NULL)
-        ret = inode->fops->open(inode);
+        ret = inode->fops->open(file);
 
     return ret;
 }
@@ -140,7 +140,7 @@ int file_close (struct File *file)
         return -1;
 
     if (file->fops->close != NULL)
-        ret = file->fops->close(inode);
+        ret = file->fops->close(file);
 
     /* 释放文件对象占用的资源 */
     if (inode->type == INODE_DEVICE)
@@ -176,7 +176,7 @@ int file_read (struct File *file,
         return -1;
 
     if (file->fops->read != NULL)
-        ret = file->fops->read(file->inode, buf, len);
+        ret = file->fops->read(file, buf, len);
 
     return ret;
 }
@@ -200,7 +200,7 @@ int file_write (struct File *file,
         return -1;
 
     if (file->fops->write != NULL)
-        ret = file->fops->write(file->inode, buf, len);
+        ret = file->fops->write(file, buf, len);
 
     return ret;
 }
@@ -219,7 +219,46 @@ int file_flush (struct File *file)
         return -1;
 
     if (file->fops->flush != NULL)
-        ret = file->fops->flush(file->inode);
+        ret = file->fops->flush(file);
+
+    return ret;
+}
+
+
+/* 读取指定数量的目录信息
+ *  
+ * 返回值：-1表示失败, 其他表示读取到的总内存大小
+ */
+int file_getdents(struct File *file, 
+    struct dirent *dirp, unsigned int nbytes)
+{
+    int ret = -1;
+
+    if ((file == NULL) || (dirp == NULL) || 
+        (nbytes == 0))
+        return -1;
+    if ((file->ref <= 0) || (file->magic != FILE_MAGIC))
+        return -1;
+
+    if (file->fops->getdents != NULL)
+        ret = file->fops->getdents(file, dirp, nbytes);
+
+    return ret;
+}
+
+/* 设置目录文件对象的偏移指针 */
+int file_lseek (struct File *file, 
+    unsigned int offset, unsigned int type)
+{
+    int ret = -1;
+
+    if (file == NULL)
+        return -1;
+    if ((file->ref <= 0) || (file->magic != FILE_MAGIC))
+        return -1;
+
+    if (file->fops->lseek != NULL)
+        ret = file->fops->lseek(file, offset, type);
 
     return ret;
 }

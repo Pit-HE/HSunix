@@ -5,12 +5,12 @@
 
 #include "defs.h"
 #include "proc.h"
+#include "dirent.h"
 
 struct Inode;
 struct File;
 struct stat;
 struct statfs;
-struct dirent;
 struct FileSystem;
 struct FsDevice;
 
@@ -40,17 +40,17 @@ enum InodeType
  */
 struct FileOperation
 {
-    int (*open)     (struct Inode *inode);
-    int (*close)    (struct Inode *inode);
-    int (*ioctl)    (struct Inode *inode, int cmd, void *args);
-    int (*read)     (struct Inode *inode, void *buf, unsigned int count);
-    int (*write)    (struct Inode *inode, void *buf, unsigned int count);
+    int (*open)     (struct File *file);
+    int (*close)    (struct File *file);
+    int (*ioctl)    (struct File *file, int cmd, void *args);
+    int (*read)     (struct File *file, void *buf, unsigned int count);
+    int (*write)    (struct File *file, void *buf, unsigned int count);
     /* 同步缓存的数据到实体文件系统中 */
-    int (*flush)    (struct Inode *inode);
+    int (*flush)    (struct File *file);
     /* 设置文件的偏移量 */
-    int (*lseek)    (struct Inode *inode, bool type, unsigned int offs);
+    int (*lseek)    (struct File *file, unsigned int offs, unsigned int type);
     /* 获取目录信息 */
-    int (*getdents) (struct Inode *inode, struct dirent *dirp, 
+    int (*getdents) (struct File *file, struct dirent *dirp, 
                         unsigned int count);
 };
 
@@ -124,13 +124,11 @@ struct Inode
     enum InodeType              type;       /* 类型 */
     unsigned int                flags;      /* 操作类型 */
     unsigned int                mode;       /* 访问的权限 */
-    unsigned int                size;       /* 占用的磁盘大小 */
+    unsigned int                size;       /* 文件对象占用的磁盘大小 */
     unsigned int                lock;       /* 锁 */
     unsigned int                valid;      /* 是否已经从磁盘读取数据 */
     unsigned int                addr;       /* 存放磁盘地址的缓冲区 */
     unsigned int                ref;        /* 引用计数 */
-    unsigned int                writeoff;   /* 文件打开后写指针的偏移 */
-    unsigned int                readoff;    /* 文件打开后读指针的偏移 */
     struct FileOperation       *fops;       /* 文件对象的操作接口 */
     struct FileSystem          *fs;         /* 所属的文件系统 */
     void                       *data;       /* 私有数据域 */
@@ -143,6 +141,7 @@ struct File
     unsigned int            magic;  /* 魔幻数 */
     unsigned int            ref;    /* 引用计数 */
     unsigned int            flags;  /* 文件可操作权限 */
+    unsigned int            off;    /* 文件的偏移值 */
     struct FileOperation   *fops;   /* 文件对象的操作接口 */
     struct Inode           *inode;  /* 占有的 inode */
     struct DirItem         *ditem;  /* 占有的目录项 */
@@ -172,6 +171,7 @@ struct DirItem
 };
 
 
+
 /**********************************/
 int  fdTab_alloc (ProcCB *pcb);
 void fdTab_free  (ProcCB *pcb);
@@ -193,6 +193,8 @@ int  file_close (struct File *file);
 int  file_read  (struct File *file, void *buf, unsigned int len);
 int  file_write (struct File *file, void *buf, unsigned int len);
 int  file_flush (struct File *file);
+int  file_getdents (struct File *file, struct dirent *dirp, unsigned int nbytes);
+int  file_lseek (struct File *file, unsigned int offset, unsigned int type);
 
 /**********************************/
 char *path_getfirst (char *path, char *name);
