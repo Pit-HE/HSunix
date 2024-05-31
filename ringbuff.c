@@ -3,6 +3,7 @@
 #include "ringbuff.h"
 
 
+/* 初始化缓冲区对象 */
 void kRingbuf_init (ringbuf_t *rb, char *buf, int len)
 {
     if (buf == NULL)
@@ -17,6 +18,8 @@ void kRingbuf_init (ringbuf_t *rb, char *buf, int len)
 
     kRingbuf_clean(rb);
 }
+
+/* 清空缓冲区内记录的数据 */
 void kRingbuf_clean (ringbuf_t *rb)
 {
     if (rb == NULL)
@@ -28,6 +31,7 @@ void kRingbuf_clean (ringbuf_t *rb)
     rb->wIndex = 0;
 }
 
+/* 往缓冲区写入指定长度的数据 */
 int kRingbuf_put (ringbuf_t *rb, char *buf, int len)
 {
     int margin;
@@ -57,6 +61,7 @@ int kRingbuf_put (ringbuf_t *rb, char *buf, int len)
     return len;
 }
 
+/* 从缓冲区内获取指定长度的数据 */
 int kRingbuf_get (ringbuf_t *rb, char *buf, int len)
 {
     int margin;
@@ -86,6 +91,7 @@ int kRingbuf_get (ringbuf_t *rb, char *buf, int len)
     return len;
 }
 
+/* 往缓冲区内写入单个字符 */
 int kRingbuf_putChar (ringbuf_t *rb, char ch)
 {
     if (rb == NULL)
@@ -103,6 +109,7 @@ int kRingbuf_putChar (ringbuf_t *rb, char ch)
     return 1;
 }
 
+/* 从缓冲区内读取单个字符 */
 int kRingbuf_getChar (ringbuf_t *rb, char *ch)
 {
     if (rb == NULL)
@@ -120,6 +127,7 @@ int kRingbuf_getChar (ringbuf_t *rb, char *ch)
     return 1;
 }
 
+/* 确认缓冲区是否还可以继续写数据 */
 int kRingbuf_putState (ringbuf_t *rb)
 {
     if (rb->idleSize == 0)
@@ -127,10 +135,23 @@ int kRingbuf_putState (ringbuf_t *rb)
     return 1;
 }
 
+/* 确认缓冲区是否还可以继续读数据 */
 int kRingbuf_getState (ringbuf_t *rb)
 {
     if (rb->idleSize == rb->baseSize)
         return 0;
     return 1;
+}
+
+/* 获取缓冲区内存放的数据长度 */
+int kRingbuf_getLength (ringbuf_t *rb)
+{
+    int len;
+
+    kDISABLE_INTERRUPT();
+    len = rb->baseSize - rb->idleSize;
+    kENABLE_INTERRUPT();
+
+    return len;
 }
 

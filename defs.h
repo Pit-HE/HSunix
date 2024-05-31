@@ -135,6 +135,7 @@ int  kRingbuf_putChar   (ringbuf_t *rb, char  ch);
 int  kRingbuf_getChar   (ringbuf_t *rb, char *ch);
 int  kRingbuf_putState  (ringbuf_t *rb);
 int  kRingbuf_getState  (ringbuf_t *rb);
+int  kRingbuf_getLength (ringbuf_t *rb);
 
 /******************** cli ***********************/
 void init_cli (void);

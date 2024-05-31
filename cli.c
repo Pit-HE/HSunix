@@ -1,53 +1,55 @@
 
 #include "defs.h"
+#include "cli.h"
 
 
-#define CLI_BUFF_SIZE   256
-
+/* 命令行模块信息管理结构体 */
 typedef struct cli_manage_info
 {
     ringbuf_t   cb;
     int         init;
 }cliInfo_t;
+
+/* 记录当前命令行界面的信息 */
 cliInfo_t cliState;
+
+
 
 void init_cli (void)
 {
     char *buf;
 
-    buf = (char *)kalloc(CLI_BUFF_SIZE);
+    buf = (char *)kalloc(CLI_CMD_BUFF_SIZE);
     if (buf != NULL)
     {
         cliState.init = 1;
-        kRingbuf_init(&cliState.cb, buf, CLI_BUFF_SIZE);
+        kRingbuf_init(&cliState.cb, buf, CLI_CMD_BUFF_SIZE);
     }
 }
 
 void cli_main (void)
 {
     char ch;
+    int  ret;
+    char cmd[CLI_CMD_BUFF_SIZE];
 
     if (cliState.init == 0)
         return;
-
     ch = console_rChar();
-    if (ch == '\r')
-        ch = '\n';
-    kRingbuf_putChar(&cliState.cb, ch);
+    if (ch < 0)
+        return;
 
-    if (ch == '\n')
+    if ((ch != '\r') && (ch != '\n'))
     {
-        kprintf("\r\n");
+        kRingbuf_putChar(&cliState.cb, ch);
+    }
+    else
+    {
+        kRingbuf_get(&cliState.cb, cmd, CLI_CMD_BUFF_SIZE);
 
-        do
-        {
-            kRingbuf_getChar(&cliState.cb, &ch);
-            console_wChar(ch);
-        }
-        while(ch != '\n');
+        cli_exec(cmd, &ret);
 
         kprintf("sh: ");
     }
-    /* TODO: Add the complete command line interaction */
 }
 
