@@ -213,20 +213,28 @@ char *path_parser (char *directory, char *filepath)
  */
 int path_setcwd (char *path)
 {
+    char *str = NULL;
     ProcCB *pcb = NULL;
     char *cwd = NULL, *old_cwd = NULL;
 
-    if ((path == NULL) || (path[0] != '/'))
+    if (path == NULL)
         return -1;
     pcb = getProcCB();
 
     /* 格式化该路径 */
-    path_formater(path);
+    str = path_parser(NULL, path);
 
-    cwd = (char *)kalloc(kstrlen(path) + 1);
+    /* 禁止设置相同路径 */
+    if (0 == kstrcmp(pcb->cwd, str))
+    {
+        kfree(str);
+        return 0;
+    }
+
+    cwd = (char *)kalloc(kstrlen(str) + 1);
     if (cwd == NULL)
         return -1;
-    kstrcpy(cwd, path);
+    kstrcpy(cwd, str);
 
     kDISABLE_INTERRUPT();
     old_cwd = pcb->cwd;
@@ -234,6 +242,7 @@ int path_setcwd (char *path)
     kENABLE_INTERRUPT();
 
     kfree(old_cwd);
+    kfree(str);
 
     return 0;
 }

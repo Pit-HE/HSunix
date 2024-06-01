@@ -51,6 +51,8 @@ int file_open (struct File *file, char *path,
         unsigned int flag, unsigned int mode)
 {
     int ret = 0;
+    char *ap_path = NULL;
+    char *std_path = NULL;
     struct Device *dev = NULL;
     struct Inode *inode = NULL;
     struct DirItem *ditem = NULL;
@@ -63,28 +65,50 @@ int file_open (struct File *file, char *path,
         return -1;
 
     /* 判断要操作的对象类型, 设备还是文件系统 */
-    if ((*path == '/') || (*path == '.'))
+    if (*path != ':')
     {
         /* 将文件路径转化为绝对路径 */
-        path = path_parser(NULL, path);
+        ap_path = path_parser(NULL, path);
 
         /* 获取该路径下所对应的文件系统 */
-        fsdev = fsdev_get(path);
+        fsdev = fsdev_get(ap_path);
         if (fsdev == NULL)
             return -1;
 
         /* 获取该路径下所对应的目录项 */
-        ditem = ditem_get(fsdev, path);
+        ditem = ditem_get(fsdev, ap_path);
         if (ditem == NULL)
         {
             /* 若不存在则创建 */
-            ditem = ditem_create(fsdev, path, flag, mode);
+            ditem = ditem_create(fsdev, ap_path, flag, mode);
             if (ditem == NULL)
             {
                 fsdev_put(fsdev);
                 return -1;
             }
+            /*  */
+            if (ditem->inode->type == INODE_DIR)
+            {
+                std_path = (char *)kalloc(kstrlen(ap_path)+3);
+                if (std_path == NULL)
+                {
+                    ditem_free(ditem);
+                    fsdev_put(fsdev);
+                    return -1;
+                }
+                kstrcpy(std_path, ap_path);
+
+                if (ap_path[kstrlen(ap_path)-1] != '/')
+                    kstrcat(std_path, "/");
+
+                kstrcat(std_path, ".");
+                ditem_create(fsdev, std_path, flag, mode);
+                kstrcat(std_path, ".");
+                ditem_create(fsdev, std_path, flag, mode);
+                kfree(std_path);
+            }
         }
+        // kfree(ap_path)   /* TODO */
 
         inode = ditem->inode;
     }

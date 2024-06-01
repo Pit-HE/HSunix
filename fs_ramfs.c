@@ -374,7 +374,7 @@ int ramfs_getdents (struct File *file,
         }
 
         /* 限制本次读取的数量 */
-        if (++idx > end)
+        if (++idx >= end)
             break;
     }
 
@@ -631,14 +631,13 @@ int ramfs_create (struct FsDevice *fsdev,
 
     /* 让 inode 与 ramfs_node 建立联系 */
     inode->data = node;
-    inode->size += 1;
-
-    parent_node->size += 1;
+    inode->size = 0;
 
     /* 将创建的节点添加到其父节点的链表中 */
     kDISABLE_INTERRUPT();
-    list_add_after(&parent_node->sublist, 
+    list_add_before(&parent_node->sublist, 
         &node->siblist);
+    parent_node->size += 1;
     kENABLE_INTERRUPT();
 
     return 0;

@@ -102,7 +102,7 @@ void tc_fsFile (void)
 
     kmemset(rbuf, 0, 50);
     kmemset(wbuf, 0, 50);
-    kstrcpy(wbuf, "HSunix running in RISC-V architecture !");
+    kstrcpy(wbuf, "HSunix running in RISC-V architecture !\r\n");
     len = kstrlen(wbuf);
     if (len <= 0)
         return;
@@ -115,7 +115,7 @@ void tc_fsFile (void)
     vfs_read(fd, rbuf, len);
     vfs_close(fd);
 
-    kprintf ("%s\r\n", rbuf);
+    kprintf ("%s", rbuf);
 }
 
 

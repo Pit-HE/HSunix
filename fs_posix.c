@@ -60,6 +60,7 @@ int closedir(DIR *dir)
 
     /* 释放申请的文件描述符 */
     fd_free(dir->fd);
+    kfree(dir);
 
     return 0;
 }
@@ -138,28 +139,30 @@ int mkdir (char *path, unsigned int mode)
 /* 更改当前进程的工作目录 */
 int chdir(char *path)
 {
-    DIR *dir;
-    ProcCB *pcb;
+    DIR *dir = NULL;
+    ProcCB *pcb = NULL;
 
     if (path == NULL)
         return -1;
-    
+
     /* 获取当前进程的控制块 */
     pcb = getProcCB();
     if (pcb == NULL)
         return -1;
-    
+
     /* 确认该目录项存在 */
     dir = opendir(path);
     if (dir == NULL)
         return -1;
-    closedir(dir);
 
-    /* 设置进程的任务控制块 */
-    kDISABLE_INTERRUPT();
-    pcb->root = fd_get(dir->fd);
-    path_setcwd(path);
-    kENABLE_INTERRUPT();
+    if (0 <= path_setcwd(path))
+    {
+        /* 设置进程的任务控制块 */
+        kDISABLE_INTERRUPT();
+        pcb->root = fd_get(dir->fd);
+        kENABLE_INTERRUPT();
+    }
+    closedir(dir);
 
     return 0;
 }

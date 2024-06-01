@@ -133,6 +133,7 @@ int  kRingbuf_put       (ringbuf_t *rb, char *buf, int len);
 int  kRingbuf_get       (ringbuf_t *rb, char *buf, int len);
 int  kRingbuf_putChar   (ringbuf_t *rb, char  ch);
 int  kRingbuf_getChar   (ringbuf_t *rb, char *ch);
+int  kRingbuf_delChar   (ringbuf_t *rb);
 int  kRingbuf_putState  (ringbuf_t *rb);
 int  kRingbuf_getState  (ringbuf_t *rb);
 int  kRingbuf_getLength (ringbuf_t *rb);

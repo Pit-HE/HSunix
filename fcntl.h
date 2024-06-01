@@ -4,7 +4,7 @@
 
 
 
-/* 文件的操作，用于虚拟文件系统的type */
+/* 文件的操作，用于虚拟文件系统的 flag */
 #define O_ACCMODE	0x00000003  /* 可访问掩码 */
 #define O_RDONLY	0x00000000  /* 只读 */
 #define O_WRONLY	0x00000001  /* 只写 */

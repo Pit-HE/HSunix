@@ -32,28 +32,49 @@ void init_cli (void)
 void cli_main (void)
 {
     char ch, *cmd;
-    int  ret;
+    int  ret, endflag = 0;
 
     if (cliState.init == 0)
         return;
-    ch = console_rChar();
-    if (ch < 0)
-        return;
 
-    if ((ch != '\r') && (ch != '\n'))
+    while(1)
     {
-        kRingbuf_putChar(&cliState.cb, ch);
-    }
-    else
-    {
-        kprintf ("\r\n");
-        cmd = kalloc(CLI_CMD_BUFF_SIZE);
-        kRingbuf_get(&cliState.cb, cmd, CLI_CMD_BUFF_SIZE);
+        if (endflag == 0)
+        {
+            endflag++;
+            kprintf("admin:~/ ");
+        }
 
-        cli_exec(cmd, &ret);
+        ch = console_rChar();
+        if (ch < 0)
+            return;
 
-        kRingbuf_clean(&cliState.cb);
-        kprintf("admin:~/ ");
+        if ((ch != '\r') && (ch != '\n'))
+        {
+            /* 处理输入删除和回车的情况 */
+            if ((ch == 0x7F) || (ch == 0x08))
+            {
+                if (0 != kRingbuf_delChar(&cliState.cb))
+                    kprintf("\b \b");
+            }
+            else
+            {
+                /* 正常存储输入的字符 */
+                kRingbuf_putChar(&cliState.cb, ch);
+            }
+        }
+        else
+        {
+            /* 输入了回车键，开始执行命令行内容 */
+            kprintf ("\r\n");
+            cmd = kalloc(CLI_CMD_BUFF_SIZE);
+            kRingbuf_get(&cliState.cb, cmd, CLI_CMD_BUFF_SIZE);
+
+            cli_exec(cmd, &ret);
+
+            kRingbuf_clean(&cliState.cb);
+            endflag = 0;
+        }
     }
 }
 

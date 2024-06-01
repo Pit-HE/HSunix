@@ -127,6 +127,25 @@ int kRingbuf_getChar (ringbuf_t *rb, char *ch)
     return 1;
 }
 
+/* 删除上一次接收到的字符 */
+int kRingbuf_delChar (ringbuf_t *rb)
+{
+    if (rb == NULL)
+        kError(eSVC_Ringbuf, E_PARAM);
+    if (rb->idleSize == rb->baseSize)
+        return 0;
+
+    if (rb->wIndex == 0)
+        rb->wIndex = rb->wIndex;
+    else
+        rb->wIndex -= 1;
+
+    rb->idleSize += 1; 
+    rb->buf[rb->wIndex] = 0;
+
+    return 1;
+}
+
 /* 确认缓冲区是否还可以继续写数据 */
 int kRingbuf_putState (ringbuf_t *rb)
 {

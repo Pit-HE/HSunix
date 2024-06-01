@@ -21,15 +21,15 @@ int fdTab_alloc (ProcCB *pcb)
 
     /* 标准输入 */
     pcb->fdTab[STD_INPUT] = file_alloc();
-    file_open(pcb->fdTab[STD_INPUT], "console", O_RDONLY, S_IRWXU);
+    file_open(pcb->fdTab[STD_INPUT], ":console", O_RDONLY, S_IRWXU);
 
     /* 标准输出 */
     pcb->fdTab[STD_OUTPUT] = file_alloc();
-    file_open(pcb->fdTab[STD_OUTPUT], "console", O_WRONLY, S_IRWXU);
+    file_open(pcb->fdTab[STD_OUTPUT], ":console", O_WRONLY, S_IRWXU);
 
     /* 标准错误 */
     pcb->fdTab[STD_ERROR] = file_alloc();
-    file_open(pcb->fdTab[STD_ERROR], "console", O_RDONLY | O_WRONLY, S_IRWXU);
+    file_open(pcb->fdTab[STD_ERROR], ":console", O_RDONLY | O_WRONLY, S_IRWXU);
 
     return ret;
 }

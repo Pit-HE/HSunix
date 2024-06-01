@@ -42,18 +42,18 @@ QEMUOPTS = -machine virt -bios none -kernel kernel -m 160M -smp $(CPUS) -nograph
 
 
 
+all:kernel
+	make flush
+
+flush:
+	rm -rf *.d *.o *.asm *.out *.sym initcode
+
 kernel: $(obj) kernel.ld
 	$(LD) $(LDFLAGS) -T kernel.ld -o kernel $(obj) 
 	$(OBJDUMP) -S kernel > kernel.asm
 	$(OBJDUMP) -t kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > kernel.sym
 
-all:kernel
-
-flush:
-	rm -rf *.d *.o *.asm *.out *.sym initcode
-
 qemu:
-	make all flush
 	$(QEMU) $(QEMUOPTS)
 
 debug:
