@@ -4,7 +4,7 @@
 
 
 
-/* 文件的操作 */
+/* 文件的操作，用于虚拟文件系统的type */
 #define O_ACCMODE	0x00000003  /* 可访问掩码 */
 #define O_RDONLY	0x00000000  /* 只读 */
 #define O_WRONLY	0x00000001  /* 只写 */
@@ -16,7 +16,7 @@
 #define O_APPEND	0x00002000  /* 在文件末尾继续写入 */
 #define O_DIRECTORY 0x00004000  /* 操作目录项 */
 
-/* 文件的权限 */
+/* 文件的权限, 用于虚拟文件系统的 mode */
 #define S_IRWXU     0x00000700  /* 用户可读可写可执行 */
 #define S_IRUSR     0x00000400  /* 用户读 */
 #define S_IWUSR     0x00000200  /* 用户写 */

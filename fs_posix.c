@@ -64,50 +64,18 @@ int closedir(DIR *dir)
     return 0;
 }
 
-/* 读取指定目录内的目录项信息
- * 会单次读取多个目录项，使得下一次 readir
- * 可以直接从 DIR 的 buf 中获取，避免每次
- * 都要操作虚拟文件系统去读写磁盘
- */
+/* 读取目录对象内的当前目录项信息 */
 struct dirent *readdir(DIR *dir)
 {
-    int ret;
-    struct dirent *dirent = NULL;
-
     if (dir == NULL)
         return NULL;
 
-    do
-    {
-        /* DIR 中是否已经有读取到的 dirent */
-        if (dir->bufsize)
-            dir->index += sizeof(struct dirent);
+    if (0 >= file_getdents(fd_get(dir->fd), 
+            (struct dirent *) dir->buf, 
+            sizeof(struct dirent)))
+        return NULL;
 
-        /* 是否需要操作虚拟文件系统读取新的 dirent 信息 */
-        if ((dir->bufsize == 0) || 
-            (dir->index >= dir->bufsize))
-        {
-            ret = file_getdents(fd_get(dir->fd), 
-                          (struct dirent *) dir->buf,
-                          sizeof(dir->buf));
-            if (ret <= 0)
-                return NULL;
-            
-            dir->bufsize = ret;
-            dir->index = 0;
-        }
-        /* 获取 DIR 中存储的 dirent 对象 */
-        dirent = (struct dirent *)&dir->buf[dir->index];
-
-        /* 跳过文件目录默认存在的 '.' 与 '..' */
-        if ((kstrcmp(dirent->name, ".") != 0) ||
-            (kstrcmp(dirent->name, "..") != 0))
-        {
-            break;
-        }
-    }while(dirent);
-
-    return dirent;
+    return (struct dirent *)dir->buf;
 }
 
 /* 设置当前目录对象的读写位置 */
@@ -121,19 +89,8 @@ void seekdir(DIR *dir, long offset)
     file = fd_get(dir->fd);
     if (file == NULL)
         return;
-    
-    /* 将偏移值设置为 0 */
-    if (file->off > offset)
-    {
-        file_lseek(file, offset, SEEK_SET);
-    }
 
-    /* 一直移动偏移值，直到其与入参相同 */
-    while(file->off < offset)
-    {
-        if (NULL == readdir(dir))
-            break;
-    }
+    file_lseek(file, offset, SEEK_SET);
 }
 
 /* 获取当前目录对象的读写位置 */
@@ -166,7 +123,8 @@ int mkdir (char *path, unsigned int mode)
         return -1;
     
     /* 创建目录对象 */
-    ret = file_open(file, path, O_CREAT|O_DIRECTORY, mode);
+    ret = file_open(file, path, 
+            O_CREAT|O_DIRECTORY, mode);
     if (ret > 0)
     {
         file_close(file);

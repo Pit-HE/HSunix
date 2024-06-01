@@ -26,13 +26,14 @@ struct cli_cmd
 };
 
 
+
+
+
 char *cli_parse_cmd (char *str);
-int cli_parse_parameter (char *param, char *argv[CLI_ARG_MAX]);
+int cli_parse_parameter (char *param, char *argv[CLI_ARG_MAX-1]);
 
 int cli_exec (char *cmd, int *retp);
 
 cmd_function cli_cmd_get (char *name);
 
-
 #endif
-

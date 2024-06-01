@@ -7,6 +7,16 @@
 
 
 
+void os_logo (void)
+{
+    kprintf(" _    _    _____                   _         \r\n");
+    kprintf("| |  | |  / ____|                 (_)        \r\n");
+    kprintf("| |__| | | (___    _   _   _ __    _  __  __ \r\n");
+    kprintf("|  __  |  \\___ \\  | | | | |  _ \\  | | \\ \\/ / \r\n");
+    kprintf("| |  | |  ____) | | |_| | | | | | | |  >  <  \r\n");
+    kprintf("|_|  |_| |_____/   \\__ _| |_| |_| |_| /_/\\_\\ \r\n");
+    kprintf("============================================ \r\n");
+}
 
 
 void main (void)
@@ -24,7 +34,7 @@ void main (void)
     init_vfs();
 
     power_selfInspection();
-    kprintf("Start OS ...\r\n");
+    os_logo();
 
     idle_main();
 }

@@ -11,7 +11,7 @@ void init_main (void)
     if (-1 == vfs_pcbInit(getProcCB(), "/"))
         kError(eSVC_Process, E_STATUS);
 
-    kprintf("sh: ");
+    kprintf("admin:~/ ");
 
     while(1)
     {

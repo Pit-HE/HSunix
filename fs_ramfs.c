@@ -332,7 +332,8 @@ int ramfs_getdents (struct File *file,
         struct dirent *dirp, unsigned int count)
 {
     ListEntry_t *list = NULL;
-    unsigned int num = 0, end = 0, idx = 0;
+    unsigned int num = 0, end = 0;
+    unsigned int cnt = 0, idx = 0;
     struct ramfs_node *node = NULL;
     struct ramfs_node *next_node = NULL;
 
@@ -360,15 +361,15 @@ int ramfs_getdents (struct File *file,
         if (idx >= file->off)
         {
             /* 添加要读取的信息 */
-            kstrcpy(dirp[num].name, next_node->name);
+            kstrcpy(dirp[cnt].name, next_node->name);
             if (next_node->type == RAMFS_FILE)
-                dirp[num].type = INODE_FILE;
+                dirp[cnt].type = INODE_FILE;
             else if (next_node->type == RAMFS_DIR)
-                dirp[num].type = INODE_DIR;
-            dirp[num].namelen = kstrlen(next_node->name);
-            dirp[num].objsize = sizeof(struct dirent);
+                dirp[cnt].type = INODE_DIR;
+            dirp[cnt].namelen = kstrlen(next_node->name);
+            dirp[cnt].objsize = sizeof(struct dirent);
 
-            num += 1;
+            cnt += 1;
             file->off += 1;
         }
 
@@ -378,7 +379,7 @@ int ramfs_getdents (struct File *file,
     }
 
     /* 返回读取到的总内存大小 */
-    return num * sizeof(struct dirent);
+    return cnt * sizeof(struct dirent);
 }
 
 
@@ -612,6 +613,10 @@ int ramfs_create (struct FsDevice *fsdev,
     if (NULL == (parent_node = _path_getnode(
             sb, parent_path)))
         return -1;
+    
+    /* 确认该父节点是目录 */
+    if (parent_node->type != RAMFS_DIR)
+        return -1;
 
     /* 递增当前超级块记录的内存空间大小 */
     sb->size += sizeof(struct ramfs_node);
@@ -626,6 +631,9 @@ int ramfs_create (struct FsDevice *fsdev,
 
     /* 让 inode 与 ramfs_node 建立联系 */
     inode->data = node;
+    inode->size += 1;
+
+    parent_node->size += 1;
 
     /* 将创建的节点添加到其父节点的链表中 */
     kDISABLE_INTERRUPT();

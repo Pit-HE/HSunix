@@ -97,22 +97,25 @@ void tc_fsFile (void)
 {
     int fd;
     int len;
-    char rbuf[50];
-    char wbuf[50];
+    char rbuf[100];
+    char wbuf[100];
 
     kmemset(rbuf, 0, 50);
     kmemset(wbuf, 0, 50);
-    kstrcpy(wbuf, "tc_fsFile runing !");
+    kstrcpy(wbuf, "HSunix running in RISC-V architecture !");
     len = kstrlen(wbuf);
     if (len <= 0)
         return;
 
     fd = vfs_open("/text.txt", O_RDWR | O_CREAT, S_IRWXU);
     vfs_write (fd, wbuf, len);
+    vfs_close(fd);
+
+    fd = vfs_open("/text.txt", O_RDWR | O_CREAT, S_IRWXU);
     vfs_read(fd, rbuf, len);
     vfs_close(fd);
 
-    kprintf ("file read: %s\r\n", rbuf);
+    kprintf ("%s\r\n", rbuf);
 }
 
 

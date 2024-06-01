@@ -15,6 +15,7 @@ cliInfo_t cliState;
 
 
 
+/* 初始化整个命令行模块 */
 void init_cli (void)
 {
     char *buf;
@@ -27,11 +28,11 @@ void init_cli (void)
     }
 }
 
+/* 命令行模块的入口函数 */
 void cli_main (void)
 {
-    char ch;
+    char ch, *cmd;
     int  ret;
-    char cmd[CLI_CMD_BUFF_SIZE];
 
     if (cliState.init == 0)
         return;
@@ -45,11 +46,14 @@ void cli_main (void)
     }
     else
     {
+        kprintf ("\r\n");
+        cmd = kalloc(CLI_CMD_BUFF_SIZE);
         kRingbuf_get(&cliState.cb, cmd, CLI_CMD_BUFF_SIZE);
 
         cli_exec(cmd, &ret);
 
-        kprintf("sh: ");
+        kRingbuf_clean(&cliState.cb);
+        kprintf("admin:~/ ");
     }
 }
 
