@@ -97,44 +97,56 @@ void kfree (void *obj)
 {
     ksm_node *objHear = (ksm_node *)obj;
     ksm_node *curHear = NULL;
-    char *ptrHear = NULL;
+    char *ptr = NULL;
 
     if (obj == NULL)
         return;
-    objHear--;
+    objHear -= 1;
     if ((objHear->magic != KSM_MAGIC) ||
         (objHear->blkNum == 0U))
         return;
     kmemset(obj, 5, objHear->blkNum - sizeof(ksm_node));
 
     kDISABLE_INTERRUPT();
-    /* 当链表中只有一个内存块时 */
     curHear = smallMemFreeHeader.next;
+
+    /* 处理空闲管理链中只有一个内存块的情况 */
     if (curHear->next == &smallMemFreeHeader)
     {
         if (objHear < curHear)
-        {
-            ptrHear = (char *)objHear;
-            ptrHear += objHear->blkNum;
-            if (ptrHear == (char*)curHear)
+        {/* 将 obj 插入 curHear 之前 */
+            ptr = (char *)objHear;
+            ptr += objHear->blkNum;
+
+            /* 判断两个内存块是否相临 */
+            if (ptr == (char*)curHear)
             {
+                /* 合并 obj 与 curHear 的内存空间 */
                 objHear->blkNum += curHear->blkNum;
                 objHear->next = curHear->next;
+
+                curHear->magic  = 0;
             }
             else
             {
+                /* 将 obj 插入空闲链表 */
                 objHear->next = curHear;
                 smallMemFreeHeader.blkNum += 1;
             }
             smallMemFreeHeader.next = objHear;
         }
         else
-        {
-            ptrHear = (char *)curHear;
-            ptrHear += curHear->blkNum;
-            if (ptrHear == (char*)objHear)
+        {/* 将 obj 插入 curHear 之后 */
+            ptr = (char *)curHear;
+            ptr += curHear->blkNum;
+
+            /* 判断两个内存块是否地址相临 */
+            if (ptr == (char*)objHear)
             {
+                /* 合并 obj 与 curHear */
                 curHear->blkNum += objHear->blkNum;
+
+                objHear->magic  = 0;
             }
             else
             {
@@ -146,8 +158,10 @@ void kfree (void *obj)
         goto exit_kfree;
     }
 
-    /* 遍历整个小内存块的链表,
-       确认将 obj 放在 curHear 与 curHear->next 之间 */
+    /********************************************
+    *   处理管理链表中有多个空闲内存块相链接的情况
+    ********************************************/
+    /* 遍历整个小内存块的链表, 确认 obj 插入 curHear 的位置 */
     while(curHear->next != &smallMemFreeHeader)
     {
         if (objHear < curHear->next)
@@ -156,26 +170,36 @@ void kfree (void *obj)
     }
     smallMemFreeHeader.blkNum += 1;
 
-    ptrHear = (char *)objHear;
-    ptrHear += objHear->blkNum;
-    if (ptrHear == (char*)curHear->next)
+    /* 确认将 obj 放在 curHear 节点之前*/
+    ptr = (char *)objHear;
+    ptr += objHear->blkNum;
+
+    /* 判断两个内存块是否地址相临 */
+    if (ptr == (char*)curHear->next)
     {
         objHear->blkNum += curHear->next->blkNum;
-        objHear->next = curHear->next->next;
+        objHear->next    = curHear->next->next;
         smallMemFreeHeader.blkNum -= 1;
+
+        curHear->next->magic = 0;
     }
     else
     {
         objHear->next = curHear->next;
     }
 
-    ptrHear = (char *)curHear;
-    ptrHear += curHear->blkNum;
-    if (ptrHear == (char *)objHear)
+    /* 确认将 obj 放在 curHear 节点之后*/ 
+    ptr = (char *)curHear;
+    ptr += curHear->blkNum;
+
+    /* 判断两个内存块是否地址相临 */
+    if (ptr == (char *)objHear)
     {
         curHear->blkNum += objHear->blkNum;
         curHear->next = objHear->next;
         smallMemFreeHeader.blkNum -= 1;
+
+        objHear->magic = 0;
     }
     else
     {
@@ -189,63 +213,79 @@ exit_kfree:
 /* 只能用于申请小于 4096 大小的内存块 */
 void *kalloc (int size)
 {
-    int  objsize;
+    int  objsize = 0;
     char *ptr = NULL;
-    void *retAddr = NULL;
-    ksm_node *curHear = NULL;
-    ksm_node *oldHear = NULL;
+    ksm_node *currNode = NULL;
+    ksm_node *nextNode = NULL;
 
     if ((0 >= size) || (size >= PGSIZE))
         return NULL;
     if (smallMemFreeHeader.next == NULL)
         return NULL;
 
-    objsize = size + sizeof(ksm_node);
     kDISABLE_INTERRUPT();
-    for (curHear = &smallMemFreeHeader; ;)
+    objsize = size + sizeof(ksm_node);
+    for (currNode = &smallMemFreeHeader; ;)
     {
-        if (curHear->next->blkNum >= objsize)
+        /* 是否有足够大的空闲内存 */
+        if (currNode->next->blkNum >= objsize)
         {
-            oldHear = curHear->next;
-            if (oldHear->blkNum == objsize)
+            /* 获取要操作的空闲内存块 */
+            nextNode = currNode->next;
+
+            /* 判断该空闲内存是否刚好等于所需大小 */
+            if (nextNode->blkNum == objsize)
             {
-                curHear->next = oldHear->next;
+                currNode->next = nextNode->next;
                 smallMemFreeHeader.blkNum -= 1;
             }
             else
             {
-                ptr = (char *)oldHear;
-                curHear->next = (ksm_node *)(ptr + objsize);
-                curHear->next->blkNum = oldHear->blkNum - objsize;
-                curHear->next->next = oldHear->next;
+                /* 分割该可用的空闲内存块 */
+                ptr  = (char *)nextNode;
+                ptr += objsize;
+                currNode->next = (ksm_node *)ptr;
+
+                /* 更新被分割后的内存块的头信息 */
+                currNode->next->magic  = KSM_MAGIC;
+                currNode->next->blkNum = nextNode->blkNum - objsize;
+                currNode->next->next = nextNode->next;
             }
-            oldHear->blkNum = objsize;
-            oldHear->magic = KSM_MAGIC;
-            oldHear += 1;
-            retAddr = (void*)oldHear;
-            kmemset(retAddr, 0, size);
+            /* 初始化寻找到的可用空闲内存块 */
+            nextNode->magic  = KSM_MAGIC;
+            nextNode->blkNum = objsize;
+            nextNode->next   = NULL;
+            kmemset(++nextNode, 0, size);
             break;
         }
 
-        if (curHear->next != &smallMemFreeHeader)
+        /* 获取下一个空闲内存块 */
+        if (currNode->next != &smallMemFreeHeader)
         {
-            curHear = curHear->next;
+            currNode = currNode->next;
         }
         else
         {
+            /* 没有可用的空闲内存块时，申请一页新的物理内存 */
             ksm_node *obj = (ksm_node *)kallocPhyPage();
             if (obj == NULL)
+            {
                 kError(eSVC_VirtualMem, E_INVAL);
+                return NULL;
+            }
             /* 设置为当前空闲内存块的大小 */
             obj->blkNum = PGSIZE;
             obj->magic = KSM_MAGIC;
-            kfree ((char *)++obj);
 
-            curHear = &smallMemFreeHeader;
+            /* 将新的空闲内存加入管理链表 */ 
+            kfree((char *)++obj);
+
+            /* 重新遍历当前空闲的链表 */
+            currNode = &smallMemFreeHeader;
         }
     }
     kENABLE_INTERRUPT();
-    return retAddr;
+    return nextNode;
 }
 
 static void smallMemFormat (void)

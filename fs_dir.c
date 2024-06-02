@@ -193,6 +193,14 @@ struct DirItem *ditem_create (struct FsDevice *fsdev,
     /* 查找与路径匹配的 inode */
     if (0 > fsdev->fs->fsops->lookup(fsdev, inode, path))
     {
+        /* 是否要创建新的 inode */
+        if ((flag & O_CREAT) != O_CREAT)
+        {
+            inode_free(inode);
+            ditem_free(ditem);
+            return NULL;
+        }
+
         /* 在磁盘上创建对应的 inode 对象 */
         if (0 > fsdev->fs->fsops->create(fsdev, inode, path))
         {

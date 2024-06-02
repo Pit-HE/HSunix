@@ -214,11 +214,10 @@ char *path_parser (char *directory, const char *filepath)
  */
 int path_setcwd (const char *path)
 {
-    
-    char *cwd = NULL;
     ProcCB *pcb = NULL;
     char *ap_path = NULL;
     char *old_cwd = NULL;
+    char *new_cwd = NULL;
 
     if (path == NULL)
         return -1;
@@ -234,31 +233,20 @@ int path_setcwd (const char *path)
         return 0;
     }
 
-    cwd = (char *)kalloc(kstrlen(ap_path) + 1);
-    if (cwd == NULL)
+    /* 生成存放新路径的缓冲区 */
+    new_cwd = (char *)kalloc(kstrlen(ap_path)+1);
+    if (new_cwd == NULL)
         return -1;
-    kstrcpy(cwd, ap_path);
+    kstrcpy(new_cwd, ap_path);
 
+    /* 更换进程工作路径的缓冲区 */
     kDISABLE_INTERRUPT();
     old_cwd = pcb->cwd;
-    pcb->cwd = cwd;
+    pcb->cwd = new_cwd;
     kENABLE_INTERRUPT();
 
-    kfree(old_cwd);
     kfree(ap_path);
+    kfree(old_cwd);
 
     return 0;
-}
-
-/* 获取进程的当前工作路径 */
-char *path_getcwd (void)
-{
-    char *cwd = NULL;
-    ProcCB *pcb = getProcCB();
-
-    cwd = (char *)kalloc(kstrlen(pcb->cwd) + 1);
-    if (cwd != NULL)
-        kstrcpy(cwd, pcb->cwd);
-
-    return cwd;
 }

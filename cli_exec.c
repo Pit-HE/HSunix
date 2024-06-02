@@ -40,5 +40,8 @@ int cli_exec (char *cmd, int *retp)
 
     /* 执行该命令所对应的函数 */
     *retp = func(argc, argv);
+    if (*retp < 0)
+        kprintf ("Command execution failure\r\n");
+
     return 0;
 }

@@ -48,7 +48,9 @@ void fdTab_free (ProcCB *pcb)
             file_free(pcb->fdTab[i]);
         }
     }
+
     /* 释放整个文件描述符数组占用的空间 */
+    pcb->fdCnt = 0;
     kfree(pcb->fdTab);
 }
 

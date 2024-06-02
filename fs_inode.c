@@ -23,11 +23,8 @@ void inode_free (struct Inode *inode)
         return;
     if (inode->magic != INODE_MAGIC)
         return;
-    if (inode->ref > 0)
-    {
-        inode->ref -= 1;
+    if (inode->ref != 0)
         return;
-    }
 
     kfree(inode);
 }
@@ -41,7 +38,6 @@ int inode_init (struct Inode *inode, unsigned int flag,
     inode->flags = flag;
     inode->fops  = fops;
     inode->mode  = mode;
-    inode->ref  += 1;
 
     if (flag & O_DIRECTORY)
         inode->type = INODE_DIR;

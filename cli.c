@@ -32,7 +32,7 @@ void init_cli (void)
 void cli_main (void)
 {
     char ch, *cmd;
-    int  ret, endflag = 0;
+    int  val, endflag = 0;
 
     if (cliState.init == 0)
         return;
@@ -42,7 +42,7 @@ void cli_main (void)
         if (endflag == 0)
         {
             endflag++;
-            kprintf("admin:~/ ");
+            kprintf("admin:%s$ ", getProcCB()->cwd);
         }
 
         ch = console_rChar();
@@ -70,7 +70,7 @@ void cli_main (void)
             cmd = (char *)kalloc(CLI_CMD_BUFF_SIZE);
             kRingbuf_get(&cliState.cb, cmd, CLI_CMD_BUFF_SIZE);
 
-            cli_exec(cmd, &ret);
+            cli_exec(cmd, &val);
 
             kRingbuf_clean(&cliState.cb);
             kfree(cmd);

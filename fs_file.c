@@ -29,13 +29,50 @@ void file_free (struct File *file)
 {
     if (file == NULL)
         return;
-    if (file->magic != FILE_MAGIC)
-        return;
-    if (file->ref != 0)
+    if ((file->magic != FILE_MAGIC) || 
+        (file->ref != 0))
         return;
 
     file->magic = 0;
     kfree(file);
+}
+
+/* 创建指定路径下的'.' 与 '..' */
+int _file_create_std (struct FsDevice *fsdev, const char *path, 
+        unsigned int flag, unsigned int mode)
+{
+    char *p_path = NULL;
+
+    /* 申请暂存路径的内存空间 */
+    p_path = (char *)kalloc(kstrlen(path) + 4);
+    if (p_path == NULL)
+        return -1;
+
+    /* 为传入的路径添加 '/' */
+    kstrcpy(p_path, path);
+    if (path[kstrlen(path)-1] != '/')
+        kstrcat(p_path, "/");
+
+    /* 创建目录'.' */
+    kstrcat(p_path, ".");
+    if (0 > ditem_create(fsdev, p_path, flag, mode))
+    {
+        kfree(p_path);
+        return -1;
+    }
+
+    /* 创建目录'..' */
+    kstrcat(p_path, ".");
+    if (0 > ditem_create(fsdev, p_path, flag, mode))
+    {
+        /* TODO：缺少删除 ditem 的功能 */
+        kfree(p_path);
+        return -1;
+    }
+
+    /* 释放暂存路径的内存 */
+    kfree(p_path);
+    return 0;
 }
 
 /* 打开文件系统中要操作的对象，将其信息存入文件描述符
@@ -52,12 +89,10 @@ int file_open (struct File *file, char *path,
 {
     int ret = 0;
     char *ap_path = NULL;
-    char *std_path = NULL;
     struct Device *dev = NULL;
     struct Inode *inode = NULL;
     struct DirItem *ditem = NULL;
     struct FsDevice *fsdev = NULL;
-    
 
     if ((file == NULL) || (path == NULL))
         return -1;
@@ -77,7 +112,6 @@ int file_open (struct File *file, char *path,
 
         /* 获取该路径下所对应的目录项 */
         ditem = ditem_get(fsdev, ap_path);
-        // if ((ditem == NULL) && (flag & O_CREAT))
         if (ditem == NULL)
         {
             /* 若不存在则创建 */
@@ -91,29 +125,16 @@ int file_open (struct File *file, char *path,
             if ((ditem->inode->type == INODE_DIR) &&
                 (flag & O_CREAT))
             {
-                std_path = (char *)kalloc(kstrlen(ap_path) + 4);
-                if (std_path == NULL)
+                if (0 > _file_create_std(fsdev, ap_path,
+                    flag, mode))
                 {
                     ditem_free(ditem);
                     fsdev_put(fsdev);
-                    return -1;
                 }
-                kstrcpy(std_path, ap_path);
-
-                if (ap_path[kstrlen(ap_path)-1] != '/')
-                    kstrcat(std_path, "/");
-
-                kstrcat(std_path, ".");
-                ditem_create(fsdev, std_path, flag, mode);
-                kstrcat(std_path, ".");
-                ditem_create(fsdev, std_path, flag, mode);
-                kfree(std_path);
             }
         }
         kfree(ap_path);
 
-        if (ditem == NULL)
-            return -1;
         inode = ditem->inode;
     }
     else /* 操作注册的设备 */
@@ -122,9 +143,11 @@ int file_open (struct File *file, char *path,
         if (inode == NULL)
             return -1;
 
-        // while(*path == ':') 
-        //     path++;
+        /* 跳过前缀 */
+        while(*path == ':') 
+            path++;
 
+        /* 获取指定的设备 */
         dev = dev_get(path);
         if (dev == NULL)
         {
@@ -136,6 +159,8 @@ int file_open (struct File *file, char *path,
         inode->dev  = dev;
         inode->type = INODE_DEVICE;
     }
+    /* 递增 inode 节点的被引用计数 */
+    inode->ref += 1;
 
     /* 初始化新打开的文件描述符 */
     file->inode = inode;
@@ -156,25 +181,22 @@ int file_open (struct File *file, char *path,
  */
 int file_close (struct File *file)
 {
-    int ret;
-    struct Inode *inode;
+    int ret = -1;
 
     if (file == NULL)
         return -1;
-    if ((file->ref <= 0) || (file->magic != FILE_MAGIC))
-        return -1;
-
-    file->ref -= 1;
-
-    inode = file->inode;
-    if (inode == NULL)
+    if ((file->ref <= 0) || 
+        (file->magic != FILE_MAGIC))
         return -1;
 
     if (file->fops->close != NULL)
         ret = file->fops->close(file);
 
+    file->ref -= 1;
+    file->inode->ref -= 1;
+
     /* 释放文件对象占用的资源 */
-    if (inode->type == INODE_DEVICE)
+    if (file->inode->type == INODE_DEVICE)
     {
         dev_put(file->inode->dev);
         inode_free(file->inode);

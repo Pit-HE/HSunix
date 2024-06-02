@@ -203,7 +203,6 @@ struct Inode *parse_getinode (char *path,unsigned int flag, unsigned int mode);
 char *path_formater (char *path);
 char *path_parser (char *directory, const char *filepath);
 int   path_setcwd (const char *path);
-char *path_getcwd (void);
 
 /**********************************/
 void  init_ditem (void);
