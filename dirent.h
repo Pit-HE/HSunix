@@ -27,6 +27,7 @@ struct dirent
     unsigned int type;      /* 接收到的文件类型 */
     unsigned int namelen;   /* 实体文件系统支持的文件名长度 */
     unsigned int objsize;   /* 接收到的单个对象的长度 */
+    unsigned int datasize;  /* 当前这个文件的大小 */
     char name[128];         /* 目录项的名字 */
 };
 
@@ -39,5 +40,6 @@ long telldir(DIR *dir);
 struct dirent *readdir(DIR *dir);
 int mkdir (char *path, unsigned int mode);
 int chdir(char *path);
+int rmdir (char *path);
 
 #endif

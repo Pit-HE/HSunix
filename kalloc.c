@@ -126,6 +126,8 @@ void kfree (void *obj)
                 objHear->next = curHear->next;
 
                 curHear->magic  = 0;
+                curHear->blkNum = 0;
+                curHear->next   = NULL;
             }
             else
             {
@@ -147,6 +149,8 @@ void kfree (void *obj)
                 curHear->blkNum += objHear->blkNum;
 
                 objHear->magic  = 0;
+                objHear->blkNum = 0;
+                objHear->next   = 0;
             }
             else
             {
@@ -181,7 +185,9 @@ void kfree (void *obj)
         objHear->next    = curHear->next->next;
         smallMemFreeHeader.blkNum -= 1;
 
-        curHear->next->magic = 0;
+        curHear->next->magic  = 0;
+        curHear->next->blkNum = 0;
+        curHear->next->next   = NULL;
     }
     else
     {
@@ -199,7 +205,9 @@ void kfree (void *obj)
         curHear->next = objHear->next;
         smallMemFreeHeader.blkNum -= 1;
 
-        objHear->magic = 0;
+        objHear->magic  = 0;
+        objHear->blkNum = 0;
+        objHear->next   = 0;
     }
     else
     {

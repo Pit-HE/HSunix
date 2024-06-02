@@ -166,3 +166,20 @@ int chdir(char *path)
 
     return 0;
 }
+
+/* 删除指定的文件目录 */
+int rmdir (char *path)
+{
+    DIR *dir = NULL;
+
+    if (path == NULL)
+        return -1;
+    
+    /* 确认文件存在 */
+    dir = opendir(path);
+    if (dir == NULL)
+        return -1;
+    closedir(dir);
+
+    return file_unlink(path);
+}

@@ -258,6 +258,55 @@ int file_write (struct File *file,
     return ret;
 }
 
+/* 删除指定路径下的文件或目录 */
+int file_unlink (char *path)
+{
+    char *ap_path = NULL;
+    struct DirItem *ditem = NULL;
+    struct FsDevice *fsdev = NULL;
+
+    if (path == NULL)
+        return -1;
+
+    /* 获取绝对路径 */
+    ap_path = path_parser(NULL, path);
+    if (ap_path == NULL)
+        return -1;
+
+    /* 获取所属的文件系统 */
+    fsdev = fsdev_get(ap_path);
+    if (fsdev == NULL)
+        return -1;
+    if (fsdev->fs->fsops->unlink == NULL)
+        return -1;
+
+    /* 禁止删除文件系统挂载的目录对象 */
+    if (0 == kstrcmp(fsdev->path, ap_path))
+    {
+        if (ap_path[kstrlen(fsdev->path)]=='\0')
+        {
+            return -1;
+        }
+    }
+
+    /* 获取该路径所对应的目录项 */
+    ditem = ditem_get(fsdev, ap_path);
+    if (ditem != NULL)
+    {
+        /* 释放目录项中占用的资源 */
+        inode_free(ditem->inode);
+        ditem_free(ditem);
+    }
+    
+    /* 调用文件系统删除指定对象 */
+    fsdev->fs->fsops->unlink(fsdev, path);
+
+    kfree(ap_path);
+    fsdev_put(fsdev);
+
+    return 0;
+}
+
 /* 将文件在内存中的缓存信息写入磁盘
  *
  * 返回值：-1表示失败

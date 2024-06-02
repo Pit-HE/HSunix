@@ -46,11 +46,19 @@ void _free_ramfs_node (struct FsDevice *fsdev,
     list_del(&node->siblist);
     kENABLE_INTERRUPT();
 
+    /* 释放文件存储的数据 */
     if (node->data != NULL)
         kfree(node->data);
 
-    sb->size -= sizeof(struct ramfs_node) + node->size;
+    if (node->type == RAMFS_DIR)
+        sb->size -= sizeof(struct ramfs_node);
+    else if (node->type == RAMFS_FILE)
+    {
+        /* 修改超级块记录的内存大小 */
+        sb->size -= sizeof(struct ramfs_node) + node->size;
+    }
 
+    /* 释放节点本身 */
     kfree(node);
 }
 
@@ -368,6 +376,7 @@ int ramfs_getdents (struct File *file,
                 dirp[cnt].type = INODE_DIR;
             dirp[cnt].namelen = kstrlen(next_node->name);
             dirp[cnt].objsize = sizeof(struct dirent);
+            dirp[cnt].datasize = next_node->size;
 
             cnt += 1;
             file->off += 1;

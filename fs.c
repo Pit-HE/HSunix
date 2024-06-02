@@ -5,6 +5,8 @@
 #include "file.h"
 #include "kerror.h"
 #include "fcntl.h"
+#include "dirent.h"
+
 
 
 /* 初始化虚拟文件系统 */
@@ -118,6 +120,58 @@ int vfs_read (int fd, void *buf, int len)
     {
         kErr_printf("fail: vfs_read read file !\r\n");
         return -1;
+    }
+
+    return ret;
+}
+
+int vfs_unlink (char *path)
+{
+    int fd, ret = -1;
+    struct File *file;
+
+    if (path == NULL)
+    {
+        kErr_printf("fail: vfs_unlink path !\r\n");
+        return -1;
+    }
+
+    fd = fd_alloc();
+    if (fd < 0)
+    {
+        kErr_printf("fail: vfs_open alloc fd !\r\n");
+        return -1;
+    }
+
+    file = fd_get(fd);
+    if (file == NULL)
+    {
+        kErr_printf("fail: vfs_open get fd !\r\n");
+        return -1;
+    }
+
+    /* 获取要处理的文件对象 */
+    if (0 > file_open(file, (char *)path, O_RDWR, S_IRWXU))
+    {
+        kErr_printf("fail: vfs_open open file !\r\n");
+        fd_free(fd);
+        return -1;
+    }
+
+    /* 按照不同的类型，处理不同的释放处理 */
+    switch (file->inode->type)
+    {
+        case INODE_DEVICE:
+            ret = 0;
+            dev_put(file->inode->dev);
+            break;
+        case INODE_FILE:
+        case INODE_DIR:
+            ret = file_unlink(path);
+            break;
+        case INODE_PIPO:
+            break;
+        default: break;
     }
 
     return ret;

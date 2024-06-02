@@ -10,24 +10,6 @@
 int cmd_help (int argc, char *argv[]);
 
 
-/* 测试命令行交互的参数传递功能 */
-int cmd_test (int argc, char *argv[])
-{
-    int i;
-
-    if (argc == 1)
-        return 0;
-
-    /* 打印传入的所有参数 */
-    for (i=1; i<argc; i++)
-    {
-        kprintf(argv[i]);
-        kprintf(" ");
-    }
-    kprintf("\r\n");
-
-    return 0;
-}
 
 /* 创建文件夹 */ 
 int cmd_mkdir (int argc, char *argv[])
@@ -75,10 +57,21 @@ int cmd_ls (int argc, char *argv[])
         dirent = readdir(dir);
         if (dirent != NULL)
         {
+            /* 显示类型 */
             if (dirent->type == INODE_DIR)
                 kprintf ("d--   ");
             else if (dirent->type == INODE_FILE)
                 kprintf ("f--   ");
+
+            /* 显示大小 */
+            if (dirent->datasize < 10)
+                kprintf (" %d    ", dirent->datasize);
+            else if (dirent->datasize < 100)
+                kprintf (" %d   ", dirent->datasize);
+            else if (dirent->datasize < 1000)
+                kprintf (" %d  ", dirent->datasize);
+
+            /* 显示名字 */
             kprintf ("%s\r\n",dirent->name);
         }
     }while(dirent != NULL);
@@ -117,11 +110,9 @@ int cmd_pwd (int argc, char *argv[])
 /* 输出文件内的数据 */
 int cmd_echo (int argc, char *argv[])
 {
-    #define READ_LEN    32
-
     int fd;
     int rlen;
-    char tmpbuf[READ_LEN + 1];
+    char tmpbuf[33];
 
     if (argc != 2)
         return -1;
@@ -132,73 +123,113 @@ int cmd_echo (int argc, char *argv[])
 
     do
     {
-        kmemset(tmpbuf, 0, READ_LEN);
-        rlen = vfs_read(fd, tmpbuf, READ_LEN);
+        kmemset(tmpbuf, 0, 32);
+        rlen = vfs_read(fd, tmpbuf, 32);
+
         if (rlen)
-        {
             kprintf("%s", tmpbuf);
-        }
-    } while (rlen < READ_LEN);
+        if (rlen < 32)
+            kprintf("\r\n");
+    }while(rlen == 32);
+    vfs_close(fd);
+
+    return 0;
+}
+
+/* 向指定文件输入数据 */
+int cmd_cat (int argc, char *argv[])
+{
+    int fd, wlen, val;
+
+    if (argc != 3)
+        return -1;
+    
+    fd = vfs_open(argv[1], O_RDWR | O_CREAT, S_IRWXU);
+    if (fd < 0)
+        return -1;
+
+    wlen = kstrlen(argv[2]);
+    val = vfs_write(fd, argv[2], wlen);
+    if (val != wlen)
+        return -1;
 
     vfs_close(fd);
 
     return 0;
 }
 
+/* 删除指定的文件或目录 */
+int cmd_rm (int argc, char *argv[])
+{
+    if (argc != 2)
+        return -1;
 
+    return vfs_unlink(argv[1]);
+}
+
+/* 删除指定的目录 */
+int cmd_rmdir (int argc, char *argv[])
+{
+    if (argc != 2)
+        return -1;
+    
+    return rmdir(argv[1]);
+}
 
 /***********************************************************
  * 
 ***********************************************************/
 struct cli_cmd func_list[] = 
 {
-    /* help */
-    {
+    {/* help */
         &cmd_help,
         "help",
         "list all command"
     },
-    /* test */
-    {
-        &cmd_test,
-        "test",
-        "test Test the command line parameter"
-    },
-    /* mkdir */
-    {
+    {/* mkdir */
         &cmd_mkdir,
         "mkdir",
         "You can use it to create folders"
     },
-    /* cd */
-    {
+    {/* cd */
         &cmd_cd,
         "cd",
         "Modify the process work path"
     },
-    /* ls */
-    {
+    {/* ls */
         &cmd_ls,
         "ls",
         "List all the objects under the folder"
     },
-    /* mkfile */
-    {
+    {/* mkfile */
         &cmd_mkfile,
         "mkfile",
         "Create the specified file"
     },
-    /* pwd */
-    {
+    {/* pwd */
         &cmd_pwd,
         "pwd",
         "Show current process work path"
     },
-    /* cat */
-    {
+    {/* echo */
         &cmd_echo,
         "echo",
         "Data in the output file"
+    },
+    {/* cat */
+        &cmd_cat,
+        "cat",
+        "Writes data to the specified file"
+    },
+    {/* rm */
+        &cmd_rm,
+        "rm",
+        "Deletes the specified file or directory"
+    },
+    {/* rmdir */
+        &cmd_rmdir,
+        "rmdir",
+        "Deletes the specified directory"
     },
 };
 #define CMD_LIST_LEN sizeof(func_list)/sizeof(func_list[0])

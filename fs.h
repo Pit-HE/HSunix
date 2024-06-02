@@ -38,12 +38,12 @@ int  vfs_pcbInit   (ProcCB *pcb, char *path);
 int  vfs_pcbdeinit (ProcCB *pcb);
 
 void init_vfs   (void);
-int  vfs_open   (char *path,unsigned int flags, unsigned int mode);
+int  vfs_open   (char *path, unsigned int flags, unsigned int mode);
 int  vfs_close  (int fd);
 int  vfs_write  (int fd, void *buf, int len);
 int  vfs_read   (int fd, void *buf, int len);
 int  vfs_mount  (char *fsname, char *path, unsigned int flag, void *data);
-
+int  vfs_unlink (char *path);
 
 
 
