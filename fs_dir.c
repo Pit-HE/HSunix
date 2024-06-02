@@ -14,7 +14,7 @@ ListEntry_t ditem_hashlist[DIR_HASH_BUFF_SIZE];
 
 
 /* 计算目录项所对应的哈希值 */
-static int ditem_hash(struct FsDevice *fsdev, char *path)
+static int ditem_hash(struct FsDevice *fsdev, const char *path)
 {
     int hash = 0;
 
@@ -32,23 +32,25 @@ static int ditem_hash(struct FsDevice *fsdev, char *path)
 
 /* 目录项路径格式化，去除路径中可能包含的文件系统挂路径 */
 static char *ditem_pathformat(
-        struct FsDevice *fsdev, char *path)
+        struct FsDevice *fsdev, const char *path)
 {
     unsigned int len;
 
+    /* 获取文件系统挂载路径的长度 */
     len = kstrlen(fsdev->path);
     if (len == 0)
         return NULL;
 
+    /* 当前路径是否为文件系统的挂载路径 */
     if (0 == kstrncmp(fsdev->path, path, len))
         path += len;
 
-    return path;
+    return (char *)path;
 }
 
 /* 查找指定的目录项是否已经存在 */
 static struct DirItem *ditem_find (
-        struct FsDevice *fsdev, char *path)
+        struct FsDevice *fsdev, const char *path)
 {
     int index;
     ListEntry_t *list = NULL;
@@ -189,10 +191,10 @@ struct DirItem *ditem_create (struct FsDevice *fsdev,
     inode_init(inode, flag, fsdev->fs->fops, mode);
 
     /* 查找与路径匹配的 inode */
-    if (-1 == fsdev->fs->fsops->lookup(fsdev, inode, path))
+    if (0 > fsdev->fs->fsops->lookup(fsdev, inode, path))
     {
         /* 在磁盘上创建对应的 inode 对象 */
-        if (-1 == fsdev->fs->fsops->create(fsdev, inode, path))
+        if (0 > fsdev->fs->fsops->create(fsdev, inode, path))
         {
             inode_free(inode);
             ditem_free(ditem);
@@ -209,7 +211,8 @@ struct DirItem *ditem_create (struct FsDevice *fsdev,
 }
 
 /* 获取已存在的目录项 (传入的必须是绝对路径) */
-struct DirItem *ditem_get (struct FsDevice *fsdev, char *path)
+struct DirItem *ditem_get (struct FsDevice *fsdev, 
+        const char *path)
 {
     struct DirItem *ditem = NULL;
 

@@ -76,7 +76,7 @@ static void free_fsdev (struct FsDevice *fsdev)
 }
 
 /* 从树状图查找已挂载的文件系统设备 */
-static struct FsDevice *find_fsdev (char *path)
+static struct FsDevice *find_fsdev (const char *path)
 {
     struct FsDevice *fsdev = root_fsdev;
     struct FsDevice *nextdev = NULL;
@@ -267,7 +267,7 @@ int fsdev_unmount (char *path)
 }
 
 /* 获取实体文件系统的结构体 (传入的必须是绝对路径) */
-struct FsDevice *fsdev_get (char *path)
+struct FsDevice *fsdev_get (const char *path)
 {
     struct FsDevice *fsdev;
 

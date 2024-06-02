@@ -51,7 +51,7 @@ int cmd_cd (int argc, char *argv[])
 int cmd_ls (int argc, char *argv[])
 {
     DIR *dir = NULL;
-    struct dirent *dp = NULL;
+    struct dirent *dirent = NULL;
     ProcCB *pcb = getProcCB();
 
     if (argc > 2)
@@ -72,16 +72,16 @@ int cmd_ls (int argc, char *argv[])
     seekdir(dir, 0);
     do
     {
-        dp = readdir(dir);
-        if (dp != NULL)
+        dirent = readdir(dir);
+        if (dirent != NULL)
         {
-            if (dp->type == INODE_DIR)
+            if (dirent->type == INODE_DIR)
                 kprintf ("d--   ");
-            else if (dp->type == INODE_FILE)
+            else if (dirent->type == INODE_FILE)
                 kprintf ("f--   ");
-            kprintf ("%s\r\n",dp->name);
+            kprintf ("%s\r\n",dirent->name);
         }
-    }while(dp != NULL);
+    }while(dirent != NULL);
     closedir(dir);
 
     return 0;

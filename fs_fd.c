@@ -11,27 +11,29 @@
  */
 int fdTab_alloc (ProcCB *pcb)
 {
-    int ret = -1;
+    struct File *file = NULL;
 
     pcb->fdTab = (struct File **)kalloc(sizeof(struct File *) * 20);
     if (pcb->fdTab == NULL)
-        return ret;
+        return -1;
     pcb->fdCnt = 20;
-    ret = 1;
 
     /* 标准输入 */
-    pcb->fdTab[STD_INPUT] = file_alloc();
-    file_open(pcb->fdTab[STD_INPUT], ":console", O_RDONLY, S_IRWXU);
+    file = file_alloc();
+    file_open(file, ":console", O_RDONLY, S_IRWXU);
+    pcb->fdTab[STD_INPUT] = file;
 
     /* 标准输出 */
-    pcb->fdTab[STD_OUTPUT] = file_alloc();
-    file_open(pcb->fdTab[STD_OUTPUT], ":console", O_WRONLY, S_IRWXU);
+    file = file_alloc();
+    file_open(file, ":console", O_WRONLY, S_IRWXU);
+    pcb->fdTab[STD_OUTPUT] = file;
 
     /* 标准错误 */
-    pcb->fdTab[STD_ERROR] = file_alloc();
-    file_open(pcb->fdTab[STD_ERROR], ":console", O_RDONLY | O_WRONLY, S_IRWXU);
+    file = file_alloc();
+    file_open(file, ":console", O_RDONLY | O_WRONLY, S_IRWXU);
+    pcb->fdTab[STD_ERROR] = file;
 
-    return ret;
+    return 0;
 }
 /* 释放进程占用的文件描述符表 */
 void fdTab_free (ProcCB *pcb)
@@ -79,7 +81,7 @@ int fd_alloc (void)
         tab = (struct File **)kalloc(sizeof(struct File*)*(pcb->fdCnt + 5));
         if (tab != NULL)
         {
-            /* 为空闲的描述数组成员分配空的描述符结构体 */
+            /* 为空闲的描述符数组成员分配空的描述符结构体 */
             pcb->fdTab[pcb->fdCnt] = file_alloc();
             fd = pcb->fdCnt;
 
@@ -88,6 +90,7 @@ int fd_alloc (void)
             kmemcpy(tab, pcb->fdTab, pcb->fdCnt);
             kfree(pcb->fdTab);
 
+            /* 更新描述符数组的信息 */
             pcb->fdTab = tab;
             pcb->fdCnt += 5;
             kENABLE_INTERRUPT();

@@ -70,7 +70,7 @@ int _free_sublist (struct FsDevice *fsdev,
         sub_node = list_container_of(list, \
                         struct ramfs_node, siblist);
 
-        /* 递归所有的文件夹节点 */
+        /* 递归所有的文件子节点 */
         if (sub_node->type == RAMFS_DIR)
             _free_sublist(fsdev, sub_node);
 
@@ -85,7 +85,7 @@ int _free_sublist (struct FsDevice *fsdev,
  * path: 要解析的路径
  * name：存放第一个节点字符的缓冲区
  */
-static char *ramfs_path_getfirst (char *path, char *name)
+static char *ramfs_path_getfirst (const char *path, char *name)
 {
     return path_getfirst(path, name);
 }
@@ -98,7 +98,7 @@ static char *ramfs_path_getfirst (char *path, char *name)
  *
  * 返回值：-1为失败
  */
-static int ramfs_path_getlast (char *path, 
+static int ramfs_path_getlast (const char *path, 
         char *parentPath, char *name)
 {
     return path_getlast(path, parentPath, name);
@@ -106,13 +106,13 @@ static int ramfs_path_getlast (char *path,
 
 /* 获取文件路径所对应的节点 ( 传入的必须是绝对路径 ) */
 struct ramfs_node *_path_getnode (struct ramfs_sb *sb, 
-        char *path)
+        const char *path)
 {
     ListEntry_t *list = NULL;
     struct ramfs_node *cur_node = NULL;
     struct ramfs_node *sub_node = NULL;
     char first_name[RAMFS_NAME_LEN];
-    char *cur_path = NULL, *tmp_path = NULL;
+    const char *cur_path = path, *tmp_path = path;
 
     if ((sb == NULL) || (path == NULL))
         return NULL;
@@ -513,8 +513,8 @@ int ramfs_stat (struct FsDevice *fsdev, char *path,
     return 0;
 }
 /* 修改指定文件对象的名字 */
-int ramfs_rename (struct FsDevice *fsdev, char *oldpath, 
-        char *newpath)
+int ramfs_rename (struct FsDevice *fsdev, 
+        char *oldpath, char *newpath)
 {
     struct ramfs_sb *sb = NULL;
     struct ramfs_node *node = NULL;
@@ -604,12 +604,13 @@ int ramfs_create (struct FsDevice *fsdev,
     if (node == NULL)
         return -1;
 
-    /* 获取父节点的 ramfs_node 和要创建的节点名字 */
     kmemset(parent_path, 0, RAMFS_PATH_MAT);
     kmemset(node_name, 0, RAMFS_NAME_LEN);
+    /* 获取父节点的路径和要创建的节点名字 */
     if (-1 == ramfs_path_getlast (path, 
             parent_path, node_name))
         return -1;
+    /* 获取父节点的 ramfs_node */
     if (NULL == (parent_node = _path_getnode(
             sb, parent_path)))
         return -1;
@@ -629,16 +630,16 @@ int ramfs_create (struct FsDevice *fsdev,
     kstrcpy(node->name, node_name);
     node->sb = sb;
 
-    /* 让 inode 与 ramfs_node 建立联系 */
-    inode->data = node;
-    inode->size = 0;
-
     /* 将创建的节点添加到其父节点的链表中 */
     kDISABLE_INTERRUPT();
     list_add_before(&parent_node->sublist, 
         &node->siblist);
     parent_node->size += 1;
     kENABLE_INTERRUPT();
+
+    /* 让 inode 与 ramfs_node 建立联系 */
+    inode->data = node;
+    inode->size = 0;
 
     return 0;
 }

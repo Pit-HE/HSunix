@@ -77,6 +77,7 @@ int file_open (struct File *file, char *path,
 
         /* 获取该路径下所对应的目录项 */
         ditem = ditem_get(fsdev, ap_path);
+        // if ((ditem == NULL) && (flag & O_CREAT))
         if (ditem == NULL)
         {
             /* 若不存在则创建 */
@@ -86,10 +87,11 @@ int file_open (struct File *file, char *path,
                 fsdev_put(fsdev);
                 return -1;
             }
-            /*  */
-            if (ditem->inode->type == INODE_DIR)
+            /* 创建目录下的 '.' 与 '..' 对象 */
+            if ((ditem->inode->type == INODE_DIR) &&
+                (flag & O_CREAT))
             {
-                std_path = (char *)kalloc(kstrlen(ap_path)+3);
+                std_path = (char *)kalloc(kstrlen(ap_path) + 4);
                 if (std_path == NULL)
                 {
                     ditem_free(ditem);
@@ -108,8 +110,10 @@ int file_open (struct File *file, char *path,
                 kfree(std_path);
             }
         }
-        // kfree(ap_path)   /* TODO */
+        kfree(ap_path);
 
+        if (ditem == NULL)
+            return -1;
         inode = ditem->inode;
     }
     else /* 操作注册的设备 */
@@ -117,6 +121,9 @@ int file_open (struct File *file, char *path,
         inode = inode_alloc();
         if (inode == NULL)
             return -1;
+
+        // while(*path == ':') 
+        //     path++;
 
         dev = dev_get(path);
         if (dev == NULL)

@@ -12,9 +12,9 @@
  * path: 要解析的路径
  * name：存放第一个节点字符的缓冲区
  */
-char *path_getfirst (char *path, char *name)
+char *path_getfirst (const char *path, char *name)
 {
-    char *ptr = path;
+    const char *ptr = path;
 
     if (path == NULL)
         return NULL;
@@ -38,7 +38,7 @@ char *path_getfirst (char *path, char *name)
     }
 
     /* 每次 ptr 都会停在文件路径的斜杠上 */
-    return ptr;
+    return (char *)ptr;
 }
 
 /* 解析路径中最后一个节点的名字，并返回该节点前的父节点路径
@@ -49,29 +49,30 @@ char *path_getfirst (char *path, char *name)
  *
  * 返回值：-1为失败
  */
-int path_getlast (char *path, char *parentPath, char *name)
+int path_getlast (const char *path, char *parentPath, char *name)
 {
-    char *p_path = NULL;
+    char *ptr = NULL;
 
     if ((path == NULL) || (parentPath == NULL) || (name == NULL))
         return -1;
 
     /* 获取最后一个'/'的位置 */
-    p_path = kstrrchr(path, '/');
+    ptr = kstrrchr(path, '/');
 
-    if (p_path == path)
+    if (ptr == path)
     {
         parentPath[0] = '/';
         parentPath[1] = '\0';
     }
     else
     {
-        kmemcpy(parentPath, path, p_path - path);
-        parentPath[p_path - path] = '\0';
+        kmemcpy(parentPath, path, ptr - path);
+        parentPath[ptr - path] = '\0';
     }
 
     /* 拷贝时跳过'/' */
-    kstrcpy(name, p_path + 1);
+    ptr += 1;
+    kstrcpy(name, ptr);
     return 0;
 }
 
@@ -174,7 +175,7 @@ char *path_formater (char *path)
  * 3、directory != NULL & filepath 为相对路径时，将两者组合称为绝对路径
  * 4、directory != NULL & filepath 为绝对路径时，直接使用 filepath 作为绝对路径
  */
-char *path_parser (char *directory, char *filepath)
+char *path_parser (char *directory, const char *filepath)
 {
     char *path = NULL;
 
@@ -211,30 +212,32 @@ char *path_parser (char *directory, char *filepath)
 /* 设置进程的当前工作路径
  * ( 传入的必须是绝对路径 )
  */
-int path_setcwd (char *path)
+int path_setcwd (const char *path)
 {
-    char *str = NULL;
+    
+    char *cwd = NULL;
     ProcCB *pcb = NULL;
-    char *cwd = NULL, *old_cwd = NULL;
+    char *ap_path = NULL;
+    char *old_cwd = NULL;
 
     if (path == NULL)
         return -1;
     pcb = getProcCB();
 
     /* 格式化该路径 */
-    str = path_parser(NULL, path);
+    ap_path = path_parser(NULL, path);
 
     /* 禁止设置相同路径 */
-    if (0 == kstrcmp(pcb->cwd, str))
+    if (0 == kstrcmp(pcb->cwd, ap_path))
     {
-        kfree(str);
+        kfree(ap_path);
         return 0;
     }
 
-    cwd = (char *)kalloc(kstrlen(str) + 1);
+    cwd = (char *)kalloc(kstrlen(ap_path) + 1);
     if (cwd == NULL)
         return -1;
-    kstrcpy(cwd, str);
+    kstrcpy(cwd, ap_path);
 
     kDISABLE_INTERRUPT();
     old_cwd = pcb->cwd;
@@ -242,7 +245,7 @@ int path_setcwd (char *path)
     kENABLE_INTERRUPT();
 
     kfree(old_cwd);
-    kfree(str);
+    kfree(ap_path);
 
     return 0;
 }

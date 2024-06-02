@@ -197,12 +197,12 @@ int  file_getdents (struct File *file, struct dirent *dirp, unsigned int nbytes)
 int  file_lseek (struct File *file, unsigned int offset, unsigned int type);
 
 /**********************************/
-char *path_getfirst (char *path, char *name);
-int   path_getlast  (char *path, char *parentPath, char *name);
+char *path_getfirst (const char *path, char *name);
+int   path_getlast  (const char *path, char *parentPath, char *name);
 struct Inode *parse_getinode (char *path,unsigned int flag, unsigned int mode);
 char *path_formater (char *path);
-char *path_parser (char *directory, char *filepath);
-int   path_setcwd (char *path);
+char *path_parser (char *directory, const char *filepath);
+int   path_setcwd (const char *path);
 char *path_getcwd (void);
 
 /**********************************/
@@ -210,7 +210,7 @@ void  init_ditem (void);
 struct DirItem *ditem_alloc (struct FsDevice *fsdev, char *path);
 int   ditem_free (struct DirItem *dir);
 struct DirItem *ditem_create (struct FsDevice *fsdev, char *path, unsigned int flag, unsigned int mode);
-struct DirItem *ditem_get (struct FsDevice *fsdev, char *path);
+struct DirItem *ditem_get (struct FsDevice *fsdev, const char *path);
 void  ditem_put  (struct DirItem *ditem);
 char *ditem_path (struct DirItem *ditem);
 
@@ -218,7 +218,7 @@ char *ditem_path (struct DirItem *ditem);
 int  fsdev_register (char *name, struct FileOperation *fops,struct FileSystemOps *fsops, unsigned int multi);
 int  fsdev_mount    (char *fsname, char *path,unsigned int flag, void *data);
 int  fsdev_unmount  (char *path);
-struct FsDevice *fsdev_get (char *path);
+struct FsDevice *fsdev_get (const char *path);
 void fsdev_put      (struct FsDevice *fsdev);
 
 #endif

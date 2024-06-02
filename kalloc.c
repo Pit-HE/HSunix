@@ -10,31 +10,38 @@ extern char end[];
 #define ALIGN(addr, size) (((addr) + (size)-1) & (~((size)-1)))
 #endif
 
-typedef struct kernelMemoryNode
+typedef struct kernelPageMemoryNode
 {
-    uint64                  blkNum;
-    struct kernelMemoryNode *next;
-}kmNode;
+    uint64 blkNum;
+    struct kernelPageMemoryNode *next;
+}kpm_node;
 /* 指向以页大小为单位的内存链表
     1、phyPageFreeHeader.blkNUM 表示当前页的数量
     2、phyPageFreeHeader.next 表示页链表的第一个块
  */
+static kpm_node phyPageFreeHeader;
 
-static kmNode phyPageFreeHeader;
+
+typedef struct kernelSmallMemoryNode
+{
+    uint16 magic;
+    uint64 blkNum;
+    struct kernelSmallMemoryNode *next;
+}ksm_node;
 /* 指向单向循环的空闲小内存块链表
     1、smallMemFreeHeader.blkNum 表示当前链表内的块数量
     2、smallMemFreeHeader.next 表示链表的第一个节点
     3、链表中每个节点的blkNum (node.blkNum) 表示当前节点块可用的内存大小
  */
-static kmNode smallMemFreeHeader;
-#define SL_HEADCODE 0x5AA5
+static ksm_node smallMemFreeHeader;
+#define KSM_MAGIC 0x5AA5
 
 
 
 /* 处理有效区间物理内存的申请功能 */
 void *kallocPhyPage (void)
 {
-    kmNode *p;
+    kpm_node *p;
 
     if (phyPageFreeHeader.next == NULL)
         return NULL;
@@ -51,7 +58,7 @@ void *kallocPhyPage (void)
 /* 处理有效区间物理内存的释放功能 */
 void kfreePhyPage (void *pa)
 {
-    kmNode *p;
+    kpm_node *p;
 
     /* 地址是否对齐 */
     if (((uint64)pa % PGSIZE) != 0)
@@ -62,7 +69,7 @@ void kfreePhyPage (void *pa)
 
     /* 格式化物理内存页 */
     kmemset (pa, 1, PGSIZE);
-    p = (kmNode*)pa;
+    p = (kpm_node*)pa;
 
     /* 添加到空闲链表 */
     p->next = phyPageFreeHeader.next;
@@ -88,19 +95,19 @@ static void phyPageFormat (void *pa_start, void *pa_end)
 
 void kfree (void *obj)
 {
-    kmNode *objHear = (kmNode *)obj;
-    kmNode *curHear = NULL;
+    ksm_node *objHear = (ksm_node *)obj;
+    ksm_node *curHear = NULL;
     char *ptrHear = NULL;
 
-    kDISABLE_INTERRUPT();
     if (obj == NULL)
-        goto exit_kfree;
+        return;
     objHear--;
-    if ((objHear->next != (kmNode *)SL_HEADCODE) ||
-            (objHear->blkNum == 0U))
-        goto exit_kfree;
-    kmemset(obj, 5, objHear->blkNum);
+    if ((objHear->magic != KSM_MAGIC) ||
+        (objHear->blkNum == 0U))
+        return;
+    kmemset(obj, 5, objHear->blkNum - sizeof(ksm_node));
 
+    kDISABLE_INTERRUPT();
     /* 当链表中只有一个内存块时 */
     curHear = smallMemFreeHeader.next;
     if (curHear->next == &smallMemFreeHeader)
@@ -185,15 +192,16 @@ void *kalloc (int size)
     int  objsize;
     char *ptr = NULL;
     void *retAddr = NULL;
-    kmNode *curHear, *oldHear;
+    ksm_node *curHear = NULL;
+    ksm_node *oldHear = NULL;
 
-    if (size >= PGSIZE)
-        goto exit_kalloc;
+    if ((0 >= size) || (size >= PGSIZE))
+        return NULL;
     if (smallMemFreeHeader.next == NULL)
-        goto exit_kalloc;
+        return NULL;
 
+    objsize = size + sizeof(ksm_node);
     kDISABLE_INTERRUPT();
-    objsize = size + sizeof(kmNode);
     for (curHear = &smallMemFreeHeader; ;)
     {
         if (curHear->next->blkNum >= objsize)
@@ -207,13 +215,14 @@ void *kalloc (int size)
             else
             {
                 ptr = (char *)oldHear;
-                curHear->next = (kmNode *)(ptr + objsize);
+                curHear->next = (ksm_node *)(ptr + objsize);
                 curHear->next->blkNum = oldHear->blkNum - objsize;
                 curHear->next->next = oldHear->next;
             }
             oldHear->blkNum = objsize;
-            oldHear->next = (kmNode *)SL_HEADCODE;
-            retAddr = (void*)++oldHear;
+            oldHear->magic = KSM_MAGIC;
+            oldHear += 1;
+            retAddr = (void*)oldHear;
             kmemset(retAddr, 0, size);
             break;
         }
@@ -224,31 +233,30 @@ void *kalloc (int size)
         }
         else
         {
-            kmNode *obj = (kmNode *)kallocPhyPage();
+            ksm_node *obj = (ksm_node *)kallocPhyPage();
             if (obj == NULL)
                 kError(eSVC_VirtualMem, E_INVAL);
             /* 设置为当前空闲内存块的大小 */
             obj->blkNum = PGSIZE;
-            obj->next = (kmNode *)SL_HEADCODE;
+            obj->magic = KSM_MAGIC;
             kfree ((char *)++obj);
 
             curHear = &smallMemFreeHeader;
         }
     }
     kENABLE_INTERRUPT();
-exit_kalloc:
     return retAddr;
 }
 
 static void smallMemFormat (void)
 {
-    kmNode* curHear;
+    ksm_node* curHear;
 
-    curHear = (kmNode*)kallocPhyPage();
+    curHear = (ksm_node*)kallocPhyPage();
     if (curHear != NULL)
     {
         curHear->blkNum = PGSIZE;
-        curHear->next = (kmNode *)SL_HEADCODE;
+        curHear->magic = KSM_MAGIC;
 
         kfree ((char *)++curHear);
     }

@@ -67,12 +67,13 @@ void cli_main (void)
         {
             /* 输入了回车键，开始执行命令行内容 */
             kprintf ("\r\n");
-            cmd = kalloc(CLI_CMD_BUFF_SIZE);
+            cmd = (char *)kalloc(CLI_CMD_BUFF_SIZE);
             kRingbuf_get(&cliState.cb, cmd, CLI_CMD_BUFF_SIZE);
 
             cli_exec(cmd, &ret);
 
             kRingbuf_clean(&cliState.cb);
+            kfree(cmd);
             endflag = 0;
         }
     }

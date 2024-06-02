@@ -16,6 +16,7 @@ void os_logo (void)
     kprintf("| |  | |  ____) | | |_| | | | | | | |  >  <  \r\n");
     kprintf("|_|  |_| |_____/   \\__ _| |_| |_| |_| /_/\\_\\ \r\n");
     kprintf("============================================ \r\n");
+    kprintf("HSunix running in RISC-V architecture\r\n");
 }
 
 

@@ -7,9 +7,6 @@
 #include "fcntl.h"
 #include "fs.h"
 
-extern void tc_fs_power (void);
-extern void tc_fs_process (void);
-
 
 /* 测试虚拟内存管理模块是否正常 */
 void tc_virtualmemory (void)
@@ -224,10 +221,9 @@ void power_selfInspection (void)
     // tc_kalloc();
     // tc_ringbuff();
     // tc_timer();
-    tc_fs_power();
 }
 
 void proc_selfInspection (void)
 {
-    tc_fs_process();
+
 }

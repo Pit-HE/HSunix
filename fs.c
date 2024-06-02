@@ -18,7 +18,8 @@ void init_vfs (void)
     init_ditem();
 
     /* 设置根文件系统 */
-    vfs_mount("ramfs", "/", O_RDWR, NULL);
+    vfs_mount("ramfs", "/", 
+        O_RDWR | O_CREAT | O_DIRECTORY, NULL);
 }
 
 /* 文件系统对外接口：打开指定路径的文件 */
@@ -146,7 +147,7 @@ int vfs_pcbInit (ProcCB *pcb, char *path)
         return -1;
     }
     if (-1 == file_open(pcb->root, path, \
-                O_RDWR, S_IRUSR))
+            O_DIRECTORY | O_RDWR | O_CREAT, S_IRUSR))
     {
         file_free(pcb->root);
         kfree(pcb->cwd);
@@ -154,7 +155,7 @@ int vfs_pcbInit (ProcCB *pcb, char *path)
     }
 
     /* 为进程申请默认大小的文件描述符数组空间 */
-    if (-1 == fdTab_alloc(pcb))
+    if (0 > fdTab_alloc(pcb))
     {
         file_close(pcb->root);
         file_free(pcb->root);
@@ -172,8 +173,11 @@ int vfs_pcbdeinit (ProcCB *pcb)
         return -1;
 
     file_close(pcb->root);
+
+    /* 释放进程占用的内存资源 */
     file_free(pcb->root);
     kfree(pcb->cwd);
+    fdTab_free(pcb);
 
     return 0;
 }

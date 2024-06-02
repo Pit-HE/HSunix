@@ -33,7 +33,7 @@ DIR *opendir(char *path)
         return NULL;
 
     /* 打开该文件对象 */
-    if (0 > file_open(file, path, O_DIRECTORY | O_RDONLY, S_IRUSR))
+    if (0 > file_open(file, path, O_DIRECTORY | O_RDWR, S_IRWXU))
     {
         fd_free(dir->fd);
         return NULL;
@@ -125,8 +125,8 @@ int mkdir (char *path, unsigned int mode)
     
     /* 创建目录对象 */
     ret = file_open(file, path, 
-            O_CREAT|O_DIRECTORY, mode);
-    if (ret > 0)
+            O_CREAT | O_DIRECTORY | O_RDWR, mode);
+    if (ret >= 0)
     {
         file_close(file);
     }
