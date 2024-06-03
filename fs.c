@@ -213,6 +213,7 @@ int vfs_fstatfs (int fd, struct statfs *buf)
     return file_fstatfs(file, buf);
 }
 
+/* 获取指定文件的信息 */
 int vfs_stat (int fd, struct stat *buf)
 {
     struct File *file = NULL;
@@ -228,12 +229,12 @@ int vfs_stat (int fd, struct stat *buf)
 }
 
 /* 修改文件路径所对应文件的名字 */
-int vfs_rename (char *oldfile, char *newfile)
+int vfs_rename (char *oldname, char *newname)
 {
-    if ((oldfile == NULL) || (newfile == NULL))
+    if ((oldname == NULL) || (newname == NULL))
         return -1;
 
-    return file_rename(oldfile, newfile);
+    return file_rename(oldname, newname);
 }
 
 /* 初始化进程的文件相关项*/

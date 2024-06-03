@@ -41,6 +41,7 @@ void file_free (struct File *file)
 int _file_create_std (struct FsDevice *fsdev, const char *path, 
         unsigned int flag, unsigned int mode)
 {
+    struct DirItem *ditem = NULL;
     char *p_path = NULL;
 
     /* 申请暂存路径的内存空间 */
@@ -55,7 +56,8 @@ int _file_create_std (struct FsDevice *fsdev, const char *path,
 
     /* 创建目录'.' */
     kstrcat(p_path, ".");
-    if (0 > ditem_create(fsdev, p_path, flag, mode))
+    ditem = ditem_create(fsdev, p_path, flag, mode);
+    if (NULL == ditem)
     {
         kfree(p_path);
         return -1;
@@ -63,9 +65,9 @@ int _file_create_std (struct FsDevice *fsdev, const char *path,
 
     /* 创建目录'..' */
     kstrcat(p_path, ".");
-    if (0 > ditem_create(fsdev, p_path, flag, mode))
+    if (NULL == ditem_create(fsdev, p_path, flag, mode))
     {
-        /* TODO：缺少删除 ditem 的功能 */
+        ditem_destroy(ditem);
         kfree(p_path);
         return -1;
     }
@@ -108,7 +110,10 @@ int file_open (struct File *file, char *path,
         /* 获取该路径下所对应的文件系统 */
         fsdev = fsdev_get(ap_path);
         if (fsdev == NULL)
+        {
+            kfree(ap_path);
             return -1;
+        }
 
         /* 获取该路径下所对应的目录项 */
         ditem = ditem_get(fsdev, ap_path);
@@ -118,6 +123,7 @@ int file_open (struct File *file, char *path,
             ditem = ditem_create(fsdev, ap_path, flag, mode);
             if (ditem == NULL)
             {
+                kfree(ap_path);
                 fsdev_put(fsdev);
                 return -1;
             }
@@ -128,7 +134,7 @@ int file_open (struct File *file, char *path,
                 if (0 > _file_create_std(fsdev, ap_path,
                     flag, mode))
                 {
-                    ditem_free(ditem);
+                    ditem_destroy(ditem);
                     fsdev_put(fsdev);
                 }
             }
@@ -423,6 +429,65 @@ int file_stat (struct File *file, struct stat *buf)
 /* 修改文件路径所对应文件的名字 */
 int file_rename (char *oldpath, char *newpath)
 {
-    /* TODO */
-    return -1;
+    int ret = -1;
+    struct DirItem *oditem = NULL;
+    struct DirItem *nditem = NULL;
+    struct FsDevice *fsdev = NULL;
+    char *ap_opath = NULL, *ap_npath = NULL;
+
+    if ((oldpath == NULL) || (newpath == NULL))
+        return -1;
+    
+    /* 格式化传入的路径 */
+    ap_opath = path_parser(NULL, oldpath);
+    ap_npath = path_parser(NULL, newpath);
+
+    /* 获取旧路径所对应的文件系统 */
+    fsdev = fsdev_get(ap_opath);
+    if (fsdev == NULL)
+    {
+        kfree(ap_opath);
+        kfree(ap_npath);
+        return -1;
+    }
+
+    /* 获取旧路径的目录项 */
+    oditem = ditem_get(fsdev, ap_opath);
+    if (oditem == NULL)
+    {
+        kfree(ap_opath);
+        kfree(ap_npath);
+        return -1;
+    }
+
+    /* 创建新路径的目录项 */
+    nditem = ditem_create(fsdev, ap_npath, 
+        oditem->inode->flags, oditem->inode->mode);
+    if (nditem == NULL)
+    {
+        ditem_put(oditem);
+        kfree(ap_opath);
+        kfree(ap_npath);
+        return -1;
+    }
+
+    /* 更新实体文件系统内的信息 */
+    if (oditem->inode->fops->rename != NULL)
+    {
+        ret = oditem->inode->fops->rename(oditem->inode, 
+                nditem->inode);
+    }
+
+    /* 更新目录项的信息 */
+    kDISABLE_INTERRUPT();
+    kstrcpy(oditem->path, nditem->path);
+    kENABLE_INTERRUPT();
+
+    /* 释放使用的资源 */
+    ditem_destroy(nditem);
+    ditem_put(oditem);
+    kfree(ap_opath);
+    kfree(ap_npath);
+
+    return ret;
 }

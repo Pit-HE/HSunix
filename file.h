@@ -53,6 +53,8 @@ struct FileOperation
     int (*getdents) (struct File *file, struct dirent *dirp, unsigned int count);
     /* 获取文件的信息 */
     int (*stat)     (struct File *file, struct stat *buf);
+    /* 重命名指定文件 */
+    int (*rename)   (struct Inode *oldnode, struct Inode *newnode);
 };
 
 
@@ -71,9 +73,6 @@ struct FileSystemOps
 
     /* 删除指定路径的文件或目录 */
     int (*unlink)   (struct FsDevice *fsdev, char *path);
-
-    /* 重命名指定文件 */
-    int (*rename)   (struct FsDevice *fsdev, char *oldpath, char *newpath);
 
     /* 在实体文件系统中查找 inode 所对应的对象 */
     int (*lookup)   (struct FsDevice *fsdev, struct Inode *inode, char *path);
@@ -211,6 +210,7 @@ void  init_ditem (void);
 struct DirItem *ditem_alloc (struct FsDevice *fsdev, char *path);
 int   ditem_free (struct DirItem *dir);
 struct DirItem *ditem_create (struct FsDevice *fsdev, char *path, unsigned int flag, unsigned int mode);
+int   ditem_destroy (struct DirItem *ditem);
 struct DirItem *ditem_get (struct FsDevice *fsdev, const char *path);
 void  ditem_put  (struct DirItem *ditem);
 char *ditem_path (struct DirItem *ditem);

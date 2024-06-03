@@ -136,15 +136,13 @@ int ditem_free (struct DirItem *dir)
         (dir->ref == 0))
     dir->magic = 0;
 
-    list_del(&dir->list);
-
     kfree(dir->path);
     kfree(dir);
 
     return 0;
 }
 
-/* 将目录项添加到模块的哈希数组中 */
+/* 将目录项添加到模块的哈希数组中 (与 ditem_del 成对使用) */
 static void ditem_add (struct DirItem *ditem)
 {
     int hash;
@@ -159,6 +157,19 @@ static void ditem_add (struct DirItem *ditem)
     kDISABLE_INTERRUPT();
     list_add_before(&ditem_hashlist[hash], &ditem->list);
     ditem->state |= DITEM_HASH;
+    kENABLE_INTERRUPT();
+}
+
+/* 将目录项从哈希数组链表中移除 (与 ditem_add 成对使用) */
+static void ditem_del (struct DirItem *ditem)
+{
+    if ((ditem == NULL) ||
+        (ditem->magic != DIRITEM_MAGIC))
+        return;
+
+    kDISABLE_INTERRUPT();
+    list_del_init(&ditem->list);
+    ditem->state &= ~DITEM_HASH;
     kENABLE_INTERRUPT();
 }
 
@@ -218,6 +229,32 @@ struct DirItem *ditem_create (struct FsDevice *fsdev,
     ditem->ref += 1;
 
     return ditem;
+}
+
+/* 删除已创建的目录项 (与 ditem_create 成对使用) */
+int ditem_destroy (struct DirItem *ditem)
+{
+    char *ap_path = NULL;
+    struct FsDevice *fsdev = NULL;
+
+    if ((ditem == NULL) || (ditem->magic != DIRITEM_MAGIC))
+        return -1;
+
+    ditem->ref = 0;
+
+    fsdev = ditem->fsdev;
+
+    ap_path = path_parser(fsdev->path, ditem->path);
+
+    ditem_del(ditem);
+
+    fsdev->fs->fsops->unlink(fsdev, ap_path);
+    
+    inode_free(ditem->inode);
+    ditem_free(ditem);
+    kfree(ap_path);
+
+    return 0;
 }
 
 /* 获取已存在的目录项 (传入的必须是绝对路径) */

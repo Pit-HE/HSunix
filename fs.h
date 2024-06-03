@@ -46,7 +46,7 @@ int  vfs_unlink (char *path);
 int  vfs_fsync  (int fd);
 int  vfs_fstatfs(int fd, struct statfs *buf);
 int  vfs_creat  (char *path, unsigned int mode);
-int  vfs_rename (char *oldfile, char *newfile);
+int  vfs_rename (char *oldname, char *newname);
 int  vfs_stat   (int fd, struct stat *buf);
 
 #endif

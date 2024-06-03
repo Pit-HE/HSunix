@@ -516,43 +516,26 @@ int ramfs_stat (struct File *file, struct stat *buf)
     return 0;
 }
 /* 修改指定文件对象的名字 */
-int ramfs_rename (struct FsDevice *fsdev, 
-        char *oldpath, char *newpath)
+int ramfs_rename (struct Inode *oldnode, struct Inode *newnode)
 {
-    struct ramfs_sb *sb = NULL;
-    struct ramfs_node *node = NULL;
-    char parent_path[RAMFS_PATH_MAT];
-    char new_name[RAMFS_NAME_LEN];
+    struct ramfs_node *o_node, *n_node;
 
-    if ((fsdev == NULL) || (oldpath == NULL) || 
-        (newpath == NULL))
-        return -1;
-    sb = fsdev->data;
-    if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
+    if ((oldnode == NULL) || (newnode == NULL))
         return -1;
 
-    /* 排除创建新的同名文件 */
-    if (NULL != _path_getnode(sb, newpath))
+    o_node = (struct ramfs_node *)oldnode->data;
+    n_node = (struct ramfs_node *)newnode->data;
+
+    if ((o_node == NULL) || (n_node == NULL))
         return -1;
 
-    /* 获取旧文件路径的节点 */
-    node = _path_getnode(sb, oldpath);
-    if (node == NULL)
-        return -1;
-
-    /* 获取新文件的名字 */
-    kmemset(new_name, 0, RAMFS_NAME_LEN);
-    if (-1 == ramfs_path_getlast (newpath, 
-            parent_path, new_name))
-        return -1;
-
-    /* 修改名字 */
     kDISABLE_INTERRUPT();
-    kstrcpy(node->name, new_name);
+    kstrcpy(o_node->name, n_node->name);
     kENABLE_INTERRUPT();
 
     return 0;
 }
+
 /* 查找路径下的 ramfs_node 对象，path 必须是绝对路径 */
 int ramfs_lookup (struct FsDevice *fsdev, 
         struct Inode *inode, char *path)
@@ -682,6 +665,7 @@ struct FileOperation ramfs_fops =
     .lseek    = ramfs_lseek,
     .getdents = ramfs_getdents,
     .stat     = ramfs_stat,
+    .rename   = ramfs_rename,
 };
 /* ramfs 文件系统的系统操作接口 */
 struct FileSystemOps ramfs_fsops =
@@ -690,7 +674,6 @@ struct FileSystemOps ramfs_fsops =
     .unmount = ramfs_unmount,
     .statfs  = ramfs_statfs,
     .unlink  = ramfs_unlink,
-    .rename  = ramfs_rename,
     .lookup  = ramfs_lookup,
     .create  = ramfs_create,
     .free    = ramfs_free,
