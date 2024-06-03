@@ -11,7 +11,7 @@
 struct statfs
 {
     unsigned int f_bsize;  /* block size */
-    unsigned int f_blocks; /* total data blocks in file system */
+    unsigned int f_block; /* total data blocks in file system */
     unsigned int f_bfree;  /* free blocks in file system */
 };
 
@@ -44,7 +44,9 @@ int  vfs_write  (int fd, void *buf, int len);
 int  vfs_read   (int fd, void *buf, int len);
 int  vfs_mount  (char *fsname, char *path, unsigned int flag, void *data);
 int  vfs_unlink (char *path);
-
-
+int  vfs_fsync  (int fd);
+int  vfs_fstatfs(int fd, struct statfs *buf);
+int  vfs_creat  (char *path, unsigned int mode);
+int  vfs_rename (char *oldfile, char *newfile);
 
 #endif

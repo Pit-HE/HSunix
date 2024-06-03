@@ -196,6 +196,8 @@ int  file_unlink(char *path);
 int  file_flush (struct File *file);
 int  file_getdents (struct File *file, struct dirent *dirp, unsigned int nbytes);
 int  file_lseek (struct File *file, unsigned int offset, unsigned int type);
+int  file_fstatfs  (struct File *file, struct statfs *buf);
+int  file_rename(char *oldpath, char *newpath);
 
 /**********************************/
 char *path_getfirst (const char *path, char *name);

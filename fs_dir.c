@@ -190,6 +190,8 @@ struct DirItem *ditem_create (struct FsDevice *fsdev,
     }
     inode_init(inode, flag, fsdev->fs->fops, mode);
 
+    inode->fs = fsdev->fs;
+
     /* 查找与路径匹配的 inode */
     if (0 > fsdev->fs->fsops->lookup(fsdev, inode, path))
     {
@@ -242,9 +244,8 @@ void ditem_put (struct DirItem *ditem)
 {
     if (ditem == NULL)
         return;
-    if (ditem->magic != DIRITEM_MAGIC)
-        return;
-    if (ditem->ref == 0)
+    if ((ditem->magic != DIRITEM_MAGIC) ||
+        (ditem->ref == 0))
         return;
 
     ditem->ref -= 1;
@@ -256,7 +257,6 @@ char *ditem_path (struct DirItem *ditem)
 {
     char *path = NULL;
     int fsdev_len, ditem_len;
-
 
     if (ditem == NULL)
         return NULL;

@@ -158,6 +158,7 @@ int file_open (struct File *file, char *path,
 
         inode->dev  = dev;
         inode->type = INODE_DEVICE;
+        inode->fs   = NULL;
     }
     /* 递增 inode 节点的被引用计数 */
     inode->ref += 1;
@@ -261,6 +262,7 @@ int file_write (struct File *file,
 /* 删除指定路径下的文件或目录 */
 int file_unlink (char *path)
 {
+    int ret = 0;
     char *ap_path = NULL;
     struct DirItem *ditem = NULL;
     struct FsDevice *fsdev = NULL;
@@ -276,35 +278,55 @@ int file_unlink (char *path)
     /* 获取所属的文件系统 */
     fsdev = fsdev_get(ap_path);
     if (fsdev == NULL)
+    {
+        kfree(ap_path);
         return -1;
-    if (fsdev->fs->fsops->unlink == NULL)
-        return -1;
+    }
 
     /* 禁止删除文件系统挂载的目录对象 */
     if (0 == kstrcmp(fsdev->path, ap_path))
     {
-        if (ap_path[kstrlen(fsdev->path)]=='\0')
+        if (ap_path[kstrlen(fsdev->path)] == '\0')
         {
+            kfree(ap_path);
+            kfree(fsdev);
             return -1;
         }
     }
 
     /* 获取该路径所对应的目录项 */
     ditem = ditem_get(fsdev, ap_path);
-    if (ditem != NULL)
+    if (ditem == NULL)
     {
-        /* 释放目录项中占用的资源 */
-        inode_free(ditem->inode);
-        ditem_free(ditem);
+        kfree(ap_path);
+        kfree(fsdev);
+        return -1;
     }
-    
-    /* 调用文件系统删除指定对象 */
-    fsdev->fs->fsops->unlink(fsdev, path);
 
-    kfree(ap_path);
+    /* 按照不同的类型，处理不同的释放处理 */
+    switch (ditem->inode->type)
+    {
+        case INODE_DEVICE:
+            dev_put(ditem->inode->dev);
+            break;
+        case INODE_DIR:
+        case INODE_FILE:
+            /* 调用文件系统删除指定对象 */
+            if (fsdev->fs->fsops->unlink != NULL)
+                ret = fsdev->fs->fsops->unlink(fsdev, path);
+            break;
+        case INODE_PIPO:
+            break;
+        default: break;
+    }
+
+    inode_free(ditem->inode);
+    ditem_put(ditem);
+    ditem_free(ditem);
     fsdev_put(fsdev);
+    kfree(ap_path);
 
-    return 0;
+    return ret;
 }
 
 /* 将文件在内存中的缓存信息写入磁盘
@@ -325,7 +347,6 @@ int file_flush (struct File *file)
 
     return ret;
 }
-
 
 /* 读取指定数量的目录信息
  *  
@@ -365,3 +386,27 @@ int file_lseek (struct File *file,
     return ret;
 }
 
+/* 获取指定文件所属实体文件系统的信息 */
+int file_fstatfs (struct File *file, struct statfs *buf)
+{
+    int ret = -1;
+
+    if ((file == NULL) || (buf == NULL))
+        return -1;
+    if (file->magic != FILE_MAGIC)
+        return -1;
+
+    if (file->inode->fs->fsops->statfs != NULL)
+    {
+        ret = file->inode->fs->fsops->statfs(
+                file->ditem->fsdev, buf);
+    }
+    return ret;
+}
+
+/* 修改文件路径所对应文件的名字 */
+int file_rename (char *oldpath, char *newpath)
+{
+    /* TODO */
+    return -1;
+}

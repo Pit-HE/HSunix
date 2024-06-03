@@ -125,16 +125,11 @@ int vfs_read (int fd, void *buf, int len)
     return ret;
 }
 
-int vfs_unlink (char *path)
+/* 创建新的文件或重写现有的文件 */
+int vfs_creat (char *path, unsigned int mode)
 {
-    int fd, ret = -1;
-    struct File *file;
-
-    if (path == NULL)
-    {
-        kErr_printf("fail: vfs_unlink path !\r\n");
-        return -1;
-    }
+    int fd, ret;
+    struct File *file = NULL;
 
     fd = fd_alloc();
     if (fd < 0)
@@ -150,31 +145,97 @@ int vfs_unlink (char *path)
         return -1;
     }
 
-    /* 获取要处理的文件对象 */
-    if (0 > file_open(file, (char *)path, O_RDWR, S_IRWXU))
+    ret = file_open(file, (char *)path, 
+        O_WRONLY | O_CREAT | O_TRUNC, mode);
+    if (ret < 0)
     {
         kErr_printf("fail: vfs_open open file !\r\n");
         fd_free(fd);
         return -1;
     }
 
-    /* 按照不同的类型，处理不同的释放处理 */
-    switch (file->inode->type)
+    return ret;
+}
+
+/* 删除指定路径下的文件对象 */
+int vfs_unlink (char *path)
+{
+    int fd;
+    struct File *file = NULL;
+
+    if (path == NULL)
     {
-        case INODE_DEVICE:
-            ret = 0;
-            dev_put(file->inode->dev);
-            break;
-        case INODE_FILE:
-        case INODE_DIR:
-            ret = file_unlink(path);
-            break;
-        case INODE_PIPO:
-            break;
-        default: break;
+        kErr_printf("fail: vfs_unlink path !\r\n");
+        return -1;
     }
 
-    return ret;
+    fd = fd_alloc();
+    if (fd < 0)
+    {
+        kErr_printf("fail: vfs_unlink alloc fd !\r\n");
+        return -1;
+    }
+
+    file = fd_get(fd);
+    if (file == NULL)
+    {
+        kErr_printf("fail: vfs_unlink get fd !\r\n");
+        return -1;
+    }
+
+    /* 确认要处理的文件对象是存在的 */
+    if (0 > file_open(file, (char *)path, O_RDONLY, S_IRWXU))
+    {
+        kErr_printf("fail: vfs_unlink open file !\r\n");
+        fd_free(fd);
+        return -1;
+    }
+    file_close(file);
+    fd_free(fd);
+
+    /* 处理该文件对象 */
+    file_unlink(path);
+
+    return 0;
+}
+
+/* 同步文件的缓存信息到实体文件系统 */
+int vfs_fsync (int fd)
+{
+    struct File *file = NULL;
+
+    file = fd_get(fd);
+    if (file == NULL)
+    {
+        kErr_printf("fail: vfs_fsync get fd !\r\n");
+        return -1;
+    }
+
+    return file_flush(file);
+}
+
+/* 获取指定文件所属实体文件系统的信息 */
+int vfs_fstatfs (int fd, struct statfs *buf)
+{
+    struct File *file = NULL;
+
+    file = fd_get(fd);
+    if (file == NULL)
+    {
+        kErr_printf("fail: vfs_fstatfs get fd !\r\n");
+        return -1;
+    }
+
+    return file_fstatfs(file, buf);
+}
+
+/* 修改文件路径所对应文件的名字 */
+int vfs_rename (char *oldfile, char *newfile)
+{
+    if ((oldfile == NULL) || (newfile == NULL))
+        return -1;
+
+    return file_rename(oldfile, newfile);
 }
 
 /* 初始化进程的文件相关项*/

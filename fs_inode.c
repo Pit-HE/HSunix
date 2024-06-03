@@ -21,9 +21,8 @@ void inode_free (struct Inode *inode)
 {
     if (inode == NULL)
         return;
-    if (inode->magic != INODE_MAGIC)
-        return;
-    if (inode->ref != 0)
+    if ((inode->magic != INODE_MAGIC) ||
+        (inode->ref != 0))
         return;
 
     kfree(inode);
@@ -33,6 +32,8 @@ int inode_init (struct Inode *inode, unsigned int flag,
         struct FileOperation *fops, unsigned int mode)
 {
     if ((inode == NULL) || (fops == NULL))
+        return -1;
+    if (inode->magic != INODE_MAGIC)
         return -1;
 
     inode->flags = flag;

@@ -176,6 +176,76 @@ int cmd_rmdir (int argc, char *argv[])
     return rmdir(argv[1]);
 }
 
+/* 同步文件系统内的缓存到磁盘 */
+int cmd_fsync (int argc, char *argv[])
+{
+    int fd, ret;
+
+    if (argc != 2)
+        return -1;
+    
+    fd = vfs_open(argv[1], O_RDWR, S_IRWXU);
+    if (fd < 0)
+        return -1;
+
+    ret = vfs_fsync(fd);
+    vfs_close(fd);
+    
+    return ret;
+}
+
+/* 获取指定文件路径对象所属文件系统的信息 */
+int cmd_fstatfs (int argc, char *argv[])
+{
+    int fd, ret;
+    struct statfs fsbuf;
+
+    if (argc != 2)
+        return -1;
+    
+    fd = vfs_open(argv[1], O_RDWR, S_IRWXU);
+    if (fd < 0)
+        return -1;
+
+    ret = vfs_fstatfs(fd, &fsbuf);
+    if (ret < 0)
+    {
+        vfs_close(fd);
+        return -1;
+    }
+    vfs_close(fd);
+
+    kprintf("    fs bsize: %d\r\n", fsbuf.f_bsize);
+    kprintf("    fs block: %d\r\n", fsbuf.f_block);
+    kprintf("    fs bfree: %d\r\n", fsbuf.f_bfree);
+
+    return ret;
+}
+
+/* 显示指定文件的信息 */
+int cmd_stat (int argc, char *argv[])
+{
+    return -1;
+}
+
+/* 修改指定文件的名字 */
+int cmd_rename (int argc, char *argv[])
+{
+    int fd;
+
+    if (argc != 3)
+        return - 1;
+
+    /* 确认要改名的文件是否存在 */
+    fd = vfs_open(argv[1], O_RDWR, S_IRWXU);
+    if (fd < 0)
+        return -1;
+    vfs_close(fd);
+
+    /* 调用接口直接修改文件对象的名字 */
+    return vfs_rename (argv[1], argv[2]);
+}
+
 /***********************************************************
  * 
 ***********************************************************/
@@ -230,6 +300,26 @@ struct cli_cmd func_list[] =
         &cmd_rmdir,
         "rmdir",
         "Deletes the specified directory"
+    },
+    {/* fsync */
+        &cmd_fsync,
+        "fsync",
+        "Refresh the cache to disk for the specified file"
+    },
+    {/* fstatfs */
+        &cmd_fstatfs,
+        "fstatfs",
+        "Obtain the file system information of the file"
+    },
+    {/* stat */
+        &cmd_stat,
+        "stat",
+        "Displays the information of the specified file"
+    },
+    {/* rename */
+        &cmd_rename,
+        "rename",
+        "Modify the name of the existing file"
     },
 };
 #define CMD_LIST_LEN sizeof(func_list)/sizeof(func_list[0])

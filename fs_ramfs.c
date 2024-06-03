@@ -50,13 +50,11 @@ void _free_ramfs_node (struct FsDevice *fsdev,
     if (node->data != NULL)
         kfree(node->data);
 
+    /* 更新超级块记录的内存占用 */
     if (node->type == RAMFS_DIR)
         sb->size -= sizeof(struct ramfs_node);
     else if (node->type == RAMFS_FILE)
-    {
-        /* 修改超级块记录的内存大小 */
         sb->size -= sizeof(struct ramfs_node) + node->size;
-    }
 
     /* 释放节点本身 */
     kfree(node);
@@ -66,14 +64,14 @@ void _free_ramfs_node (struct FsDevice *fsdev,
 int _free_sublist (struct FsDevice *fsdev, 
         struct ramfs_node *node)
 {
-    ListEntry_t *list;
+    ListEntry_t *list, *tmp;
     struct ramfs_node *sub_node;
 
     if (node == NULL)
         return - 1;
 
     /* 遍历当前节点下的所有子节点 */
-    list_for_each(list, &node->sublist)
+    list_for_each_safe(list, tmp, &node->sublist)
     {
         sub_node = list_container_of(list, \
                         struct ramfs_node, siblist);
@@ -462,9 +460,9 @@ int ramfs_statfs (struct FsDevice *fsdev,
         return -1;
 
     /* 写入文件系统当前的信息 */
-    buf->f_bsize  = 512;
-    buf->f_blocks = (sb->size + 511)/512;
-    buf->f_bfree  = 1;
+    buf->f_bsize = 512;
+    buf->f_block = (sb->size + 511)/512;
+    buf->f_bfree = 1;
 
     return 0;
 }
