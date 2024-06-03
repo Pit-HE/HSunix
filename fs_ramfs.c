@@ -30,16 +30,12 @@ struct ramfs_node *_alloc_ramfs_node (void)
 }
 
 /* 释放已申请的 ramfs_node 对象 */
-void _free_ramfs_node (struct FsDevice *fsdev, 
+void _free_ramfs_node (struct ramfs_sb *sb, 
         struct ramfs_node *node)
 {
-    struct ramfs_sb *sb;
-
-    if ((fsdev == NULL) || (node == NULL))
+    if ((sb == NULL) || (node == NULL))
         return;
-
-    sb = fsdev->data;
-    if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
+    if (sb->magic != RAMFS_MAGIC)
         return;
 
     kDISABLE_INTERRUPT();
@@ -61,14 +57,16 @@ void _free_ramfs_node (struct FsDevice *fsdev,
 }
 
 /* 释放目录节点下的所有子节点 (需要使用递归) */
-int _free_sublist (struct FsDevice *fsdev, 
+int _free_sublist (struct ramfs_sb *sb, 
         struct ramfs_node *node)
 {
-    ListEntry_t *list, *tmp;
-    struct ramfs_node *sub_node;
+    ListEntry_t *list = NULL, *tmp = NULL;
+    struct ramfs_node *sub_node = NULL;
 
-    if (node == NULL)
-        return - 1;
+    if ((sb == NULL) || (node == NULL))
+        return -1;
+    if (sb->magic != RAMFS_MAGIC)
+        return -1;
 
     /* 遍历当前节点下的所有子节点 */
     list_for_each_safe(list, tmp, &node->sublist)
@@ -78,9 +76,9 @@ int _free_sublist (struct FsDevice *fsdev,
 
         /* 递归所有的文件子节点 */
         if (sub_node->type == RAMFS_DIR)
-            _free_sublist(fsdev, sub_node);
+            _free_sublist(sb, sub_node);
 
-        _free_ramfs_node(fsdev, sub_node);
+        _free_ramfs_node(sb, sub_node);
     }
 
     return 0;
@@ -438,7 +436,7 @@ int ramfs_unmount (struct FsDevice *fsdev)
     sb->magic = 0;
 
     /* 释放根目录链表下的所有子节点 */
-    _free_sublist(fsdev, &sb->root);
+    _free_sublist(fsdev->data, &sb->root);
     /* 释放超级块本身占用的内容 */
     kfree(sb);
 
@@ -467,19 +465,16 @@ int ramfs_statfs (struct FsDevice *fsdev,
     return 0;
 }
 /* 删除指定的文件或目录 */
-int ramfs_unlink (struct FsDevice *fsdev, char *path)
+int ramfs_unlink (struct DirItem *ditem)
 {
-    struct ramfs_sb *sb = NULL;
     struct ramfs_node *node = NULL;
 
-    if ((fsdev == NULL) || (path == NULL))
-        return -1;
-    sb = fsdev->data;
-    if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
+    if ((ditem == NULL) ||
+        (ditem->magic != DIRITEM_MAGIC))
         return -1;
 
     /* 获取路径所对应的文件节点 */
-    node = _path_getnode(sb, path);
+    node = ditem->inode->data;
     if (node == NULL)
         return -1;
 
@@ -488,10 +483,13 @@ int ramfs_unlink (struct FsDevice *fsdev, char *path)
     list_del (&node->siblist);
     kENABLE_INTERRUPT();
 
-    /* 释放节点链表中的所有子节点 */
-    _free_sublist(fsdev, node);
+    if (node->type == RAMFS_DIR)
+    {
+        /* 释放节点链表中的所有子节点 */
+        _free_sublist(ditem->fsdev->data, node);
+    }
     /* 释放节点本身占用的内存空间 */
-    _free_ramfs_node(fsdev, node);
+    _free_ramfs_node(ditem->fsdev->data, node);
 
     return 0;
 }

@@ -242,19 +242,13 @@ int cmd_stat (int argc, char *argv[])
 /* 修改指定文件的名字 */
 int cmd_rename (int argc, char *argv[])
 {
-    int fd;
-
     if (argc != 3)
         return - 1;
-
-    /* 确认要改名的文件是否存在 */
-    fd = vfs_open(argv[1], O_RDWR, S_IRWXU);
-    if (fd < 0)
+    if ((argv[1] == NULL) || (argv[2] == NULL))
         return -1;
-    vfs_close(fd);
 
     /* 调用接口直接修改文件对象的名字 */
-    return vfs_rename (argv[1], argv[2]);
+    return vfs_rename(argv[1], argv[2]);
 }
 
 /***********************************************************

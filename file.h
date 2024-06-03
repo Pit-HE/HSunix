@@ -7,12 +7,15 @@
 #include "proc.h"
 #include "dirent.h"
 
-struct Inode;
+
 struct File;
 struct stat;
+struct Inode;
 struct statfs;
-struct FileSystem;
+struct DirItem;
 struct FsDevice;
+struct FileSystem;
+
 
 
 #define INODE_MAGIC     0xDEA5
@@ -72,7 +75,7 @@ struct FileSystemOps
     int (*statfs)   (struct FsDevice *fsdev, struct statfs *buf);
 
     /* 删除指定路径的文件或目录 */
-    int (*unlink)   (struct FsDevice *fsdev, char *path);
+    int (*unlink)   (struct DirItem *ditem);
 
     /* 在实体文件系统中查找 inode 所对应的对象 */
     int (*lookup)   (struct FsDevice *fsdev, struct Inode *inode, char *path);

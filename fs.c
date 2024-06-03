@@ -144,43 +144,14 @@ int vfs_creat (char *path, unsigned int mode)
 /* 删除指定路径下的文件对象 */
 int vfs_unlink (char *path)
 {
-    int fd;
-    struct File *file = NULL;
-
     if (path == NULL)
     {
         kErr_printf("fail: vfs_unlink path !\r\n");
         return -1;
     }
 
-    fd = fd_alloc();
-    if (fd < 0)
-    {
-        kErr_printf("fail: vfs_unlink alloc fd !\r\n");
-        return -1;
-    }
-
-    file = fd_get(fd);
-    if (file == NULL)
-    {
-        kErr_printf("fail: vfs_unlink get fd !\r\n");
-        return -1;
-    }
-
-    /* 确认要处理的文件对象是存在的 */
-    if (0 > file_open(file, (char *)path, O_RDONLY, S_IRWXU))
-    {
-        kErr_printf("fail: vfs_unlink open file !\r\n");
-        fd_free(fd);
-        return -1;
-    }
-    file_close(file);
-    fd_free(fd);
-
     /* 处理该文件对象 */
-    file_unlink(path);
-
-    return 0;
+    return file_unlink(path);
 }
 
 /* 同步文件的缓存信息到实体文件系统 */

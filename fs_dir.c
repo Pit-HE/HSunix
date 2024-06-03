@@ -168,8 +168,8 @@ static void ditem_del (struct DirItem *ditem)
         return;
 
     kDISABLE_INTERRUPT();
-    list_del_init(&ditem->list);
-    ditem->state &= ~DITEM_HASH;
+    list_del(&ditem->list);
+    ditem->state = DITEM_ALLOC;
     kENABLE_INTERRUPT();
 }
 
@@ -234,25 +234,24 @@ struct DirItem *ditem_create (struct FsDevice *fsdev,
 /* 删除已创建的目录项 (与 ditem_create 成对使用) */
 int ditem_destroy (struct DirItem *ditem)
 {
-    char *ap_path = NULL;
-    struct FsDevice *fsdev = NULL;
-
     if ((ditem == NULL) || (ditem->magic != DIRITEM_MAGIC))
         return -1;
-
+    if (ditem->ref > 1)
+    {
+        ditem->ref -= 1;
+        return -1;
+    }
     ditem->ref = 0;
 
-    fsdev = ditem->fsdev;
-
-    ap_path = path_parser(fsdev->path, ditem->path);
-
+    /* 从链表移除 */
     ditem_del(ditem);
 
-    fsdev->fs->fsops->unlink(fsdev, ap_path);
-    
+    /* 清除目录项与实体文件系统的关联 */
+    ditem->fsdev->fs->fsops->unlink(ditem);
+
+    /* 释放目录项占用的资源 */
     inode_free(ditem->inode);
     ditem_free(ditem);
-    kfree(ap_path);
 
     return 0;
 }

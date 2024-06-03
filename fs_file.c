@@ -289,23 +289,23 @@ int file_unlink (char *path)
         return -1;
     }
 
-    /* 禁止删除文件系统挂载的目录对象 */
+    /* 禁止删除文件系统挂载路径所对应的文件对象 */
     if (0 == kstrcmp(fsdev->path, ap_path))
     {
         if (ap_path[kstrlen(fsdev->path)] == '\0')
         {
-            kfree(ap_path);
             kfree(fsdev);
+            kfree(ap_path);
             return -1;
         }
     }
 
-    /* 获取该路径所对应的目录项 */
+    /* 获取该路径所对应的目录项 (确认该文件存在) */
     ditem = ditem_get(fsdev, ap_path);
     if (ditem == NULL)
     {
-        kfree(ap_path);
         kfree(fsdev);
+        kfree(ap_path);
         return -1;
     }
 
@@ -317,18 +317,17 @@ int file_unlink (char *path)
             break;
         case INODE_DIR:
         case INODE_FILE:
-            /* 调用文件系统删除指定对象 */
-            if (fsdev->fs->fsops->unlink != NULL)
-                ret = fsdev->fs->fsops->unlink(fsdev, path);
+            /* ditem_destroy 中已对实体文件系统
+             * 对象进行处理
+             */
             break;
         case INODE_PIPO:
             break;
         default: break;
     }
 
-    inode_free(ditem->inode);
     ditem_put(ditem);
-    ditem_free(ditem);
+    ditem_destroy(ditem);
     fsdev_put(fsdev);
     kfree(ap_path);
 
@@ -478,7 +477,7 @@ int file_rename (char *oldpath, char *newpath)
                 nditem->inode);
     }
 
-    /* 更新目录项的信息 */
+    /* 更新旧目录项的信息 */
     kDISABLE_INTERRUPT();
     kstrcpy(oditem->path, nditem->path);
     kENABLE_INTERRUPT();
