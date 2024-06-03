@@ -50,8 +50,9 @@ struct FileOperation
     /* 设置文件的偏移量 */
     int (*lseek)    (struct File *file, unsigned int offs, unsigned int type);
     /* 获取目录信息 */
-    int (*getdents) (struct File *file, struct dirent *dirp, 
-                        unsigned int count);
+    int (*getdents) (struct File *file, struct dirent *dirp, unsigned int count);
+    /* 获取文件的信息 */
+    int (*stat)     (struct File *file, struct stat *buf);
 };
 
 
@@ -70,9 +71,6 @@ struct FileSystemOps
 
     /* 删除指定路径的文件或目录 */
     int (*unlink)   (struct FsDevice *fsdev, char *path);
-
-    /* 获取文件的信息 */
-    int (*stat)     (struct FsDevice *fsdev, char *path, struct stat *buf);
 
     /* 重命名指定文件 */
     int (*rename)   (struct FsDevice *fsdev, char *oldpath, char *newpath);
@@ -198,6 +196,7 @@ int  file_getdents (struct File *file, struct dirent *dirp, unsigned int nbytes)
 int  file_lseek (struct File *file, unsigned int offset, unsigned int type);
 int  file_fstatfs  (struct File *file, struct statfs *buf);
 int  file_rename(char *oldpath, char *newpath);
+int  file_stat  (struct File *file, struct stat *buf);
 
 /**********************************/
 char *path_getfirst (const char *path, char *name);

@@ -197,7 +197,7 @@ int cmd_fsync (int argc, char *argv[])
 /* 获取指定文件路径对象所属文件系统的信息 */
 int cmd_fstatfs (int argc, char *argv[])
 {
-    int fd, ret;
+    int fd, ret = -1;
     struct statfs fsbuf;
 
     if (argc != 2)
@@ -208,11 +208,6 @@ int cmd_fstatfs (int argc, char *argv[])
         return -1;
 
     ret = vfs_fstatfs(fd, &fsbuf);
-    if (ret < 0)
-    {
-        vfs_close(fd);
-        return -1;
-    }
     vfs_close(fd);
 
     kprintf("    fs bsize: %d\r\n", fsbuf.f_bsize);
@@ -225,7 +220,23 @@ int cmd_fstatfs (int argc, char *argv[])
 /* 显示指定文件的信息 */
 int cmd_stat (int argc, char *argv[])
 {
-    return -1;
+    int fd, ret = -1;
+    struct stat buf;
+
+    if (argc != 2)
+        return -1;
+    
+    fd = vfs_open(argv[1],  O_RDONLY, S_IRWXU);
+    if (fd < 0)
+        return -1;
+
+    ret = vfs_stat(fd, &buf);
+    vfs_close(fd);
+
+    kprintf("    size: %d\r\n", buf.size);
+    kprintf("    name: %s\r\n", buf.name);
+
+    return ret;
 }
 
 /* 修改指定文件的名字 */

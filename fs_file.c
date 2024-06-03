@@ -404,6 +404,22 @@ int file_fstatfs (struct File *file, struct statfs *buf)
     return ret;
 }
 
+/* 获取文件对象的信息 */
+int file_stat (struct File *file, struct stat *buf)
+{
+    int ret = -1;
+
+    if ((file == NULL) || (buf == NULL))
+        return -1;
+    if (file->magic != FILE_MAGIC)
+        return -1;
+    
+    if (file->fops->stat != NULL)
+        ret = file->fops->stat(file, buf);
+
+    return ret;
+}
+
 /* 修改文件路径所对应文件的名字 */
 int file_rename (char *oldpath, char *newpath)
 {

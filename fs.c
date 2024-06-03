@@ -82,7 +82,6 @@ int vfs_close (int fd)
 /* 文件系统对外接口：将数据写入指定文件中 */
 int vfs_write (int fd, void *buf, int len)
 {
-    int ret;
     struct File *file = NULL;
 
     file = fd_get(fd);
@@ -92,20 +91,12 @@ int vfs_write (int fd, void *buf, int len)
         return -1;
     }
 
-    ret = file_write(file, buf, len);
-    if (0 > ret)
-    {
-        kErr_printf("fail: vfs_write write file !\r\n");
-        return -1;
-    }
-
-    return ret;
+    return file_write(file, buf, len);
 }
 
 /* 文件系统对外接口：从指定文件中读取指定长度的数据 */
 int vfs_read (int fd, void *buf, int len)
 {
-    int ret;
     struct File *file = NULL;
 
     file = fd_get(fd);
@@ -115,14 +106,7 @@ int vfs_read (int fd, void *buf, int len)
         return -1;
     }
 
-    ret = file_read(file, buf, len);
-    if (ret < 0)
-    {
-        kErr_printf("fail: vfs_read read file !\r\n");
-        return -1;
-    }
-
-    return ret;
+    return file_read(file, buf, len);
 }
 
 /* 创建新的文件或重写现有的文件 */
@@ -227,6 +211,20 @@ int vfs_fstatfs (int fd, struct statfs *buf)
     }
 
     return file_fstatfs(file, buf);
+}
+
+int vfs_stat (int fd, struct stat *buf)
+{
+    struct File *file = NULL;
+
+    file = fd_get(fd);
+    if (file == NULL)
+    {
+        kErr_printf("fail: vfs_stat get fd !\r\n");
+        return -1;
+    }
+
+    return file_stat(file, buf);
 }
 
 /* 修改文件路径所对应文件的名字 */

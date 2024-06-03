@@ -11,7 +11,7 @@
 struct statfs
 {
     unsigned int f_bsize;  /* block size */
-    unsigned int f_block; /* total data blocks in file system */
+    unsigned int f_block;  /* total data blocks in file system */
     unsigned int f_bfree;  /* free blocks in file system */
 };
 
@@ -21,9 +21,8 @@ struct statfs
  */
 struct stat
 {
-    int     dev;
-    int     size;
-    int     mode;
+    int  size;      /* 对象的大小 */
+    char name[32];  /* 文件对象的名字 */
 };
 
 #define SEEK_SET	0	/* 设置值为距离文件开始位置的绝对值 */
@@ -48,5 +47,6 @@ int  vfs_fsync  (int fd);
 int  vfs_fstatfs(int fd, struct statfs *buf);
 int  vfs_creat  (char *path, unsigned int mode);
 int  vfs_rename (char *oldfile, char *newfile);
+int  vfs_stat   (int fd, struct stat *buf);
 
 #endif

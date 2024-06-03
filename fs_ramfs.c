@@ -496,26 +496,22 @@ int ramfs_unlink (struct FsDevice *fsdev, char *path)
     return 0;
 }
 /* 获取指定文件或目录的信息  */
-int ramfs_stat (struct FsDevice *fsdev, char *path, 
-        struct stat *buf)
+int ramfs_stat (struct File *file, struct stat *buf)
 {
-    struct ramfs_sb     *sb = NULL;
-    struct ramfs_node   *node = NULL;
+    struct ramfs_node *node = NULL;
 
-    if ((fsdev == NULL) || (path == NULL) || 
+    if ((file == NULL) || (buf == NULL) || 
         (buf == NULL))
-        return -1;
-    sb = fsdev->data;
-    if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
         return -1;
 
     /* 获取文件路径所对应的节点 */
-    node = _path_getnode(sb, path);
+    node = file->inode->data;
     if (node == NULL)
         return -1;
 
     /* 将节点信息写入缓冲区 */
     buf->size = node->size;
+    kstrcpy(buf->name, node->name);
 
     return 0;
 }
@@ -685,6 +681,7 @@ struct FileOperation ramfs_fops =
     .flush    = ramfs_flush,
     .lseek    = ramfs_lseek,
     .getdents = ramfs_getdents,
+    .stat     = ramfs_stat,
 };
 /* ramfs 文件系统的系统操作接口 */
 struct FileSystemOps ramfs_fsops =
@@ -693,7 +690,6 @@ struct FileSystemOps ramfs_fsops =
     .unmount = ramfs_unmount,
     .statfs  = ramfs_statfs,
     .unlink  = ramfs_unlink,
-    .stat    = ramfs_stat,
     .rename  = ramfs_rename,
     .lookup  = ramfs_lookup,
     .create  = ramfs_create,
