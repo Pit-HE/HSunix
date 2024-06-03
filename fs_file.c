@@ -38,10 +38,10 @@ void file_free (struct File *file)
 }
 
 /* 创建指定路径下的'.' 与 '..' */
-int _file_create_std (struct FsDevice *fsdev, const char *path, 
+int _file_create_std (struct FsDevice *fsdev, char *path, 
         unsigned int flag, unsigned int mode)
 {
-    struct DirItem *ditem = NULL;
+    struct Inode *inode = NULL;
     char *p_path = NULL;
 
     /* 申请暂存路径的内存空间 */
@@ -54,23 +54,18 @@ int _file_create_std (struct FsDevice *fsdev, const char *path,
     if (path[kstrlen(path)-1] != '/')
         kstrcat(p_path, "/");
 
-    /* 创建目录'.' */
+    /* 创建目录项 '.' */
+    inode = inode_setfs(fsdev, flag, mode);
     kstrcat(p_path, ".");
-    ditem = ditem_create(fsdev, p_path, flag, mode);
-    if (NULL == ditem)
-    {
-        kfree(p_path);
-        return -1;
-    }
+    fsdev->fs->fsops->create(fsdev, inode, p_path);
+    ditem_create(fsdev, p_path, inode);
 
-    /* 创建目录'..' */
+
+    /* 创建目录项 '..' */
+    inode = inode_setfs(fsdev, flag, mode);
     kstrcat(p_path, ".");
-    if (NULL == ditem_create(fsdev, p_path, flag, mode))
-    {
-        ditem_destroy(ditem);
-        kfree(p_path);
-        return -1;
-    }
+    fsdev->fs->fsops->create(fsdev, inode, p_path);
+    ditem_create(fsdev, p_path, inode);
 
     /* 释放暂存路径的内存 */
     kfree(p_path);
@@ -117,38 +112,49 @@ int file_open (struct File *file, char *path,
 
         /* 获取该路径下所对应的目录项 */
         ditem = ditem_get(fsdev, ap_path);
-        if (ditem == NULL)
+        if (ditem != NULL)
+            inode = ditem->inode;
+        else
         {
-            /* 若不存在则创建 */
-            ditem = ditem_create(fsdev, ap_path, flag, mode);
-            if (ditem == NULL)
+            /* 申请新的 inode 节点 */
+            inode = inode_setfs(fsdev, flag, mode);
+            if (inode == NULL)
             {
                 kfree(ap_path);
                 fsdev_put(fsdev);
                 return -1;
             }
+
+            /* 获取指定的 inode 对象，若是没有则创建 */
+            if (0 > inode_lookup(fsdev, inode, ap_path, flag))
+            {
+                inode_free(inode);
+                kfree(ap_path);
+                fsdev_put(fsdev);
+                return -1;
+            }
+
+            /* 创建新的目录项 */
+            ditem = ditem_create(fsdev, ap_path, inode);
+            if (ditem == NULL)
+            {
+                inode_free(inode);
+                kfree(ap_path);
+                fsdev_put(fsdev);
+                return -1;
+            }
+
             /* 创建目录下的 '.' 与 '..' 对象 */
             if ((ditem->inode->type == INODE_DIR) &&
                 (flag & O_CREAT))
             {
-                if (0 > _file_create_std(fsdev, ap_path,
-                    flag, mode))
-                {
-                    ditem_destroy(ditem);
-                    fsdev_put(fsdev);
-                }
+                _file_create_std(fsdev, ap_path, flag, mode);
             }
         }
         kfree(ap_path);
-
-        inode = ditem->inode;
     }
     else /* 操作注册的设备 */
     {
-        inode = inode_alloc();
-        if (inode == NULL)
-            return -1;
-
         /* 跳过前缀 */
         while(*path == ':') 
             path++;
@@ -156,24 +162,22 @@ int file_open (struct File *file, char *path,
         /* 获取指定的设备 */
         dev = dev_get(path);
         if (dev == NULL)
+            return -1;
+
+        inode = inode_setdev(dev, flag, S_IRWXU);
+        if (inode == NULL)
         {
-            inode_free(inode);
+            dev_put(dev);
             return -1;
         }
-        inode_init(inode, flag, &dev->opt, S_IRWXU);
-
-        inode->dev  = dev;
-        inode->type = INODE_DEVICE;
-        inode->fs   = NULL;
+        
     }
-    /* 递增 inode 节点的被引用计数 */
-    inode->ref += 1;
 
     /* 初始化新打开的文件描述符 */
     file->inode = inode;
     file->ref  += 1;
-    file->flags = flag;
     file->fops  = inode->fops;
+    file->flags = flag;
     file->ditem = ditem;
 
     if (inode->fops->open != NULL)
@@ -317,15 +321,15 @@ int file_unlink (char *path)
             break;
         case INODE_DIR:
         case INODE_FILE:
-            /* ditem_destroy 中已对实体文件系统
-             * 对象进行处理
-             */
+            /* 清除目录项与实体文件系统的关联 */
+            if (ditem->fsdev->fs->fsops->unlink != NULL)
+                ret = ditem->fsdev->fs->fsops->unlink(ditem);
             break;
         case INODE_PIPO:
             break;
         default: break;
     }
-
+    inode_free(ditem->inode);
     ditem_put(ditem);
     ditem_destroy(ditem);
     fsdev_put(fsdev);
@@ -429,6 +433,7 @@ int file_stat (struct File *file, struct stat *buf)
 int file_rename (char *oldpath, char *newpath)
 {
     int ret = -1;
+    struct Inode *ninode = NULL;
     struct DirItem *oditem = NULL;
     struct DirItem *nditem = NULL;
     struct FsDevice *fsdev = NULL;
@@ -459,11 +464,30 @@ int file_rename (char *oldpath, char *newpath)
         return -1;
     }
 
+    /* 申请新的 inode 节点 */
+    ninode = inode_setfs(fsdev, O_CREAT|O_RDWR, S_IRWXU);
+    if (ninode == NULL)
+    {
+        ditem_put(oditem);
+        kfree(ap_opath);
+        kfree(ap_npath);
+        return -1;
+    }
+
+    /* 获取指定的 inode 对象, 若没有则创建 */
+    if (0 > inode_lookup(fsdev, ninode, ap_npath, O_CREAT|O_RDWR))
+    {
+        ditem_put(oditem);
+        kfree(ap_opath);
+        kfree(ap_npath);
+        return -1;
+    }
+
     /* 创建新路径的目录项 */
-    nditem = ditem_create(fsdev, ap_npath, 
-        oditem->inode->flags, oditem->inode->mode);
+    nditem = ditem_create(fsdev, ap_npath, ninode);
     if (nditem == NULL)
     {
+        inode_free(ninode);
         ditem_put(oditem);
         kfree(ap_opath);
         kfree(ap_npath);
@@ -482,8 +506,12 @@ int file_rename (char *oldpath, char *newpath)
     kstrcpy(oditem->path, nditem->path);
     kENABLE_INTERRUPT();
 
+    if (nditem->fsdev->fs->fsops->unlink != NULL)
+        ret = nditem->fsdev->fs->fsops->unlink(nditem);
+
     /* 释放使用的资源 */
     ditem_destroy(nditem);
+    inode_free(ninode);
     ditem_put(oditem);
     kfree(ap_opath);
     kfree(ap_npath);

@@ -87,7 +87,11 @@ static int console_dev_read (struct File *file,
 {
     return console_rCmd(buf, count);
 }
-
+static struct FileOperation console_dev_opt = 
+{
+    .write = console_dev_write,
+    .read  = console_dev_read,
+};
 
 
 /* 控制台的中断服务函数 */
@@ -109,8 +113,7 @@ void init_console (void)
     dev = dev_alloc("console");
     if (dev != NULL)
     {
-        dev->opt.write = console_dev_write;
-        dev->opt.read  = console_dev_read;
+        dev->opt = &console_dev_opt;
 
         dev_register(dev);
     }

@@ -28,23 +28,78 @@ void inode_free (struct Inode *inode)
     kfree(inode);
 }
 
-int inode_init (struct Inode *inode, unsigned int flag,
-        struct FileOperation *fops, unsigned int mode)
+/* 初始化 inode 为文件系统的情况 */
+struct Inode *inode_setfs (struct FsDevice *fsdev,
+        unsigned int flag, unsigned int mode)
 {
-    if ((inode == NULL) || (fops == NULL))
-        return -1;
-    if (inode->magic != INODE_MAGIC)
-        return -1;
+    struct Inode *inode = NULL;
+
+    if (fsdev == NULL)
+        return NULL;
+    
+    inode = inode_alloc();
+    if (inode == NULL)
+        return NULL;
 
     inode->flags = flag;
-    inode->fops  = fops;
+    inode->fops  = fsdev->fs->fops;
     inode->mode  = mode;
+    inode->dev   = NULL;
+    inode->fs    = fsdev->fs;
+    inode->ref  += 1;
 
     if (flag & O_DIRECTORY)
         inode->type = INODE_DIR;
     else
         inode->type = INODE_FILE;
 
-    return 0;
+    return inode;
 }
 
+/* 初始化 inode 为内核设备的情况 */
+struct Inode *inode_setdev (struct Device *dev,
+        unsigned int flag, unsigned int mode)
+{
+    struct Inode *inode = NULL;
+
+    if (dev == NULL)
+        return NULL;
+    
+    inode = inode_alloc();
+    if (inode == NULL)
+        return NULL;
+    
+    inode->flags = flag;
+    inode->fops  = dev->opt;
+    inode->mode  = mode;
+    inode->dev   = dev;
+    inode->fs    = NULL;
+    inode->ref  += 1;
+
+    inode->type  = INODE_DEVICE;
+
+    return inode;
+}
+
+
+int inode_lookup (struct FsDevice *fsdev,
+        struct Inode *inode, char *path, unsigned flag)
+{
+    int ret;
+
+    if ((fsdev == NULL) || (inode == NULL) || (path == NULL))
+        return -1;
+
+    /* 查找与路径匹配的 inode */
+    ret = fsdev->fs->fsops->lookup(fsdev, inode, path);
+    if (ret < 0)
+    {
+        /* 是否要创建新的 inode */
+        if ((flag & O_CREAT) != O_CREAT)
+            return -1;
+
+        /* 在磁盘上创建对应的 inode 对象 */
+        ret = fsdev->fs->fsops->create(fsdev, inode, path);
+    }
+    return ret;
+}

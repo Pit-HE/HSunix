@@ -407,12 +407,11 @@ int ramfs_mount (struct FsDevice *fsdev,
     sb->magic = RAMFS_MAGIC;
     sb->size  = sizeof(struct ramfs_sb);
     sb->flag  = flag;
+    list_init(&sb->siblist);
 
     sb->root.type = RAMFS_DIR;
     sb->root.name[0] = '/';
     sb->root.sb = sb;
-
-    list_init(&sb->siblist);
     list_init(&sb->root.siblist);
     list_init(&sb->root.sublist);
 
@@ -554,14 +553,8 @@ int ramfs_lookup (struct FsDevice *fsdev,
         return -1;
 
     /* 初始化 inode 的内容 */
-    if (node->type == RAMFS_DIR)
-        inode->type = INODE_DIR;
-    else
-        inode->type = INODE_FILE;
-    inode->fs = fsdev->fs;
     inode->data = node; /* 非常重要的一步操作 */
     inode->size = node->size;
-    inode->flags = node->flags;
 
     return 0;
 }

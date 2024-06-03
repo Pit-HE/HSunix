@@ -6,6 +6,7 @@
 #include "defs.h"
 #include "proc.h"
 #include "dirent.h"
+#include "device.h"
 
 
 struct File;
@@ -183,7 +184,9 @@ int  fd_copy     (int fd);
 /**********************************/
 struct Inode *inode_alloc (void);
 void inode_free (struct Inode *inode);
-int  inode_init (struct Inode *inode, unsigned int flag, struct FileOperation *fops, unsigned int mode);
+struct Inode *inode_setdev (struct Device *dev, unsigned int flag, unsigned int mode);
+struct Inode *inode_setfs (struct FsDevice *fsdev, unsigned int flag, unsigned int mode);
+int inode_lookup (struct FsDevice *fsdev, struct Inode *inode, char *path, unsigned flag);
 
 /**********************************/
 struct File *file_alloc (void);
@@ -212,12 +215,13 @@ int   path_setcwd (const char *path);
 void  init_ditem (void);
 struct DirItem *ditem_alloc (struct FsDevice *fsdev, char *path);
 int   ditem_free (struct DirItem *dir);
-struct DirItem *ditem_create (struct FsDevice *fsdev, char *path, unsigned int flag, unsigned int mode);
+struct Inode *inode_setdev (struct Device *dev, unsigned int flag, unsigned int mode);
 int   ditem_destroy (struct DirItem *ditem);
 struct DirItem *ditem_get (struct FsDevice *fsdev, const char *path);
 void  ditem_put  (struct DirItem *ditem);
 char *ditem_path (struct DirItem *ditem);
-
+struct DirItem *ditem_create (struct FsDevice *fsdev, char *path, struct Inode *inode);
+    
 /**********************************/
 int  fsdev_register (char *name, struct FileOperation *fops,struct FileSystemOps *fsops, unsigned int multi);
 int  fsdev_mount    (char *fsname, char *path,unsigned int flag, void *data);

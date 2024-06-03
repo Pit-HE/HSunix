@@ -175,16 +175,12 @@ static void ditem_del (struct DirItem *ditem)
 
 /* 创建新的目录项 (传入的必须是绝对路径) */
 struct DirItem *ditem_create (struct FsDevice *fsdev, 
-        char *path, unsigned int flag, unsigned int mode)
+        char *path, struct Inode *inode)
 {
     struct DirItem *ditem = NULL;
-    struct Inode *inode = NULL;
 
-    if ((fsdev == NULL) || (path == NULL))
-        return NULL;
-
-    if ((fsdev->fs->fsops->lookup == NULL) ||
-        (fsdev->fs->fsops->create == NULL))
+    if ((fsdev == NULL) || (path == NULL) ||
+        inode == NULL)
         return NULL;
 
     /* 创建新的目录项 */
@@ -192,41 +188,10 @@ struct DirItem *ditem_create (struct FsDevice *fsdev,
     if (ditem == NULL)
         return NULL;
 
-    /* 申请新的 inode 节点 */
-    inode = inode_alloc();
-    if (inode == NULL)
-    {
-        ditem_free(ditem);
-        return NULL;
-    }
-    inode_init(inode, flag, fsdev->fs->fops, mode);
-
-    inode->fs = fsdev->fs;
-
-    /* 查找与路径匹配的 inode */
-    if (0 > fsdev->fs->fsops->lookup(fsdev, inode, path))
-    {
-        /* 是否要创建新的 inode */
-        if ((flag & O_CREAT) != O_CREAT)
-        {
-            inode_free(inode);
-            ditem_free(ditem);
-            return NULL;
-        }
-
-        /* 在磁盘上创建对应的 inode 对象 */
-        if (0 > fsdev->fs->fsops->create(fsdev, inode, path))
-        {
-            inode_free(inode);
-            ditem_free(ditem);
-            return NULL;
-        }
-
-        ditem_add(ditem);
-    }
-
     ditem->inode = inode;
     ditem->ref += 1;
+
+    ditem_add(ditem);
 
     return ditem;
 }
@@ -246,11 +211,7 @@ int ditem_destroy (struct DirItem *ditem)
     /* 从链表移除 */
     ditem_del(ditem);
 
-    /* 清除目录项与实体文件系统的关联 */
-    ditem->fsdev->fs->fsops->unlink(ditem);
-
     /* 释放目录项占用的资源 */
-    inode_free(ditem->inode);
     ditem_free(ditem);
 
     return 0;
