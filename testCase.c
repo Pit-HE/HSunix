@@ -212,7 +212,32 @@ void tc_timer (void)
  #endif
 }
 
+/* 在文件系统中创建默认的文件树结构 */
+void tc_fsdefualt (void)
+{
+    mkdir("/usr", S_IRWXU);
 
+    mkdir("/bin", S_IRWXU);
+    mkdir("/bin/bin", S_IRWXU);
+    mkdir("/bin/bin/stop", S_IRWXU);
+    mkfile("/bin/a.a", O_CREAT|O_RDWR, S_IRWXU);
+    mkfile("/bin/b.b", O_CREAT|O_RDWR, S_IRWXU);
+
+    mkdir("/home", S_IRWXU);
+    mkfile("/home/abc.o", O_CREAT|O_RDWR, S_IRWXU);
+    mkfile("/home/123.o", O_CREAT|O_RDWR, S_IRWXU);
+    mkdir("/home/study", S_IRWXU);
+    mkdir("/home/study/tmp1", S_IRWXU);
+    mkdir("/home/study/tmp2", S_IRWXU);
+    mkdir("/home/book", S_IRWXU);
+    mkdir("/home/book/usr", S_IRWXU);
+    mkdir("/home/book/sys", S_IRWXU);
+    mkfile("/home/book/a.a", O_CREAT|O_RDWR, S_IRWXU);
+    mkfile("/home/book/b.b", O_CREAT|O_RDWR, S_IRWXU);
+
+    mkfile("/aa.a", O_CREAT|O_RDWR, S_IRWXU);
+    mkfile("/bb.b", O_CREAT|O_RDWR, S_IRWXU);
+}
 
 /* 系统上电自检接口 */
 void power_selfInspection (void)
@@ -223,7 +248,8 @@ void power_selfInspection (void)
     // tc_timer();
 }
 
+/* 在进程中调用的自检接口 */
 void proc_selfInspection (void)
 {
-
+    tc_fsdefualt();
 }

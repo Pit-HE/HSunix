@@ -144,6 +144,23 @@ int mkdir (char *path, unsigned int mode)
     return ret;
 }
 
+int mkfile (char *path, unsigned int flag, 
+        unsigned int mode)
+{
+    int fd;
+
+    if (path == NULL)
+        return -1;
+    
+    fd = vfs_open(path, O_CREAT|O_RDWR, S_IRWXU);
+    if (fd < 0)
+        return -1;
+
+    vfs_close(fd);
+
+    return 0;
+}
+
 /* 更改当前进程的工作目录 */
 int chdir(char *path)
 {

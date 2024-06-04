@@ -38,7 +38,8 @@ int  closedir(DIR *dir);
 void seekdir(DIR *dir, long offset);
 long telldir(DIR *dir);
 struct dirent *readdir(DIR *dir);
-int mkdir (char *path, unsigned int mode);
+int mkdir  (char *path, unsigned int mode);
+int mkfile (char *path, unsigned int flag, unsigned int mode);
 int chdir(char *path);
 int rmdir (char *path);
 

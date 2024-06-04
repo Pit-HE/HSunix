@@ -83,18 +83,10 @@ int cmd_ls (int argc, char *argv[])
 /* 创建文件 */
 int cmd_mkfile (int argc, char *argv[])
 {
-    int fd;
-
     if (argc != 2)
         return -1;
-    
-    fd = vfs_open(argv[1], O_CREAT|O_RDWR, S_IRWXU);
-    if (fd < 0)
-        return -1;
 
-    vfs_close(fd);
-
-    return 0;
+    return mkfile(argv[1], O_CREAT|O_RDWR, S_IRWXU);
 }
 
 /* 显示当前进程的工作路径 */

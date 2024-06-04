@@ -54,7 +54,7 @@ void cli_main (void)
             /* 处理输入删除和回车的情况 */
             if ((ch == 0x7F) || (ch == 0x08))
             {
-                if (0 != kRingbuf_delChar(&cliState.cb))
+                if (0 <= kRingbuf_delChar(&cliState.cb))
                     kprintf("\b \b");
             }
             else

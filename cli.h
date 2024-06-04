@@ -12,7 +12,7 @@
 #define CLI_CMD_LEN     10
 
 /* 命令行界面，每次缓存的字符串总长度 */
-#define CLI_CMD_BUFF_SIZE   200
+#define CLI_CMD_BUFF_SIZE   128
 
 
 typedef int (*cmd_function)(int argc, char *argv[]); 

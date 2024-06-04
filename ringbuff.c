@@ -133,7 +133,9 @@ int kRingbuf_delChar (ringbuf_t *rb)
     if (rb == NULL)
         kError(eSVC_Ringbuf, E_PARAM);
     if (rb->idleSize >= rb->baseSize)
-        return 0;
+        return -1;
+    if (rb->rIndex == rb->wIndex)
+        return -1;
 
     if (rb->wIndex == 0)
         rb->wIndex = rb->baseSize;
