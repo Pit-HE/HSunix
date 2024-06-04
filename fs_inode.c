@@ -4,7 +4,7 @@
 #include "fcntl.h"
 
 
-struct Inode *inode_alloc (void)
+static struct Inode *inode_alloc (void)
 {
     struct Inode *inode = NULL;
 
@@ -16,20 +16,20 @@ struct Inode *inode_alloc (void)
 
     return inode;
 }
-
-void inode_free (struct Inode *inode)
+static void inode_free (struct Inode *inode)
 {
     if (inode == NULL)
         return;
-    if ((inode->magic != INODE_MAGIC) ||
-        (inode->ref != 0))
+    if (inode->ref != 0)
         return;
 
     kfree(inode);
 }
 
+
+
 /* 初始化 inode 为文件系统的情况 */
-struct Inode *inode_setfs (struct FsDevice *fsdev,
+struct Inode *inode_getfs (struct FsDevice *fsdev,
         unsigned int flag, unsigned int mode)
 {
     struct Inode *inode = NULL;
@@ -57,7 +57,7 @@ struct Inode *inode_setfs (struct FsDevice *fsdev,
 }
 
 /* 初始化 inode 为内核设备的情况 */
-struct Inode *inode_setdev (struct Device *dev,
+struct Inode *inode_getdev (struct Device *dev,
         unsigned int flag, unsigned int mode)
 {
     struct Inode *inode = NULL;
@@ -81,25 +81,23 @@ struct Inode *inode_setdev (struct Device *dev,
     return inode;
 }
 
-
-int inode_lookup (struct FsDevice *fsdev,
-        struct Inode *inode, char *path, unsigned flag)
+/* 释放已经存在的 inode 节点 */
+int inode_put (struct Inode *inode)
 {
-    int ret;
-
-    if ((fsdev == NULL) || (inode == NULL) || (path == NULL))
+    if (inode == NULL)
         return -1;
-
-    /* 查找与路径匹配的 inode */
-    ret = fsdev->fs->fsops->lookup(fsdev, inode, path);
-    if (ret < 0)
+    if (inode->magic != INODE_MAGIC)
+        return -1;
+    
+    if (inode->ref > 1)
     {
-        /* 是否要创建新的 inode */
-        if ((flag & O_CREAT) != O_CREAT)
-            return -1;
-
-        /* 在磁盘上创建对应的 inode 对象 */
-        ret = fsdev->fs->fsops->create(fsdev, inode, path);
+        inode->ref -= 1;
+        return -1;
     }
-    return ret;
+
+    inode->ref = 0;
+    inode_free(inode);
+
+    return 0;
 }
+

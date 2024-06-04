@@ -513,21 +513,31 @@ int ramfs_stat (struct File *file, struct stat *buf)
     return 0;
 }
 /* 修改指定文件对象的名字 */
-int ramfs_rename (struct Inode *oldnode, struct Inode *newnode)
+int ramfs_rename (struct DirItem *old_ditem, 
+        struct DirItem *new_ditem)
 {
-    struct ramfs_node *o_node, *n_node;
+    struct ramfs_node *node;
+    char parent_path[RAMFS_PATH_MAT];
+    char node_name[RAMFS_NAME_LEN];
 
-    if ((oldnode == NULL) || (newnode == NULL))
+    if ((old_ditem == NULL) || (new_ditem == NULL))
+        return -1;
+    
+    node = old_ditem->inode->data;
+    if (node == NULL)
         return -1;
 
-    o_node = (struct ramfs_node *)oldnode->data;
-    n_node = (struct ramfs_node *)newnode->data;
-
-    if ((o_node == NULL) || (n_node == NULL))
+    /* 获取新节点的名字 */
+    if (-1 == ramfs_path_getlast(new_ditem->path, 
+            parent_path, node_name))
+        return -1;
+    if (node_name[0] == '\0')
         return -1;
 
+    /* 更改旧节点的信息 */
     kDISABLE_INTERRUPT();
-    kstrcpy(o_node->name, n_node->name);
+    kstrcpy(old_ditem->path, new_ditem->path);
+    kstrcpy(node->name, node_name);
     kENABLE_INTERRUPT();
 
     return 0;
@@ -535,7 +545,7 @@ int ramfs_rename (struct Inode *oldnode, struct Inode *newnode)
 
 /* 查找路径下的 ramfs_node 对象，path 必须是绝对路径 */
 int ramfs_lookup (struct FsDevice *fsdev, 
-        struct Inode *inode, char *path)
+        struct Inode *inode, const char *path)
 {
     struct ramfs_sb     *sb = NULL;
     struct ramfs_node   *node = NULL;
@@ -555,6 +565,13 @@ int ramfs_lookup (struct FsDevice *fsdev,
     /* 初始化 inode 的内容 */
     inode->data = node; /* 非常重要的一步操作 */
     inode->size = node->size;
+    inode->flags= node->flags;
+    inode->mode = node->mode;
+
+    if (node->type == RAMFS_DIR)
+        inode->type = INODE_DIR;
+    else
+        inode->type = INODE_FILE;
 
     return 0;
 }
@@ -581,8 +598,6 @@ int ramfs_create (struct FsDevice *fsdev,
     if (node == NULL)
         return -1;
 
-    kmemset(parent_path, 0, RAMFS_PATH_MAT);
-    kmemset(node_name, 0, RAMFS_NAME_LEN);
     /* 获取父节点的路径和要创建的节点名字 */
     if (-1 == ramfs_path_getlast (path, 
             parent_path, node_name))
@@ -606,6 +621,8 @@ int ramfs_create (struct FsDevice *fsdev,
         node->type = RAMFS_DIR;
     kstrcpy(node->name, node_name);
     node->sb = sb;
+    node->flags = inode->flags;
+    node->mode = inode->mode;
 
     /* 将创建的节点添加到其父节点的链表中 */
     kDISABLE_INTERRUPT();

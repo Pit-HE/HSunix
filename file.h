@@ -58,7 +58,7 @@ struct FileOperation
     /* 获取文件的信息 */
     int (*stat)     (struct File *file, struct stat *buf);
     /* 重命名指定文件 */
-    int (*rename)   (struct Inode *oldnode, struct Inode *newnode);
+    int (*rename)   (struct DirItem *old_ditem, struct DirItem *new_ditem);
 };
 
 
@@ -79,7 +79,7 @@ struct FileSystemOps
     int (*unlink)   (struct DirItem *ditem);
 
     /* 在实体文件系统中查找 inode 所对应的对象 */
-    int (*lookup)   (struct FsDevice *fsdev, struct Inode *inode, char *path);
+    int (*lookup)   (struct FsDevice *fsdev, struct Inode *inode, const char *path);
 
     /* 在实体文件系统中创建 inode 所需的对象 */
     int (*create)   (struct FsDevice *fsdev, struct Inode *inode, char *path);
@@ -182,11 +182,9 @@ struct File *fd_get (int fd);
 int  fd_copy     (int fd);
 
 /**********************************/
-struct Inode *inode_alloc (void);
-void inode_free (struct Inode *inode);
-struct Inode *inode_setdev (struct Device *dev, unsigned int flag, unsigned int mode);
-struct Inode *inode_setfs (struct FsDevice *fsdev, unsigned int flag, unsigned int mode);
-int inode_lookup (struct FsDevice *fsdev, struct Inode *inode, char *path, unsigned flag);
+struct Inode *inode_getdev (struct Device *dev, unsigned int flag, unsigned int mode);
+struct Inode *inode_getfs (struct FsDevice *fsdev, unsigned int flag, unsigned int mode);
+int inode_put (struct Inode *inode);
 
 /**********************************/
 struct File *file_alloc (void);
@@ -213,15 +211,14 @@ int   path_setcwd (const char *path);
 
 /**********************************/
 void  init_ditem (void);
-struct DirItem *ditem_alloc (struct FsDevice *fsdev, char *path);
+struct DirItem *ditem_alloc (struct FsDevice *fsdev, const char *path);
 int   ditem_free (struct DirItem *dir);
-struct Inode *inode_setdev (struct Device *dev, unsigned int flag, unsigned int mode);
 int   ditem_destroy (struct DirItem *ditem);
 struct DirItem *ditem_get (struct FsDevice *fsdev, const char *path);
 void  ditem_put  (struct DirItem *ditem);
 char *ditem_path (struct DirItem *ditem);
-struct DirItem *ditem_create (struct FsDevice *fsdev, char *path, struct Inode *inode);
-    
+struct DirItem *ditem_create (struct FsDevice *fsdev, const char *path);
+
 /**********************************/
 int  fsdev_register (char *name, struct FileOperation *fops,struct FileSystemOps *fsops, unsigned int multi);
 int  fsdev_mount    (char *fsname, char *path,unsigned int flag, void *data);

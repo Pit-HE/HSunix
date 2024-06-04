@@ -59,11 +59,23 @@ int path_getlast (const char *path, char *parentPath, char *name)
     /* 获取最后一个'/'的位置 */
     ptr = kstrrchr(path, '/');
 
+    /* 在路径的开头 */
     if (ptr == path)
     {
         parentPath[0] = '/';
         parentPath[1] = '\0';
     }
+    /* 该路径没有 '/' 
+     * (处理文件目标在根目录下的情况) 
+     */
+    else if (ptr == NULL)
+    {
+        parentPath[0] = '/';
+        parentPath[1] = '\0';
+        kstrcpy(name, path);
+        return 0;
+    }
+    /* 在路径的最后一个 '/' 处 */
     else
     {
         kmemcpy(parentPath, path, ptr - path);

@@ -88,7 +88,7 @@ static struct DirItem *ditem_find (
 
 /* 创建新的目录项，并初始化 */
 struct DirItem *ditem_alloc (
-        struct FsDevice *fsdev, char *path)
+        struct FsDevice *fsdev, const char *path)
 {
     struct DirItem *ditem = NULL;
 
@@ -175,12 +175,11 @@ static void ditem_del (struct DirItem *ditem)
 
 /* 创建新的目录项 (传入的必须是绝对路径) */
 struct DirItem *ditem_create (struct FsDevice *fsdev, 
-        char *path, struct Inode *inode)
+        const char *path)
 {
     struct DirItem *ditem = NULL;
 
-    if ((fsdev == NULL) || (path == NULL) ||
-        inode == NULL)
+    if ((fsdev == NULL) || (path == NULL))
         return NULL;
 
     /* 创建新的目录项 */
@@ -188,7 +187,6 @@ struct DirItem *ditem_create (struct FsDevice *fsdev,
     if (ditem == NULL)
         return NULL;
 
-    ditem->inode = inode;
     ditem->ref += 1;
 
     ditem_add(ditem);
@@ -222,14 +220,37 @@ struct DirItem *ditem_get (struct FsDevice *fsdev,
         const char *path)
 {
     struct DirItem *ditem = NULL;
+    struct Inode *inode = NULL;
 
     if ((fsdev == NULL) || (path == NULL))
         return NULL;
 
     /* 确认目录项是否已经存在 */
     ditem = ditem_find(fsdev, path);
-    if (ditem != NULL)
-        ditem->ref += 1;
+    if (ditem == NULL)
+    {
+        /* 申请新的 inode 节点 */
+        inode = inode_getfs(fsdev, 0, 0);
+        if (inode == NULL)
+            return NULL;
+
+        /* 获取与该目录项对应的实体文件系统成员 */
+        if (0 > fsdev->fs->fsops->lookup(fsdev, inode, path))
+        {
+            inode_put(inode);
+            return NULL;
+        }
+
+        /* 创建新的目录项记录已存在的文件成员 */
+        ditem = ditem_create(fsdev, path);
+        if (NULL == ditem)
+        {
+            inode_put(inode);
+            return NULL;
+        }
+        ditem->inode = inode;
+    }
+    ditem->ref += 1;
 
     return ditem;
 }

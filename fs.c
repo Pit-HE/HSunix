@@ -51,6 +51,14 @@ int vfs_open (char *path, unsigned int flags, unsigned int mode)
         return -1;
     }
 
+    /* 确认文件对象的类型是否正确 */
+    if (file->inode->type != INODE_FILE)
+    {
+        file_close(file);
+        fd_free(fd);
+        return -1;
+    }
+
     return fd;
 }
 
@@ -231,7 +239,7 @@ int vfs_pcbInit (ProcCB *pcb, char *path)
         kfree(pcb->cwd);
         return -1;
     }
-    if (-1 == file_open(pcb->root, path, \
+    if (0 > file_open(pcb->root, path, \
             O_DIRECTORY | O_RDWR | O_CREAT, S_IRUSR))
     {
         file_free(pcb->root);

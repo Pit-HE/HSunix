@@ -3,7 +3,7 @@
  */
 #include "defs.h"
 #include "file.h"
-
+#include "fcntl.h"
 
 /* 用于记录注册的文件系统信息 */
 struct FsObject
@@ -239,6 +239,10 @@ int fsdev_mount (char *fsname, char *path,
         ret = chi_fsdev->fs->fsops->mount(chi_fsdev, 
                 flag, data);
     }
+
+extern int _file_default (struct FsDevice *fsdev, char *path, 
+        unsigned int flag, unsigned int mode);
+    _file_default(chi_fsdev, path, flag, S_IRWXU);
 
     return ret;
 }

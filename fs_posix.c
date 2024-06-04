@@ -39,6 +39,14 @@ DIR *opendir(char *path)
         return NULL;
     }
 
+    /* 确认文件对象的类型是否正确 */
+    if (file->inode->type != INODE_DIR)
+    {
+        file_close(file);
+        fd_free(dir->fd);
+        return NULL;
+    }
+
     return dir;
 }
 
@@ -170,8 +178,16 @@ int chdir(char *path)
 /* 删除指定的文件目录 */
 int rmdir (char *path)
 {
+    DIR *dir = NULL;
+
     if (path == NULL)
         return -1;
+
+    /* 确认该目录项存在 */
+    dir = opendir(path);
+    if (dir == NULL)
+        return -1;
+    closedir(dir);
 
     return file_unlink(path);
 }
