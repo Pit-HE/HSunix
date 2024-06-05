@@ -42,6 +42,7 @@ int  vfs_close  (int fd);
 int  vfs_write  (int fd, void *buf, int len);
 int  vfs_read   (int fd, void *buf, int len);
 int  vfs_mount  (char *fsname, char *path, unsigned int flag, void *data);
+int  vfs_unmount(char *path);
 int  vfs_unlink (char *path);
 int  vfs_fsync  (int fd);
 int  vfs_fstatfs(int fd, struct statfs *buf);

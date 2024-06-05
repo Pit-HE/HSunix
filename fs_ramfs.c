@@ -603,8 +603,8 @@ int ramfs_create (struct FsDevice *fsdev,
             parent_path, node_name))
         return -1;
     /* 获取父节点的 ramfs_node */
-    if (NULL == (parent_node = _path_getnode(
-            sb, parent_path)))
+    parent_node = _path_getnode(sb, parent_path);
+    if (NULL == parent_node)
         return -1;
     
     /* 确认该父节点是目录 */

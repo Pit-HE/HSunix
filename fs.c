@@ -291,3 +291,14 @@ int vfs_mount(char *fsname, char *path,
 
     return ret;
 }
+
+/* 对外提供的文件系统卸载接口
+ *  ( 传入的必须是绝对路径 )
+ */
+int vfs_unmount (char *path)
+{
+    if (path == NULL)
+        return -1;
+
+    return fsdev_unmount(path);
+}

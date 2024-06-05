@@ -28,6 +28,12 @@ void init_cli (void)
     }
 }
 
+/* 清空屏幕的内容,将光标移动到左上角 */
+void cli_clear (void)
+{
+    kprintf("\x1b[2J\x1b[H");
+}
+
 /* 命令行模块的入口函数 */
 void cli_main (void)
 {

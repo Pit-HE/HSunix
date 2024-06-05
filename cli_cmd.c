@@ -243,6 +243,40 @@ int cmd_rename (int argc, char *argv[])
     return vfs_rename(argv[1], argv[2]);
 }
 
+/* 挂载新的文件系统 */
+int cmd_mount (int argc, char *argv[])
+{
+    int ret;
+
+    if (argc != 2)
+        return -1;
+
+    ret = vfs_mount("tmpfs", argv[1], 
+        O_RDWR | O_CREAT | O_DIRECTORY, NULL);
+    return ret;
+}
+
+/* 卸载已经挂载的文件系统 */
+int cmd_unmount (int argc, char *argv[])
+{
+    if (argc != 2)
+        return -1;
+
+    return vfs_unmount(argv[1]);
+}
+
+/* 清除命令行交互的屏幕 */
+int cmd_clear(int argc, char *argv[]) 
+{
+    if (argc != 1)
+        return -1;
+
+    cli_clear();
+
+    return 0;
+}
+
+
 /***********************************************************
  * 
 ***********************************************************/
@@ -256,68 +290,98 @@ struct cli_cmd func_list[] =
     {/* mkdir */
         &cmd_mkdir,
         "mkdir",
-        "You can use it to create folders"
+        "To create a new document clip\r\n  \
+            example: mkdir sys | mkdir /usr/sys"
     },
     {/* cd */
         &cmd_cd,
         "cd",
-        "Modify the process work path"
+        "Modify the process work path\r\n   \
+            example: cd / | cd /home | cd /home/.."
     },
     {/* ls */
         &cmd_ls,
         "ls",
-        "List all the objects under the folder"
+        "List all the objects under the folder\r\n  \
+            example: ls | ls /home | ls /home/book/.."
     },
     {/* mkfile */
         &cmd_mkfile,
         "mkfile",
-        "Create the specified file"
+        "Create the specified file\r\n  \
+            example: mkfile aa.a | mkfile /usr/aa.a"
     },
     {/* pwd */
         &cmd_pwd,
         "pwd",
-        "Show current process work path"
+        "Show current process work path\r\n \
+            example: pwd"
     },
     {/* echo */
         &cmd_echo,
         "echo",
-        "Data in the output file"
+        "Data in the output file\r\n    \
+            example: echo a.a | echo /bin/a.a"
     },
     {/* cat */
         &cmd_cat,
         "cat",
-        "Writes data to the specified file"
+        "Writes data to the specified file\r\n  \
+            example: cat a.a 1234567 | cat /bin/a.a 1234567"
     },
     {/* rm */
         &cmd_rm,
         "rm",
-        "Deletes the specified file or directory"
+        "Deletes the specified file or directory\r\n    \
+            example: rm a.a | rm /bin/a.a"
     },
     {/* rmdir */
         &cmd_rmdir,
         "rmdir",
-        "Deletes the specified directory"
+        "Deletes the specified directory\r\n    \
+            example: rmdir usr | rmdir /usr/tmp1"
     },
     {/* fsync */
         &cmd_fsync,
         "fsync",
-        "Refresh the cache to disk for the specified file"
+        "Refresh the cache to disk for the specified file\r\r    \
+            example: fsync a.a | fsync /bin/a.a"
     },
     {/* fstatfs */
         &cmd_fstatfs,
         "fstatfs",
-        "Obtain the file system information of the file"
+        "Obtain the file system information of the file\r\n    \
+            example: fstatfs a.a | fstatfs /bin/a.a"
     },
     {/* stat */
         &cmd_stat,
         "stat",
-        "Displays the information of the specified file"
+        "Displays the information of the specified file\r\n    \
+            example: stat a.a | stat /bin/a.a"
     },
     {/* rename */
         &cmd_rename,
         "rename",
-        "Modify the name of the existing file"
+        "Modify the name of the existing file\r\n    \
+            example: rename a.a b.b"
     },
+    {/* mount */
+        &cmd_mount,
+        "mount",
+        "Hang the message system to the specified path\r\n    \
+            example: mount /fs"
+    },
+    {/* unmount */
+        &cmd_unmount,
+        "unmount",
+        "Uninstall the file system of the specified path\r\n    \
+            example: unmount /fs"
+    },
+    {/* clear */
+        &cmd_clear,
+        "clear",
+        "Clear screen and move cursor to top-left corner"
+    }
 };
 #define CMD_LIST_LEN sizeof(func_list)/sizeof(func_list[0])
 
