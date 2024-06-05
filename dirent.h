@@ -5,6 +5,7 @@
 #define __DIRENT_H__
 
 #include "param.h"
+#include "types.h"
 
 /* 用于目录操作中，缓存多个 dirent 的结构体
  * ( 减少操作 dirent 时读写文件系统的次数 )
@@ -24,11 +25,11 @@ typedef struct
  */
 struct dirent
 {
-    unsigned int type;      /* 接收到的文件类型 */
-    unsigned int namelen;   /* 实体文件系统支持的文件名长度 */
-    unsigned int objsize;   /* 接收到的单个对象的长度 */
-    unsigned int datasize;  /* 当前这个文件的大小 */
-    char name[128];         /* 目录项的名字 */
+    uint type;      /* 接收到的文件类型 */
+    uint namelen;   /* 实体文件系统支持的文件名长度 */
+    uint objsize;   /* 接收到的单个对象的长度 */
+    uint datasize;  /* 当前这个文件的大小 */
+    char name[128]; /* 目录项的名字 */
 };
 
 
@@ -38,8 +39,8 @@ int  closedir(DIR *dir);
 void seekdir(DIR *dir, long offset);
 long telldir(DIR *dir);
 struct dirent *readdir(DIR *dir);
-int mkdir  (char *path, unsigned int mode);
-int mkfile (char *path, unsigned int flag, unsigned int mode);
+int mkdir  (char *path, uint mode);
+int mkfile (char *path, uint flag, uint mode);
 int chdir(char *path);
 int rmdir (char *path);
 

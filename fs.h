@@ -10,9 +10,9 @@
  */
 struct statfs
 {
-    unsigned int f_bsize;  /* block size */
-    unsigned int f_block;  /* total data blocks in file system */
-    unsigned int f_bfree;  /* free blocks in file system */
+    uint f_bsize;  /* block size */
+    uint f_block;  /* total data blocks in file system */
+    uint f_bfree;  /* free blocks in file system */
 };
 
 
@@ -37,16 +37,16 @@ int  vfs_pcbInit   (ProcCB *pcb, char *path);
 int  vfs_pcbdeinit (ProcCB *pcb);
 
 void init_vfs   (void);
-int  vfs_open   (char *path, unsigned int flags, unsigned int mode);
+int  vfs_open   (char *path, uint flags, uint mode);
 int  vfs_close  (int fd);
 int  vfs_write  (int fd, void *buf, int len);
 int  vfs_read   (int fd, void *buf, int len);
-int  vfs_mount  (char *fsname, char *path, unsigned int flag, void *data);
+int  vfs_mount  (char *fsname, char *path, uint flag, void *data);
 int  vfs_unmount(char *path);
 int  vfs_unlink (char *path);
 int  vfs_fsync  (int fd);
 int  vfs_fstatfs(int fd, struct statfs *buf);
-int  vfs_creat  (char *path, unsigned int mode);
+int  vfs_creat  (char *path, uint mode);
 int  vfs_rename (char *oldname, char *newname);
 int  vfs_stat   (int fd, struct stat *buf);
 

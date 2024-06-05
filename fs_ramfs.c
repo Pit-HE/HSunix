@@ -221,9 +221,9 @@ int ramfs_ioctl (struct File *file, int cmd, void *args)
 }
 /* 将缓冲区数据从指定文件中读取 */
 int ramfs_read (struct File *file, void *buf, 
-        unsigned int count)
+        uint count)
 {
-    unsigned int rLen;
+    uint rLen;
     struct Inode *inode;
     struct ramfs_node *node = NULL;
 
@@ -252,7 +252,7 @@ int ramfs_read (struct File *file, void *buf,
 }
 /* 将缓冲区数据写入指定文件中 */
 int ramfs_write (struct File *file, void *buf, 
-        unsigned int count)
+        uint count)
 {
     char *memAddr = NULL;
     struct ramfs_sb *sb = NULL;
@@ -297,7 +297,7 @@ int ramfs_flush (struct File *file)
 }
 /* 修改文件节点内的偏移值 */
 int ramfs_lseek (struct File *file, 
-        unsigned int offs, unsigned int type)
+        uint offs, uint type)
 {
     int ret = -1;
     struct ramfs_node *node = NULL;
@@ -333,11 +333,11 @@ int ramfs_lseek (struct File *file,
 }
 /* 获取目录节点下指定数量的子节点信息 */
 int ramfs_getdents (struct File *file, 
-        struct dirent *dirp, unsigned int count)
+        struct dirent *dirp, uint count)
 {
     ListEntry_t *list = NULL;
-    unsigned int num = 0, end = 0;
-    unsigned int cnt = 0, idx = 0;
+    uint num = 0, end = 0;
+    uint cnt = 0, idx = 0;
     struct ramfs_node *node = NULL;
     struct ramfs_node *next_node = NULL;
 
@@ -392,8 +392,7 @@ int ramfs_getdents (struct File *file,
  *      ramfs 文件系统文件操作接口
  ***************************************************/
 /* 创建文件系统的超级块，并初始化 */
-int ramfs_mount (struct FsDevice *fsdev, 
-        unsigned long flag, void *data)
+int ramfs_mount (struct FsDevice *fsdev, uint flag, void *data)
 {
     struct ramfs_sb *sb = NULL;
 

@@ -100,7 +100,7 @@ int kstrncmp(const char *p, const char *q, uint n)
 /* 申请新的内存空间拷贝字符串 */
 char *kstrdup(const char *s)
 {
-    unsigned int len = kstrlen(s) + 1;
+    uint len = kstrlen(s) + 1;
     char *tmp = (char *)kalloc(len);
 
     if (tmp == NULL)

@@ -119,7 +119,7 @@ long telldir(DIR *dir)
 }
 
 /* 在指定路径创建目录对象 */
-int mkdir (char *path, unsigned int mode)
+int mkdir (char *path, uint mode)
 {
     int ret;
     struct File *file;
@@ -144,8 +144,7 @@ int mkdir (char *path, unsigned int mode)
     return ret;
 }
 
-int mkfile (char *path, unsigned int flag, 
-        unsigned int mode)
+int mkfile (char *path, uint flag, uint mode)
 {
     int fd;
 

@@ -31,10 +31,10 @@ static int ditem_hash(struct FsDevice *fsdev, const char *path)
 }
 
 /* 目录项路径格式化，去除路径中可能包含的文件系统挂路径 */
-static char *ditem_pathformat(
-        struct FsDevice *fsdev, const char *path)
+static char *ditem_pathformat(struct FsDevice *fsdev, 
+        const char *path)
 {
-    unsigned int len;
+    uint len;
 
     /* 获取文件系统挂载路径的长度 */
     len = kstrlen(fsdev->path);
@@ -49,8 +49,8 @@ static char *ditem_pathformat(
 }
 
 /* 查找指定的目录项是否已经存在 */
-static struct DirItem *ditem_find (
-        struct FsDevice *fsdev, const char *path)
+static struct DirItem *ditem_find (struct FsDevice *fsdev, 
+        const char *path)
 {
     int index;
     ListEntry_t *list = NULL;
@@ -87,8 +87,8 @@ static struct DirItem *ditem_find (
 }
 
 /* 创建新的目录项，并初始化 */
-struct DirItem *ditem_alloc (
-        struct FsDevice *fsdev, const char *path)
+struct DirItem *ditem_alloc (struct FsDevice *fsdev, 
+        const char *path)
 {
     struct DirItem *ditem = NULL;
 

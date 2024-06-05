@@ -19,10 +19,10 @@ struct ramfs_node
     char             name[RAMFS_NAME_LEN];
     ListEntry_t      siblist; /* 链接同级节点的链表 */
     ListEntry_t      sublist; /* 链接子级节点的链表 */
-    unsigned int     flags;   /* 对应 inode 的 flags */
-    unsigned int     mode;    /* 对应 inode 的 mode */
+    uint             flags;   /* 对应 inode 的 flags */
+    uint             mode;    /* 对应 inode 的 mode */
     char            *data;    /* 文件存储数据的内存空间 */
-    unsigned int     size;    /* 文件的大小 */
+    uint             size;    /* 文件的大小 */
     struct ramfs_sb *sb;      /* 所属的 ramfs */
 };
 
@@ -30,11 +30,11 @@ struct ramfs_node
 /* 文件系统的超级块 */
 struct ramfs_sb
 {
-    unsigned int      magic;  /* 魔幻数 */
-    struct ramfs_node root;   /* 根目录节点 */
-    unsigned int      size;   /* 记录当前文件系统占用的总内存 */
-    unsigned int      flag;   /* 标记系统的访问方式(可读、可写...) */
-    ListEntry_t       siblist;/* 记录根目录下的 node */
+    uint                magic;  /* 魔幻数 */
+    struct ramfs_node   root;   /* 根目录节点 */
+    uint                size;   /* 记录当前文件系统占用的总内存 */
+    uint                flag;   /* 标记系统的访问方式(可读、可写...) */
+    ListEntry_t         siblist;/* 记录根目录下的 node */
 };
 
 

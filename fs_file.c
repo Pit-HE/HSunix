@@ -38,8 +38,8 @@ void file_free (struct File *file)
 }
 
 /* 创建路径下默认的 '.' 与 '..' */
-int _file_default (struct FsDevice *fsdev, char *path, 
-        unsigned int flag, unsigned int mode)
+int file_default (struct FsDevice *fsdev, char *path, 
+        uint flag, uint mode)
 {
     struct DirItem *ditem = NULL;
     struct Inode *inode = NULL;
@@ -83,8 +83,8 @@ int _file_default (struct FsDevice *fsdev, char *path,
  * 
  * 返回值：-1表示失败
  */
-int file_open (struct File *file, char *path, 
-        unsigned int flag, unsigned int mode)
+int file_open (struct File *file, char *path, uint flag, 
+        uint mode)
 {
     int ret = 0;
     char *ap_path = NULL;
@@ -149,7 +149,7 @@ int file_open (struct File *file, char *path,
             /* 创建目录下的 '.' 与 '..' 对象 */
             if (flag & O_DIRECTORY)
             {
-                _file_default(fsdev, ap_path, flag, mode);
+                file_default(fsdev, ap_path, flag, mode);
             }
         }
         kfree(ap_path);
@@ -226,8 +226,7 @@ int file_close (struct File *file)
  *
  * 返回值：-1表示失败，其他值表示实际读取的长度
  */
-int file_read (struct File *file, 
-    void *buf, unsigned int len)
+int file_read (struct File *file, void *buf, uint len)
 {
     int ret = 0;
 
@@ -250,8 +249,7 @@ int file_read (struct File *file,
  *
  * 返回值：-1表示失败，其他值表示实际写入的长度
  */
-int file_write (struct File *file, 
-    void *buf, unsigned int len)
+int file_write (struct File *file, void *buf, uint len)
 {
     int ret = 0;
 
@@ -362,8 +360,8 @@ int file_flush (struct File *file)
  *  
  * 返回值：-1表示失败, 其他表示读取到的总内存大小
  */
-int file_getdents(struct File *file, 
-    struct dirent *dirp, unsigned int nbytes)
+int file_getdents(struct File *file, struct dirent *dirp, 
+        uint nbytes)
 {
     int ret = -1;
 
@@ -380,8 +378,7 @@ int file_getdents(struct File *file,
 }
 
 /* 设置目录文件对象的偏移指针 */
-int file_lseek (struct File *file, 
-    unsigned int offset, unsigned int type)
+int file_lseek (struct File *file, uint offset, uint type)
 {
     int ret = -1;
 
@@ -475,10 +472,10 @@ int file_rename (char *oldpath, char *newpath)
     /* 释放使用的资源 */
     ditem_destroy(nditem);
 
-_exit_rename_ditem:
+ _exit_rename_ditem:
     ditem_put(oditem);
 
-_exit_rename_path:
+ _exit_rename_path:
     kfree(ap_opath);
     kfree(ap_npath);
 

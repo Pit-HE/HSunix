@@ -20,12 +20,11 @@ void init_vfs (void)
     init_ditem();
 
     /* 设置根文件系统 */
-    vfs_mount("ramfs", "/", 
-        O_RDWR | O_CREAT | O_DIRECTORY, NULL);
+    vfs_mount("ramfs", "/", O_RDWR | O_CREAT | O_DIRECTORY, NULL);
 }
 
 /* 文件系统对外接口：打开指定路径的文件 */
-int vfs_open (char *path, unsigned int flags, unsigned int mode)
+int vfs_open (char *path, uint flags, uint mode)
 {
     int fd;
     struct File *file = NULL;
@@ -47,14 +46,6 @@ int vfs_open (char *path, unsigned int flags, unsigned int mode)
     if (0 > file_open(file, (char *)path, flags, mode))
     {
         kErr_printf("fail: vfs_open open file !\r\n");
-        fd_free(fd);
-        return -1;
-    }
-
-    /* 确认文件对象的类型是否正确 */
-    if (file->inode->type != INODE_FILE)
-    {
-        file_close(file);
         fd_free(fd);
         return -1;
     }
@@ -118,7 +109,7 @@ int vfs_read (int fd, void *buf, int len)
 }
 
 /* 创建新的文件或重写现有的文件 */
-int vfs_creat (char *path, unsigned int mode)
+int vfs_creat (char *path, uint mode)
 {
     int fd, ret;
     struct File *file = NULL;
@@ -279,7 +270,7 @@ int vfs_pcbdeinit (ProcCB *pcb)
  *  ( 传入的必须是绝对路径 )
  */
 int vfs_mount(char *fsname, char *path, 
-        unsigned int flag, void *data)
+        uint flag, void *data)
 {
     int ret;
 

@@ -115,8 +115,7 @@ static struct FsDevice *find_fsdev (const char *path)
 }
 
 /* 将文件系统设备添加到管理树中 */
-static int insert_fsdev (struct FsDevice *parent,
-                struct FsDevice *child)
+static int insert_fsdev (struct FsDevice *parent, struct FsDevice *child)
 {
     if (child == NULL)
         return -1;
@@ -158,7 +157,7 @@ static int remove_fsdev (struct FsDevice *fsdev)
 
 /* 将文件系统注册到内核中 ( 由实体文件系统初始化时调用 ) */
 int fsdev_register (char *name, struct FileOperation *fops,
-        struct FileSystemOps *fsops, unsigned int multi)
+        struct FileSystemOps *fsops, uint multi)
 {
     struct FsObject *fsobj;
     struct FileSystem *fs;
@@ -195,8 +194,7 @@ int fsdev_register (char *name, struct FileOperation *fops,
 }
 
 /* 将实体文件系统挂载到可用区域 (传入的必须是绝对路径) */
-int fsdev_mount (char *fsname, char *path,
-        unsigned int flag, void *data)
+int fsdev_mount (char *fsname, char *path, uint flag, void *data)
 {
     int ret = 0;
     struct FsObject *fsobj = NULL;
@@ -240,9 +238,8 @@ int fsdev_mount (char *fsname, char *path,
                 flag, data);
     }
 
-extern int _file_default (struct FsDevice *fsdev, char *path, 
-        unsigned int flag, unsigned int mode);
-    _file_default(chi_fsdev, path, flag, S_IRWXU);
+    /* 创建根目录下的 '.' 与 '..' */
+    file_default(chi_fsdev, path, flag, S_IRWXU);
 
     return ret;
 }

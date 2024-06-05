@@ -29,8 +29,8 @@ static void inode_free (struct Inode *inode)
 
 
 /* 初始化 inode 为文件系统的情况 */
-struct Inode *inode_getfs (struct FsDevice *fsdev,
-        unsigned int flag, unsigned int mode)
+struct Inode *inode_getfs (struct FsDevice *fsdev, uint flag, 
+        uint mode)
 {
     struct Inode *inode = NULL;
 
@@ -57,8 +57,8 @@ struct Inode *inode_getfs (struct FsDevice *fsdev,
 }
 
 /* 初始化 inode 为内核设备的情况 */
-struct Inode *inode_getdev (struct Device *dev,
-        unsigned int flag, unsigned int mode)
+struct Inode *inode_getdev (struct Device *dev, uint flag, 
+        uint mode)
 {
     struct Inode *inode = NULL;
 
