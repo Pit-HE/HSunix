@@ -115,7 +115,7 @@ int cmd_echo (int argc, char *argv[])
 
     do
     {
-        kmemset(tmpbuf, 0, 32);
+        kmemset(tmpbuf, 0, 33);
         rlen = vfs_read(fd, tmpbuf, 32);
 
         if (rlen)
@@ -141,6 +141,8 @@ int cmd_cat (int argc, char *argv[])
         return -1;
 
     wlen = kstrlen(argv[2]);
+
+    vfs_lseek(fd, 0, SEEK_END);
     val = vfs_write(fd, argv[2], wlen);
     if (val != wlen)
         return -1;

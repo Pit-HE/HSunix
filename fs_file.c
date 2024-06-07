@@ -41,7 +41,7 @@ void file_free (struct File *file)
 int file_default (struct FsDevice *fsdev, char *path, 
         uint flag, uint mode)
 {
-    struct DirItem *ditem = NULL;
+    // struct DirItem *ditem = NULL;
     struct Inode *inode = NULL;
     char *p_path = NULL;
 
@@ -59,15 +59,17 @@ int file_default (struct FsDevice *fsdev, char *path,
     inode = inode_getfs(fsdev, flag, mode);
     kstrcat(p_path, ".");
     fsdev->fs->fsops->create(fsdev, inode, p_path);
-    ditem = ditem_create(fsdev, p_path);
-    ditem->inode = inode;
+    // ditem = ditem_create(fsdev, p_path);
+    // ditem->inode = inode;
+    inode_put(inode);
 
     /* 创建目录项 '..' */
     inode = inode_getfs(fsdev, flag, mode);
     kstrcat(p_path, ".");
     fsdev->fs->fsops->create(fsdev, inode, p_path);
-    ditem = ditem_create(fsdev, p_path);
-    ditem->inode = inode;
+    // ditem = ditem_create(fsdev, p_path);
+    // ditem->inode = inode;
+    inode_put(inode);
 
     /* 释放暂存路径的内存 */
     kfree(p_path);

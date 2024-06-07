@@ -287,11 +287,5 @@ void fsdev_put (struct FsDevice *fsdev)
         return;
 
     fsdev->ref -= 1;
-
-    if (fsdev->ref == 0)
-    {
-        remove_fsdev(fsdev);
-        free_fsdev(fsdev);
-    }
 }
 

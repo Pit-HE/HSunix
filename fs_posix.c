@@ -164,15 +164,8 @@ int mkfile (char *path, uint flag, uint mode)
 int chdir(char *path)
 {
     DIR *dir = NULL;
-    ProcCB *pcb = NULL;
-    struct File *file = NULL;
 
     if (path == NULL)
-        return -1;
-
-    /* 获取当前进程的控制块 */
-    pcb = getProcCB();
-    if (pcb == NULL)
         return -1;
 
     /* 确认该目录项存在 */
@@ -180,21 +173,9 @@ int chdir(char *path)
     if (dir == NULL)
         return -1;
 
-    if (0 <= path_setcwd(path))
-    {
-        file = fd_get(dir->fd);
-
-        /* 设置进程的任务控制块 */
-        kDISABLE_INTERRUPT();
-        pcb->root->off   = file->off;
-        pcb->root->fops  = file->fops;
-        pcb->root->inode = file->inode;
-        pcb->root->ditem = file->ditem;
-        kENABLE_INTERRUPT();
-    }
     closedir(dir);
 
-    return 0;
+    return path_setcwd(path);
 }
 
 /* 删除指定的文件目录 */

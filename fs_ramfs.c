@@ -224,28 +224,23 @@ int ramfs_read (struct File *file, void *buf,
         uint count)
 {
     uint rLen;
-    struct Inode *inode;
     struct ramfs_node *node = NULL;
 
     if ((file == NULL) || (buf == NULL) || 
         (count == 0))
         return -1;
 
-    inode = file->inode;
-    if (inode == NULL)
-        return -1;
-
-    node = inode->data;
+    node = file->inode->data;
     if ((node == NULL) || (node->data == NULL))
         return -1;
 
     /* 确认文件实际可读写的长度 */
-    if (count > (inode->size - file->off))
-        rLen = inode->size - file->off;
+    if (count > (node->size - file->off))
+        rLen = node->size - file->off;
     else
         rLen = count;
 
-    kmemcpy(buf, node->data, rLen);
+    kmemcpy(buf, node->data + file->off, rLen);
     file->off += rLen;
 
     return rLen;
@@ -262,7 +257,8 @@ int ramfs_write (struct File *file, void *buf,
         (count == 0) || (file->inode == NULL))
         return -1;
 
-    if ((node = file->inode->data) == NULL)
+    node = file->inode->data;
+    if (node == NULL)
         return -1;
 
     sb = ((struct ramfs_node*)file->inode->data)->sb;
@@ -306,7 +302,7 @@ int ramfs_lseek (struct File *file,
         return -1;
 
     node = file->inode->data;
-    if ((node == NULL) || (node->data != NULL))
+    if (node == NULL)
         return -1;
 
     switch (type)
@@ -541,7 +537,6 @@ int ramfs_rename (struct DirItem *old_ditem,
 
     return 0;
 }
-
 /* 查找路径下的 ramfs_node 对象，path 必须是绝对路径 */
 int ramfs_lookup (struct FsDevice *fsdev, 
         struct Inode *inode, const char *path)

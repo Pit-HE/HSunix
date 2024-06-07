@@ -49,5 +49,6 @@ int  vfs_fstatfs(int fd, struct statfs *buf);
 int  vfs_creat  (char *path, uint mode);
 int  vfs_rename (char *oldname, char *newname);
 int  vfs_stat   (int fd, struct stat *buf);
+int  vfs_lseek  (int fd, uint off, int whence);
 
 #endif

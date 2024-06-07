@@ -207,6 +207,19 @@ int vfs_rename (char *oldname, char *newname)
     return file_rename(oldname, newname);
 }
 
+int vfs_lseek (int fd, uint off, int whence)
+{
+    struct File *file = NULL;
+
+    file = fd_get(fd);
+    if (file < 0)
+    {
+        kErr_printf("fail: vfs_lseek get fd !\r\n");
+        return -1;
+    }
+    return file_lseek(file, off, whence);
+}
+
 /* 初始化进程的文件相关项*/
 int vfs_pcbInit (ProcCB *pcb, char *path)
 {
@@ -223,26 +236,9 @@ int vfs_pcbInit (ProcCB *pcb, char *path)
         return -1;
     kstrcpy(pcb->cwd, path);
 
-    /* 设置进程的根节点 */
-    pcb->root = file_alloc();
-    if (pcb->root == NULL)
-    {
-        kfree(pcb->cwd);
-        return -1;
-    }
-    if (0 > file_open(pcb->root, path, \
-            O_DIRECTORY | O_RDWR | O_CREAT, S_IRUSR))
-    {
-        file_free(pcb->root);
-        kfree(pcb->cwd);
-        return -1;
-    }
-
     /* 为进程申请默认大小的文件描述符数组空间 */
     if (0 > fdTab_alloc(pcb))
     {
-        file_close(pcb->root);
-        file_free(pcb->root);
         kfree(pcb->cwd);
         return -1;
     }
@@ -256,10 +252,7 @@ int vfs_pcbdeinit (ProcCB *pcb)
     if (pcb == NULL)
         return -1;
 
-    file_close(pcb->root);
-
-    /* 释放进程占用的内存资源 */
-    file_free(pcb->root);
+    // /* 释放进程占用的内存资源 */
     kfree(pcb->cwd);
     fdTab_free(pcb);
 

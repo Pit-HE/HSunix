@@ -98,7 +98,6 @@ typedef struct processControlBlock
 
   struct File **fdTab;            // 文件描述符的指针数组
   uint          fdCnt;            // 记录当前文件描述符数组的长度(可以动态变化)
-  struct File  *root;             // 进程工作路径所属的文件节点
   char         *cwd;              // 进程的工作路径
 
   uint64        stackAddr;        // Virtual address of kernel stack
