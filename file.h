@@ -66,7 +66,7 @@ struct FileOperation
 struct FileSystemOps
 {
     /* mount and unmount file system */
-    int (*mount)    (struct FsDevice *fsdev, unsigned long flag, void *data);
+    int (*mount)    (struct FsDevice *fsdev, uint flag, void *data);
     int (*unmount)  (struct FsDevice *fsdev);
 
     /* make a file system */

@@ -46,10 +46,12 @@ void *kallocPhyPage (void)
     if (phyPageFreeHeader.next == NULL)
         return NULL;
 
+    kDISABLE_INTERRUPT();
     /* 从链表取出节点 */
     p = phyPageFreeHeader.next;
     phyPageFreeHeader.next = p->next;
     phyPageFreeHeader.blkNum -= 1;
+    kENABLE_INTERRUPT();
 
     kmemset((void*)p, 5, PGSIZE);
     return p;
@@ -71,10 +73,12 @@ void kfreePhyPage (void *pa)
     kmemset (pa, 1, PGSIZE);
     p = (kpm_node*)pa;
 
+    kDISABLE_INTERRUPT();
     /* 添加到空闲链表 */
     p->next = phyPageFreeHeader.next;
     phyPageFreeHeader.next = p;
     phyPageFreeHeader.blkNum += 1;
+    kENABLE_INTERRUPT();
 }
 
 /* 将可用内存格式化为固定大小的页 */
@@ -207,7 +211,7 @@ void kfree (void *obj)
 
         objHear->magic  = 0;
         objHear->blkNum = 0;
-        objHear->next   = 0;
+        objHear->next   = NULL;
     }
     else
     {
@@ -224,6 +228,7 @@ void *kalloc (int size)
     int  objsize = 0;
     char *ptr = NULL;
     ksm_node *currNode = NULL;
+    ksm_node *tempNode = NULL;
     ksm_node *nextNode = NULL;
 
     if ((0 >= size) || (size >= PGSIZE))
@@ -241,8 +246,11 @@ void *kalloc (int size)
             /* 获取要操作的空闲内存块 */
             nextNode = currNode->next;
 
-            /* 判断该空闲内存是否刚好等于所需大小 */
-            if (nextNode->blkNum == objsize)
+            /* 判断该空闲内存是否有足够的可分配空间，
+             * 若该内存剩余空间过小，则整块分配
+             */
+            if (nextNode->blkNum < 
+                (objsize + sizeof(ksm_node) + 1))
             {
                 currNode->next = nextNode->next;
                 smallMemFreeHeader.blkNum -= 1;
@@ -251,19 +259,21 @@ void *kalloc (int size)
             {
                 /* 分割该可用的空闲内存块 */
                 ptr  = (char *)nextNode;
-                ptr += objsize;
-                currNode->next = (ksm_node *)ptr;
+                tempNode = (ksm_node *)(ptr + objsize);
 
                 /* 更新被分割后的内存块的头信息 */
-                currNode->next->magic  = KSM_MAGIC;
-                currNode->next->blkNum = nextNode->blkNum - objsize;
-                currNode->next->next = nextNode->next;
+                tempNode->magic  = KSM_MAGIC;
+                tempNode->blkNum = nextNode->blkNum - objsize;
+                tempNode->next   = nextNode->next;
+
+                currNode->next = tempNode;
+                nextNode->blkNum = objsize;
             }
             /* 初始化寻找到的可用空闲内存块 */
-            nextNode->magic  = KSM_MAGIC;
-            nextNode->blkNum = objsize;
+            // nextNode->magic  = KSM_MAGIC;
             nextNode->next   = NULL;
-            kmemset(++nextNode, 0, size);
+            nextNode        += 1;
+            kmemset(nextNode, 0, size);
             break;
         }
 
@@ -282,11 +292,13 @@ void *kalloc (int size)
                 return NULL;
             }
             /* 设置为当前空闲内存块的大小 */
+            obj->magic  = KSM_MAGIC;
             obj->blkNum = PGSIZE;
-            obj->magic = KSM_MAGIC;
+            obj->next   = NULL;
+            obj        += 1;
 
             /* 将新的空闲内存加入管理链表 */ 
-            kfree((char *)++obj);
+            kfree((char *)obj);
 
             /* 重新遍历当前空闲的链表 */
             currNode = &smallMemFreeHeader;
@@ -303,10 +315,12 @@ static void smallMemFormat (void)
     curHear = (ksm_node*)kallocPhyPage();
     if (curHear != NULL)
     {
+        curHear->magic  = KSM_MAGIC;
         curHear->blkNum = PGSIZE;
-        curHear->magic = KSM_MAGIC;
+        curHear->next   = NULL;
+        curHear        += 1;
 
-        kfree ((char *)++curHear);
+        kfree ((char *)curHear);
     }
 }
 

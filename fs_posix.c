@@ -165,6 +165,7 @@ int chdir(char *path)
 {
     DIR *dir = NULL;
     ProcCB *pcb = NULL;
+    struct File *file = NULL;
 
     if (path == NULL)
         return -1;
@@ -181,9 +182,14 @@ int chdir(char *path)
 
     if (0 <= path_setcwd(path))
     {
+        file = fd_get(dir->fd);
+
         /* 设置进程的任务控制块 */
         kDISABLE_INTERRUPT();
-        pcb->root = fd_get(dir->fd);
+        pcb->root->off   = file->off;
+        pcb->root->fops  = file->fops;
+        pcb->root->inode = file->inode;
+        pcb->root->ditem = file->ditem;
         kENABLE_INTERRUPT();
     }
     closedir(dir);
