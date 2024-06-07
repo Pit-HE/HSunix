@@ -204,6 +204,8 @@ int cmd_fstatfs (int argc, char *argv[])
     ret = vfs_fstatfs(fd, &fsbuf);
     vfs_close(fd);
 
+    kprintf("    fs name:  %s\r\n", fsbuf.name);
+    kprintf("    fs total: %d\r\n", fsbuf.f_total);
     kprintf("    fs bsize: %d\r\n", fsbuf.f_bsize);
     kprintf("    fs block: %d\r\n", fsbuf.f_block);
     kprintf("    fs bfree: %d\r\n", fsbuf.f_bfree);

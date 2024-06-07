@@ -451,7 +451,10 @@ int ramfs_statfs (struct FsDevice *fsdev,
     if ((sb == NULL) || (sb->magic != RAMFS_MAGIC))
         return -1;
 
-    /* 写入文件系统当前的信息 */
+    /* 写入当前文件系统的信息 */
+    kstrcpy(buf->name, fsdev->fs->name);
+
+    buf->f_total = sb->size;
     buf->f_bsize = 512;
     buf->f_block = (sb->size + 511)/512;
     buf->f_bfree = 1;
@@ -596,6 +599,7 @@ int ramfs_create (struct FsDevice *fsdev,
     if (-1 == ramfs_path_getlast (path, 
             parent_path, node_name))
         return -1;
+
     /* 获取父节点的 ramfs_node */
     parent_node = _path_getnode(sb, parent_path);
     if (NULL == parent_node)

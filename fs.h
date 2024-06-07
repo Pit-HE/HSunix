@@ -10,6 +10,8 @@
  */
 struct statfs
 {
+    char name[FS_NAME_LEN];
+    uint f_total;  /* 文件系统的总大小 */
     uint f_bsize;  /* block size */
     uint f_block;  /* total data blocks in file system */
     uint f_bfree;  /* free blocks in file system */

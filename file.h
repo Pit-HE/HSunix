@@ -23,7 +23,7 @@ struct FileSystem;
 #define FILE_MAGIC      0xFE5A
 #define DIRITEM_MAGIC   0xD55D
 
-#define  FS_NAME_LEN 32
+#define  FS_NAME_LEN 16
 
 
 
@@ -200,7 +200,7 @@ int  file_lseek (struct File *file, uint offset, uint type);
 int  file_fstatfs  (struct File *file, struct statfs *buf);
 int  file_rename(char *oldpath, char *newpath);
 int  file_stat  (struct File *file, struct stat *buf);
-int  file_default (struct FsDevice *fsdev, char *path, uint flag, uint mode);
+int  file_defaultdir (struct FsDevice *fsdev, char *path, uint flag, uint mode);
 
 /**********************************/
 char *path_getfirst (const char *path, char *name);
@@ -209,6 +209,7 @@ struct Inode *parse_getinode (char *path,uint flag, uint mode);
 char *path_formater (char *path);
 char *path_parser (char *directory, const char *filepath);
 int   path_setcwd (const char *path);
+char *path_fsdev  (struct FsDevice *fsdev, char *path);
 
 /**********************************/
 void  init_ditem (void);

@@ -262,3 +262,33 @@ int path_setcwd (const char *path)
 
     return 0;
 }
+
+/* 去除路径中文件系统的挂载路径 (path 必须是绝对值) */
+char *path_fsdev (struct FsDevice *fsdev, char *path)
+{
+    int len;
+    char *ap_path = path;
+    char *ret_path = NULL;
+
+    if ((fsdev == NULL) || (path == NULL))
+        return NULL;
+    len = kstrlen(fsdev->path);
+
+    /* 判断该路径是否在文件系统的挂载路径下 */
+    if (kstrncmp(fsdev->path, path, len) != 0)
+        return NULL;
+
+    /* 获取去除文件系统挂载路径后的字符串首地址 */
+    ap_path += len;
+
+    /* 记录去除文件系统挂载路径后的字符串 */
+    if (*ap_path == '\0')
+    {
+        ret_path = kstrdup("/");
+    }
+    else
+    {
+        ret_path = kstrdup(ap_path);
+    }
+    return ret_path;
+}

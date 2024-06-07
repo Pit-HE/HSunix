@@ -37,11 +37,10 @@ void file_free (struct File *file)
     kfree(file);
 }
 
-/* 创建路径下默认的 '.' 与 '..' */
-int file_default (struct FsDevice *fsdev, char *path, 
+/* 创建路径下默认的文件夹 '.' 与 '..' */
+int file_defaultdir (struct FsDevice *fsdev, char *path, 
         uint flag, uint mode)
 {
-    // struct DirItem *ditem = NULL;
     struct Inode *inode = NULL;
     char *p_path = NULL;
 
@@ -57,18 +56,24 @@ int file_default (struct FsDevice *fsdev, char *path,
 
     /* 创建目录项 '.' */
     inode = inode_getfs(fsdev, flag, mode);
+    if(inode == NULL)
+    {
+        kfree(p_path);
+        return -1;
+    }
     kstrcat(p_path, ".");
     fsdev->fs->fsops->create(fsdev, inode, p_path);
-    // ditem = ditem_create(fsdev, p_path);
-    // ditem->inode = inode;
     inode_put(inode);
 
     /* 创建目录项 '..' */
     inode = inode_getfs(fsdev, flag, mode);
+    if (inode == NULL)
+    {
+        kfree(p_path);
+        return -1;
+    }
     kstrcat(p_path, ".");
     fsdev->fs->fsops->create(fsdev, inode, p_path);
-    // ditem = ditem_create(fsdev, p_path);
-    // ditem->inode = inode;
     inode_put(inode);
 
     /* 释放暂存路径的内存 */
@@ -85,11 +90,11 @@ int file_default (struct FsDevice *fsdev, char *path,
  * 
  * 返回值：-1表示失败
  */
-int file_open (struct File *file, char *path, uint flag, 
-        uint mode)
+int file_open (struct File *file, char *path, uint flag, uint mode)
 {
     int ret = 0;
-    char *ap_path = NULL;
+    char *ap_path = NULL;   /* 绝对路径 */
+    char *rp_path = NULL;   /* 相对路径 */
     struct Device *dev = NULL;
     struct Inode *inode = NULL;
     struct DirItem *ditem = NULL;
@@ -113,9 +118,11 @@ int file_open (struct File *file, char *path, uint flag,
             kfree(ap_path);
             return -1;
         }
+        /* 去除路径中包含的文件系统的挂载路径  */
+        rp_path = path_fsdev(fsdev, ap_path);
 
-        /* 获取该路径下所对应的目录项 */
-        ditem = ditem_get(fsdev, ap_path);
+        /* 获取文件系统中该路径下所对应的目录项 */
+        ditem = ditem_get(fsdev, rp_path);
         if (ditem != NULL)
         {
             inode = ditem->inode;
@@ -132,7 +139,7 @@ int file_open (struct File *file, char *path, uint flag,
                 return -1;
 
             /* 在实体文件系统中创建对应成员 */
-            ret = fsdev->fs->fsops->create(fsdev, inode, ap_path);
+            ret = fsdev->fs->fsops->create(fsdev, inode, rp_path);
             if (ret < 0)
             {
                 inode_put(inode);
@@ -140,7 +147,7 @@ int file_open (struct File *file, char *path, uint flag,
             }
 
             /* 创建新的目录项 */
-            ditem = ditem_create(fsdev, ap_path);
+            ditem = ditem_create(fsdev, rp_path);
             if (ditem == NULL)
             {
                 inode_put(inode);
@@ -151,9 +158,10 @@ int file_open (struct File *file, char *path, uint flag,
             /* 创建目录下的 '.' 与 '..' 对象 */
             if (flag & O_DIRECTORY)
             {
-                file_default(fsdev, ap_path, flag, mode);
+                file_defaultdir(fsdev, rp_path, flag, mode);
             }
         }
+        kfree(rp_path);
         kfree(ap_path);
     }
     else /* 操作注册的设备 */
@@ -173,7 +181,6 @@ int file_open (struct File *file, char *path, uint flag,
             dev_put(dev);
             return -1;
         }
-        
     }
 
     /* 初始化新打开的文件描述符 */
@@ -362,8 +369,7 @@ int file_flush (struct File *file)
  *  
  * 返回值：-1表示失败, 其他表示读取到的总内存大小
  */
-int file_getdents(struct File *file, struct dirent *dirp, 
-        uint nbytes)
+int file_getdents(struct File *file, struct dirent *dirp, uint nbytes)
 {
     int ret = -1;
 

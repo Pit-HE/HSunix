@@ -43,6 +43,7 @@ static struct FsObject *find_fsobj (char *name)
     return NULL;
 }
 
+/* 申请文件系统设备所需的内存空间 */
 static struct FsDevice *alloc_fsdev (char *path)
 {
     struct FsDevice *fsdev;
@@ -66,6 +67,7 @@ static struct FsDevice *alloc_fsdev (char *path)
 
     return fsdev;
 }
+/* 释放文件系统设备结构体所占用的内存空间 */
 static void free_fsdev (struct FsDevice *fsdev)
 {
     if (fsdev == NULL)
@@ -197,9 +199,16 @@ int fsdev_register (char *name, struct FileOperation *fops,
 int fsdev_mount (char *fsname, char *path, uint flag, void *data)
 {
     int ret = 0;
+    char *ap_path = NULL;   /* 绝对路径 */
+    char *rp_path = NULL;   /* 相对路径 */
     struct FsObject *fsobj = NULL;
     struct FsDevice *chi_fsdev = NULL;
     struct FsDevice *per_fsdev = NULL;
+
+    /* 获取文件系统要挂载的绝对路径 */
+    ap_path = path_parser(NULL, path);
+    if (ap_path == NULL)
+        return -1;
 
     /* 查找已注册的文件系统 */
     fsobj = find_fsobj(fsname);
@@ -212,15 +221,15 @@ int fsdev_mount (char *fsname, char *path, uint flag, void *data)
         return -1;
 
     /* 查找文件系统要挂载时的父对象 */
-    per_fsdev = find_fsdev(path);
+    per_fsdev = find_fsdev(ap_path);
 
     /* 不允许在同一路径上重复挂载文件系统 */
     if ((per_fsdev != NULL) &&
-        kstrlen(per_fsdev->path) == kstrlen(path))
+        kstrlen(per_fsdev->path) == kstrlen(ap_path))
         return -1;
 
     /* 创建新的文件系统设备 */
-    chi_fsdev = alloc_fsdev(path);
+    chi_fsdev = alloc_fsdev(ap_path);
     if (chi_fsdev == NULL)
         return -1;
 
@@ -238,8 +247,14 @@ int fsdev_mount (char *fsname, char *path, uint flag, void *data)
                 flag, data);
     }
 
+    /* 去除路径中文件系统的挂载路径 */
+    rp_path = path_fsdev(chi_fsdev, ap_path);
+
     /* 创建根目录下的 '.' 与 '..' */
-    file_default(chi_fsdev, path, flag, S_IRWXU);
+    file_defaultdir(chi_fsdev, rp_path, flag, S_IRWXU);
+
+    kfree(rp_path);
+    kfree(ap_path);
 
     return ret;
 }
@@ -248,9 +263,16 @@ int fsdev_mount (char *fsname, char *path, uint flag, void *data)
 int fsdev_unmount (char *path)
 {
     int ret = 0;
+    char *ap_path = NULL;
     struct FsDevice *fsdev;
 
-    fsdev = find_fsdev(path);
+    /* 获取要操作的绝对路径 */
+    ap_path = path_parser(NULL, path);
+    if (ap_path == NULL)
+        return -1;
+
+    /* 寻找该绝对路径下所挂载的文件系统 */
+    fsdev = find_fsdev(ap_path);
     if (fsdev == NULL)
         return -1;
     if (fsdev->ref != 0)
@@ -260,9 +282,12 @@ int fsdev_unmount (char *path)
 
     /* 调用实体文件系统的挂载接口 */
     if (fsdev->fs->fsops->unmount != NULL)
+    {
         ret = fsdev->fs->fsops->unmount(fsdev);
+    }
 
     free_fsdev(fsdev);
+    kfree(ap_path);
 
     return ret;
 }

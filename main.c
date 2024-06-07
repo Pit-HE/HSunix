@@ -4,12 +4,13 @@
 #include "riscv.h"
 #include "defs.h"
 #include "list.h"
+#include "cli.h"
 
 
 
 void os_logo (void)
 {
-    kprintf("\r\n");
+    cli_clear();
     kprintf(" _    _    _____                   _         \r\n");
     kprintf("| |  | |  / ____|                 (_)        \r\n");
     kprintf("| |__| | | (___    _   _   _ __    _  __  __ \r\n");
