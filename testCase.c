@@ -244,7 +244,7 @@ void tc_fsdefualt (void)
 }
 
 /* 系统上电自检接口 */
-void power_selfInspection (void)
+void selfInspection (void)
 {
     // tc_virtualmemory();
     // tc_kalloc();

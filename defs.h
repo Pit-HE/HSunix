@@ -73,7 +73,7 @@ void kerneltrap     (void);
 
 
 /******************** test ********************/
-void power_selfInspection (void);
+void selfInspection (void);
 
 
 /******************** proc ********************/

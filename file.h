@@ -23,7 +23,7 @@ struct FileSystem;
 #define FILE_MAGIC      0xFE5A
 #define DIRITEM_MAGIC   0xD55D
 
-#define  FS_NAME_LEN 16
+#define FS_NAME_LEN     16
 
 
 

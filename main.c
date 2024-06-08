@@ -37,7 +37,7 @@ void main (void)
     init_proc();
     init_vfs();
 
-    power_selfInspection();
+    selfInspection();
     os_logo();
 
     idle_main();

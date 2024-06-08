@@ -15,6 +15,7 @@ extern void kernelvec ();
 extern void uservec (void);
 extern void userret (void);
 extern void trampoline (void);
+extern void virtio_disk_isr(void);
 
 /****************************************/
 void init_trap(void)
@@ -44,6 +45,7 @@ int dev_interrupt (void)
                 uart_intrrupt();
                 break;
             case VIRTIO0_IRQ:
+                virtio_disk_isr();
                 break;
             default:
                 break;

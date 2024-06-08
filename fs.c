@@ -16,6 +16,10 @@ void init_vfs (void)
     void dfs_ramfs_init (void);
     dfs_ramfs_init();
 
+    /* 虚拟磁盘初始化 */
+    extern void virtio_disk_init (void);
+    virtio_disk_init();
+
     /* 初始化虚拟文件系统的目录项模块 */
     init_ditem();
 
