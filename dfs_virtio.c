@@ -208,7 +208,7 @@ static int alloc3_desc(int *idx)
  * data:    存放数据的缓冲区地址(缓冲区大小必须为1024)
  * write:   是读取还是写数据
  */
-void virtio_disk_io(uint blknum, uchar data[1024], io_type type)
+void virtio_disk_io(uint blknum, uchar *data, io_type type)
 {
   uint64 sector = blknum * (BSIZE / 512);
 
