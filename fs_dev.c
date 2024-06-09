@@ -1,5 +1,7 @@
 /*
- * 仅处理关于实体文件系统相关的操作
+ * 管理实体文件系统的注册、挂载、卸载等操作
+ * 1、注册的实体文件系统记录为文件系统对象: fsobj
+ * 2、执行挂载后的实体文件系统为文件系统设备: fsdev
  */
 #include "defs.h"
 #include "file.h"
@@ -25,7 +27,10 @@ LIST_INIT_OBJ(gFsObjectList);
 struct FsDevice *root_fsdev;
 
 
-/* 查找已注册的文件系统 */
+/********************************************************
+ *      文件系统对象与文件系统设备模块内部专用接口
+ *******************************************************/
+/* 查找已注册的文件系统对象 */
 static struct FsObject *find_fsobj (char *name)
 {
     struct FsObject *fsobj = NULL;
@@ -67,6 +72,7 @@ static struct FsDevice *alloc_fsdev (char *path)
 
     return fsdev;
 }
+
 /* 释放文件系统设备结构体所占用的内存空间 */
 static void free_fsdev (struct FsDevice *fsdev)
 {
@@ -157,8 +163,12 @@ static int remove_fsdev (struct FsDevice *fsdev)
     return 0;
 }
 
+
+/********************************************************
+ *      文件系统对象与文件系统设备模块对外的接口
+ *******************************************************/
 /* 将文件系统注册到内核中 ( 由实体文件系统初始化时调用 ) */
-int fsdev_register (char *name, struct FileOperation *fops,
+int fsobj_register (char *name, struct FileOperation *fops,
         struct FileSystemOps *fsops, uint multi)
 {
     struct FsObject *fsobj;

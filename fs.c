@@ -6,22 +6,24 @@
 #include "kerror.h"
 #include "fcntl.h"
 #include "dirent.h"
-
+#include "dfs_fs.h"
 
 
 /* 初始化虚拟文件系统 */
 void init_vfs (void)
 {
-    /* 初始化实体 ramfs 文件系统 */
-    void dfs_ramfs_init (void);
-    dfs_ramfs_init();
-
-    /* 虚拟磁盘初始化 */
-    extern void virtio_disk_init (void);
-    virtio_disk_init();
-
     /* 初始化虚拟文件系统的目录项模块 */
     init_ditem();
+
+
+    /* 初始化实体文件系统: ramfs */
+    void init_ramfs (void);
+    init_ramfs();
+
+    /* 初始化实体文件系统: dfs */
+    void init_dfs (void);
+    init_dfs();
+
 
     /* 设置根文件系统 */
     vfs_mount("ramfs", "/", O_RDWR | O_CREAT | O_DIRECTORY, NULL);

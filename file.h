@@ -225,7 +225,7 @@ char *ditem_path (struct DirItem *ditem);
 struct DirItem *ditem_create (struct FsDevice *fsdev, const char *path);
 
 /**********************************/
-int  fsdev_register (char *name, struct FileOperation *fops,struct FileSystemOps *fsops, uint multi);
+int  fsobj_register (char *name, struct FileOperation *fops,struct FileSystemOps *fsops, uint multi);
 int  fsdev_mount    (char *fsname, char *path,uint flag, void *data);
 int  fsdev_unmount  (char *path);
 struct FsDevice *fsdev_get (const char *path);

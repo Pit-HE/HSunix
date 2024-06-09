@@ -39,6 +39,6 @@ struct ramfs_sb
 
 
 /* 文件系统唯一对外的初始化接口 */
-void dfs_ramfs_init (void);
+void init_ramfs (void);
 
 #endif

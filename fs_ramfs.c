@@ -30,8 +30,7 @@ struct ramfs_node *_alloc_ramfs_node (void)
 }
 
 /* 释放已申请的 ramfs_node 对象 */
-void _free_ramfs_node (struct ramfs_sb *sb, 
-        struct ramfs_node *node)
+void _free_ramfs_node (struct ramfs_sb *sb, struct ramfs_node *node)
 {
     if ((sb == NULL) || (node == NULL))
         return;
@@ -57,8 +56,7 @@ void _free_ramfs_node (struct ramfs_sb *sb,
 }
 
 /* 释放目录节点下的所有子节点 (需要使用递归) */
-int _free_sublist (struct ramfs_sb *sb, 
-        struct ramfs_node *node)
+int _free_sublist (struct ramfs_sb *sb, struct ramfs_node *node)
 {
     ListEntry_t *list = NULL, *tmp = NULL;
     struct ramfs_node *sub_node = NULL;
@@ -109,8 +107,7 @@ static int ramfs_path_getlast (const char *path,
 }
 
 /* 获取文件路径所对应的节点 ( 传入的必须是绝对路径 ) */
-struct ramfs_node *_path_getnode (struct ramfs_sb *sb, 
-        const char *path)
+struct ramfs_node *_path_getnode (struct ramfs_sb *sb, const char *path)
 {
     ListEntry_t *list = NULL;
     struct ramfs_node *cur_node = NULL;
@@ -220,8 +217,7 @@ int ramfs_ioctl (struct File *file, int cmd, void *args)
     return 0;
 }
 /* 将缓冲区数据从指定文件中读取 */
-int ramfs_read (struct File *file, void *buf, 
-        uint count)
+int ramfs_read (struct File *file, void *buf, uint count)
 {
     uint rLen;
     struct ramfs_node *node = NULL;
@@ -246,8 +242,7 @@ int ramfs_read (struct File *file, void *buf,
     return rLen;
 }
 /* 将缓冲区数据写入指定文件中 */
-int ramfs_write (struct File *file, void *buf, 
-        uint count)
+int ramfs_write (struct File *file, void *buf, uint count)
 {
     char *memAddr = NULL;
     struct ramfs_sb *sb = NULL;
@@ -292,8 +287,7 @@ int ramfs_flush (struct File *file)
     return 0;
 }
 /* 修改文件节点内的偏移值 */
-int ramfs_lseek (struct File *file, 
-        uint offs, uint type)
+int ramfs_lseek (struct File *file, uint offs, uint type)
 {
     int ret = -1;
     struct ramfs_node *node = NULL;
@@ -328,8 +322,7 @@ int ramfs_lseek (struct File *file,
     return ret;
 }
 /* 获取目录节点下指定数量的子节点信息 */
-int ramfs_getdents (struct File *file, 
-        struct dirent *dirp, uint count)
+int ramfs_getdents (struct File *file, struct dirent *dirp, uint count)
 {
     ListEntry_t *list = NULL;
     uint num = 0, end = 0;
@@ -440,8 +433,7 @@ int ramfs_unmount (struct FsDevice *fsdev)
     return 0;
 }
 /* 获取文件系统的信息 */
-int ramfs_statfs (struct FsDevice *fsdev, 
-        struct statfs *buf)
+int ramfs_statfs (struct FsDevice *fsdev, struct statfs *buf)
 {
     struct ramfs_sb *sb = NULL;
 
@@ -511,8 +503,7 @@ int ramfs_stat (struct File *file, struct stat *buf)
     return 0;
 }
 /* 修改指定文件对象的名字 */
-int ramfs_rename (struct DirItem *old_ditem, 
-        struct DirItem *new_ditem)
+int ramfs_rename (struct DirItem *old_ditem, struct DirItem *new_ditem)
 {
     struct ramfs_node *node;
     char parent_path[RAMFS_PATH_MAT];
@@ -573,8 +564,7 @@ int ramfs_lookup (struct FsDevice *fsdev,
     return 0;
 }
 /* 创建文件路径下与 inode 对应的 ramfs_node */
-int ramfs_create (struct FsDevice *fsdev, 
-        struct Inode *inode, char *path)
+int ramfs_create (struct FsDevice *fsdev, struct Inode *inode, char *path)
 {
     struct ramfs_sb *sb = NULL;
     struct ramfs_node *node = NULL;
@@ -636,8 +626,7 @@ int ramfs_create (struct FsDevice *fsdev,
     return 0;
 }
 /* 释放与 inode 对应 ramfs_node 的链接 */
-int ramfs_free (struct FsDevice *fsdev, 
-        struct Inode *inode)
+int ramfs_free (struct FsDevice *fsdev, struct Inode *inode)
 {
     struct ramfs_sb *sb = NULL;
 
@@ -690,15 +679,15 @@ struct FileSystemOps ramfs_fsops =
  *      ramfs 文件系统对外的接口
  ***************************************************/
 /* 初始化当前文件系统, 并注册到系统内核 */
-void dfs_ramfs_init (void)
+void init_ramfs (void)
 {
-    fsdev_register("ramfs", &ramfs_fops, 
+    fsobj_register("ramfs", &ramfs_fops, 
         &ramfs_fsops, TRUE);
 
     /* 注册两个实体文件系统，
      * 方便测试虚拟文件系统的多级挂载功能
      */
-    fsdev_register("tmpfs", &ramfs_fops, 
+    fsobj_register("tmpfs", &ramfs_fops, 
         &ramfs_fsops, TRUE);
 }
 
