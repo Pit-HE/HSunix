@@ -54,7 +54,7 @@
 // must be a power of two.
 #define NUM 8
 
-
+// block size
 #define BSIZE 1024
 
 // a single descriptor, from the spec.

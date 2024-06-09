@@ -1,4 +1,6 @@
-
+/*
+ * 记录所有的系统调用编号
+ */
 #ifndef __SYSTEM_CALL_H__
 #define __SYSTEM_CALL_H__
 

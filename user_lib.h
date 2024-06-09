@@ -1,4 +1,6 @@
-
+/*
+ * 记录用户空间可以直接调用的内核接口
+ */
 #ifndef __USER_LIB_H__
 #define __USER_LIB_H__
 

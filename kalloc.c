@@ -1,4 +1,8 @@
-
+/*
+ * 内存动态管理模块，
+ * 1、可以动态分配 4k 的页内存.
+ * 2、可以动态分配指定大小的内存块.
+ */
 #include "param.h"
 #include "types.h"
 #include "memlayout.h"

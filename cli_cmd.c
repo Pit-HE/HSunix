@@ -7,14 +7,12 @@
 #include "dirent.h"
 #include "fcntl.h"
 
-int cmd_help (int argc, char *argv[]);
-
 
 
 /* 创建文件夹 */ 
 int cmd_mkdir (int argc, char *argv[])
 {
-    if (argc != 2)
+    if ((argc != 2) || (argv[1] == NULL))
         return -1;
 
     return mkdir(argv[1], S_IRWXU);
@@ -23,7 +21,7 @@ int cmd_mkdir (int argc, char *argv[])
 /* 修改进程的工作路径 */
 int cmd_cd (int argc, char *argv[])
 {
-    if (argc != 2)
+    if ((argc != 2) || (argv[1] == NULL))
         return -1;
 
     return chdir(argv[1]);
@@ -45,12 +43,15 @@ int cmd_ls (int argc, char *argv[])
             dir = opendir(pcb->cwd);
             break;
         case 2: /* 列举指定路径 */
+            if (argv[1] == NULL)
+                return -1;
             dir = opendir(argv[1]);
             break;
-        default:/* 暂不认可的参数 */
+        default:/* 暂不认可其他参数 */
             break;
     }
 
+    /* 将目录项偏移指针移动到开头 */
     seekdir(dir, 0);
     do
     {
@@ -83,7 +84,7 @@ int cmd_ls (int argc, char *argv[])
 /* 创建文件 */
 int cmd_mkfile (int argc, char *argv[])
 {
-    if (argc != 2)
+    if ((argc != 2) || (argv[1] == NULL))
         return -1;
 
     return mkfile(argv[1], O_CREAT|O_RDWR, S_IRWXU);
@@ -106,23 +107,28 @@ int cmd_echo (int argc, char *argv[])
     int rlen;
     char tmpbuf[33];
 
-    if (argc != 2)
+    if ((argc != 2) || (argv[1] == NULL))
         return -1;
     
+    /* 获取文件路径指定的文件对象 */
     fd = vfs_open(argv[1], O_RDWR, S_IRWXU);
     if (fd < 0)
         return -1;
 
     do
     {
-        kmemset(tmpbuf, 0, 33);
+        /* 读取文件对象的信息 */
         rlen = vfs_read(fd, tmpbuf, 32);
+        tmpbuf[rlen] = '\0';
 
+        /* 打印读取到的信息 */
         if (rlen)
             kprintf("%s", tmpbuf);
         if (rlen < 32)
             kprintf("\r\n");
     }while(rlen == 32);
+
+    /* 关闭已经打开的文件 */
     vfs_close(fd);
 
     return 0;
@@ -135,18 +141,26 @@ int cmd_cat (int argc, char *argv[])
 
     if (argc != 3)
         return -1;
+    if ((argv[1] == NULL) || (argv[2] == NULL))
+        return -1;
     
+    /* 打开指定路径下的文件对象 */
     fd = vfs_open(argv[1], O_RDWR | O_CREAT, S_IRWXU);
     if (fd < 0)
         return -1;
 
+    /* 获取要写入的字符串长度 */
     wlen = kstrlen(argv[2]);
 
+    /* 将偏移指针移动到文件末尾 */
     vfs_lseek(fd, 0, SEEK_END);
+
+    /* 将数据写入文件 */
     val = vfs_write(fd, argv[2], wlen);
     if (val != wlen)
         return -1;
 
+    /* 关闭已打开的文件 */
     vfs_close(fd);
 
     return 0;
@@ -155,7 +169,7 @@ int cmd_cat (int argc, char *argv[])
 /* 删除指定的文件或目录 */
 int cmd_rm (int argc, char *argv[])
 {
-    if (argc != 2)
+    if ((argc != 2) || (argv[1] == NULL))
         return -1;
 
     return vfs_unlink(argv[1]);
@@ -164,7 +178,7 @@ int cmd_rm (int argc, char *argv[])
 /* 删除指定的目录 */
 int cmd_rmdir (int argc, char *argv[])
 {
-    if (argc != 2)
+    if ((argc != 2) || (argv[1] == NULL))
         return -1;
     
     return rmdir(argv[1]);
@@ -175,7 +189,7 @@ int cmd_fsync (int argc, char *argv[])
 {
     int fd, ret;
 
-    if (argc != 2)
+    if ((argc != 2) || (argv[1] == NULL))
         return -1;
     
     fd = vfs_open(argv[1], O_RDWR, S_IRWXU);
@@ -194,13 +208,14 @@ int cmd_fstatfs (int argc, char *argv[])
     int fd, ret = -1;
     struct statfs fsbuf;
 
-    if (argc != 2)
+    if ((argc != 2) || (argv[1] == NULL))
         return -1;
     
     fd = vfs_open(argv[1], O_RDWR, S_IRWXU);
     if (fd < 0)
         return -1;
 
+    /* 获取当前文件所属文件系统的信息 */
     ret = vfs_fstatfs(fd, &fsbuf);
     vfs_close(fd);
 
@@ -219,7 +234,7 @@ int cmd_stat (int argc, char *argv[])
     int fd, ret = -1;
     struct stat buf;
 
-    if (argc != 2)
+    if ((argc != 2) || (argv[1] == NULL))
         return -1;
     
     fd = vfs_open(argv[1],  O_RDONLY, S_IRWXU);
@@ -252,7 +267,7 @@ int cmd_mount (int argc, char *argv[])
 {
     int ret;
 
-    if (argc != 2)
+    if ((argc != 2) || (argv[1] == NULL))
         return -1;
 
     ret = vfs_mount("tmpfs", argv[1], 
@@ -263,7 +278,7 @@ int cmd_mount (int argc, char *argv[])
 /* 卸载已经挂载的文件系统 */
 int cmd_unmount (int argc, char *argv[])
 {
-    if (argc != 2)
+    if ((argc != 2) || (argv[1] == NULL))
         return -1;
 
     return vfs_unmount(argv[1]);
@@ -281,9 +296,12 @@ int cmd_clear(int argc, char *argv[])
 }
 
 
+
 /***********************************************************
- * 
+ *      记录所有交互命令的数组，以及解析该数组的命令行接口
 ***********************************************************/
+int cmd_help (int argc, char *argv[]);
+
 struct cli_cmd func_list[] = 
 {
     {/* help */
@@ -294,31 +312,31 @@ struct cli_cmd func_list[] =
     {/* mkdir */
         &cmd_mkdir,
         "mkdir",
-        "To create a new document clip\r\n  \
+        "To create a new document clip\r\n    \
             example: mkdir sys | mkdir /usr/sys"
     },
     {/* cd */
         &cmd_cd,
         "cd",
-        "Modify the process work path\r\n   \
+        "Modify the process work path\r\n    \
             example: cd / | cd /home | cd /home/.."
     },
     {/* ls */
         &cmd_ls,
         "ls",
-        "List all the objects under the folder\r\n  \
+        "List all the objects under the folder\r\n    \
             example: ls | ls /home | ls /home/book/.."
     },
     {/* mkfile */
         &cmd_mkfile,
         "mkfile",
-        "Create the specified file\r\n  \
+        "Create the specified file\r\n    \
             example: mkfile aa.a | mkfile /usr/aa.a"
     },
     {/* pwd */
         &cmd_pwd,
         "pwd",
-        "Show current process work path\r\n \
+        "Show current process work path\r\n    \
             example: pwd"
     },
     {/* echo */
@@ -330,7 +348,7 @@ struct cli_cmd func_list[] =
     {/* cat */
         &cmd_cat,
         "cat",
-        "Writes data to the specified file\r\n  \
+        "Writes data to the specified file\r\n    \
             example: cat a.a 1234567 | cat /bin/a.a 1234567"
     },
     {/* rm */
@@ -348,7 +366,7 @@ struct cli_cmd func_list[] =
     {/* fsync */
         &cmd_fsync,
         "fsync",
-        "Refresh the cache to disk for the specified file\r\r    \
+        "Refresh the cache to disk for the specified file\r\n    \
             example: fsync a.a | fsync /bin/a.a"
     },
     {/* fstatfs */
@@ -418,11 +436,11 @@ cmd_function cli_cmd_get (char *name)
     {
         cmd_len = kstrlen(func_list[i].name);
 
-        /*  */
+        /* 确认当前函数是否为所寻对象 */
         if (0 != kstrncmp(func_list[i].name, name, cmd_len))
             continue;
 
-        /*  */
+        /* 确认命令名长度是否一致 */
         if (cmd_len != name_len)
             continue;
 

@@ -22,7 +22,7 @@
 
 
 /********************* dfs_virtio *********************/
-void virtio_disk_io(uint blockno, uchar *data, io_type write);
+void virtio_disk_io(uint blknum, uchar data[1024], io_type write);
 void virtio_disk_isr(void);
 void virtio_disk_init(void);
 

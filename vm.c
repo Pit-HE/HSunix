@@ -1,4 +1,6 @@
-
+/* 
+ * 虚拟内存管理模块 (Virtual memory)
+ */
 #include "param.h"
 #include "types.h"
 #include "memlayout.h"

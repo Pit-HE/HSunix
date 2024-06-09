@@ -1,3 +1,6 @@
+/*
+ * 链表操作库
+ */
 #ifndef __LIBS_LIST_H__
 #define __LIBS_LIST_H__
 
@@ -189,4 +192,3 @@ __list_del(ListEntry_t *prev, ListEntry_t *next) {
 #endif /* !__ASSEMBLER__ */
 
 #endif /* !__LIBS_LIST_H__ */
-

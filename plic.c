@@ -1,4 +1,6 @@
-
+/*
+ * risc-v 架构的 plic 功能管理模块
+ */
 #include "types.h"
 #include "param.h"
 #include "memlayout.h"

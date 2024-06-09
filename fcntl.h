@@ -1,4 +1,7 @@
-
+/* 
+ * 模拟 linux 的 fcntl.h 文件，
+ * 记录一些与虚拟文件系统相关的参数
+ */
 #ifndef __FCNTL_H__
 #define __FCNTL_H__
 
@@ -26,5 +29,7 @@
 #define STD_INPUT   0
 #define STD_OUTPUT  1
 #define STD_ERROR   2
+
+
 
 #endif

@@ -31,6 +31,8 @@ ProcCB *getProcCB (void)
 {
     return getCpuCB()->proc;
 }
+
+/* 唤醒指定的进程 */
 void wakeProcCB (ProcCB *pcb)
 {
     ProcCB *curPcb;
@@ -49,6 +51,8 @@ void wakeProcCB (ProcCB *pcb)
         }
     }
 }
+
+/* 释放进程的所有子进程到 init 进程 */
 void freeChildProcCB (ProcCB *pcb)
 {
     ProcCB *childPcb;
@@ -69,6 +73,8 @@ void freeChildProcCB (ProcCB *pcb)
         }
     }
 }
+
+/* 打印当前非空闲进程的信息 */
 void dumpProcCB (void)
 {
     static char *states[7] =
@@ -111,6 +117,8 @@ int allocPid (void)
 {
     return (kPidToken++);
 }
+
+/* 申请并初始化一个进程控制块的内存空间 */
 ProcCB *allocProcCB (void)
 {
     ProcCB *pcb;
@@ -161,6 +169,8 @@ ProcCB *allocProcCB (void)
 _exit_allocProcCB:
     return pcb;
 }
+
+/* 释放已经存在的进程控制块 */
 int freeProcCB (ProcCB *pcb)
 {
     if (pcb == NULL)
@@ -193,6 +203,8 @@ int freeProcCB (ProcCB *pcb)
 
     return 1;
 }
+
+/* 寻找指定 id 的进程控制块 */
 ProcCB *findProcCB (int pid)
 {
     ProcCB *pcb = NULL;
@@ -213,7 +225,7 @@ exit_findProcCB:
 #endif
 
 
-
+/* 初始化当前用于测试的指定进程 */
 void init_proc (void)
 {
     char *stack;
@@ -331,6 +343,7 @@ void defuncter (void)
     }
 }
 
+/* 执行进程切换的接口 */
 void do_switch (void)
 {
     int         state;
@@ -344,10 +357,13 @@ void do_switch (void)
     if (intr_get())
         kError(eSVC_Process, E_INTERRUPT);
 
+    /* 记录进程切换前的中断状态，并执行切换 */
     state = cpu->intrOldState;
     switch_to(&pcb->context, &cpu->context);
     cpu->intrOldState = state;
 }
+
+/* 外部接口，释放当前进程的 cpu 使用权 */
 void do_yield (void)
 {
     kDISABLE_INTERRUPT();
@@ -356,6 +372,8 @@ void do_yield (void)
 
     do_switch();
 }
+
+/* 将当前进程挂起到指定的对象 */
 void do_suspend (void *obj)
 {
     ProcCB *pcb = NULL;
@@ -373,6 +391,8 @@ void do_suspend (void *obj)
 
     pcb->pendObj = NULL;
 }
+
+/* 从指定对象恢复被挂起的进程 */
 void do_resume (void *obj)
 {
     ProcCB        *pcb = NULL;
@@ -391,6 +411,8 @@ void do_resume (void *obj)
         }
     }
 }
+
+/* 复制当前进程，生成新的进程 */
 int do_fork (void)
 {
     int pid = -1;
@@ -439,6 +461,8 @@ int do_fork (void)
 _exit_fork:
     return pid;
 }
+
+/* 等待处理退出的子进程 */
 int do_wait (int *code)
 {
     int pid = -1;
@@ -476,6 +500,8 @@ int do_wait (int *code)
 _exit_wait:
     return pid;
 }
+
+/* 退出当前进程 */
 void do_exit (int state)
 {
     ProcCB *curPcb;
@@ -494,6 +520,8 @@ void do_exit (int state)
     do_resume(curPcb->parent);
     do_switch();
 }
+
+/* 杀死指定 id 的进程 */
 int do_kill (int pid)
 {
     ProcCB *pcb;
@@ -512,6 +540,8 @@ int do_kill (int pid)
     }
     return -1;
 }
+
+/* 让进程休眠指定的时长后唤醒 */
 int do_sleep (int ms)
 {
     timer_t *timer = NULL;
@@ -529,6 +559,8 @@ int do_sleep (int ms)
 
     return 0;
 }
+
+/* 获取进程的死亡状态 */
 int KillState (ProcCB *pcb)
 {
     return pcb->killState;

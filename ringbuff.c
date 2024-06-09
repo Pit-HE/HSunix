@@ -47,11 +47,13 @@ int kRingbuf_put (ringbuf_t *rb, char *buf, int len)
 
     if (margin > len)
     {
+        /* 要读取的数据不涉及缓冲区的重新循环 */
         kmemcpy(&rb->buf[rb->wIndex], buf, len);
         rb->wIndex += len;
     }
     else
     {
+        /* 要读取的数据涉及缓冲区的重新循环 */
         kmemcpy(&rb->buf[rb->wIndex], buf, margin);
         kmemcpy(&rb->buf[0], &buf[margin], len - margin);
         rb->wIndex = len - margin;
@@ -71,17 +73,20 @@ int kRingbuf_get (ringbuf_t *rb, char *buf, int len)
     if ((len == 0) || (rb->idleSize == rb->baseSize))
         return 0;
 
+    /* 计数缓冲区的数据长度，确定用户可以读取的数据长度 */
     if (len > (rb->baseSize - rb->idleSize))
         len = rb->baseSize - rb->idleSize;
     margin = rb->baseSize - rb->rIndex;
 
     if (margin > len)
     {
+        /* 要读取的数据不涉及缓冲区的重新循环 */
         kmemcpy(buf, &rb->buf[rb->rIndex], len);
         rb->rIndex += len;
     }
     else
     {
+        /* 要读取的数据涉及缓冲区的重新循环 */
         kmemcpy(&buf[0], &rb->buf[rb->rIndex], margin);
         kmemcpy(&buf[margin], &rb->buf[0], len - margin);
         rb->rIndex = len - margin;
@@ -103,6 +108,7 @@ int kRingbuf_putChar (ringbuf_t *rb, char ch)
     rb->idleSize -= 1;
     rb->wIndex += 1;
 
+    /* 若是数组写到了头，则从数组头继续开始 */
     if (rb->baseSize == rb->wIndex)
         rb->wIndex = 0;
 
@@ -121,6 +127,7 @@ int kRingbuf_getChar (ringbuf_t *rb, char *ch)
     rb->idleSize += 1;
     rb->rIndex += 1;
 
+    /* 若是数组写到了头，则从数组头继续开始 */
     if (rb->baseSize == rb->rIndex)
         rb->rIndex = 0;
 
@@ -137,11 +144,13 @@ int kRingbuf_delChar (ringbuf_t *rb)
     if (rb->rIndex == rb->wIndex)
         return -1;
 
+    /* 回退写指针的位置 */
     if (rb->wIndex == 0)
         rb->wIndex = rb->baseSize;
     else
         rb->wIndex -= 1;
 
+    /* 修改循环队列的信息 */
     rb->idleSize += 1; 
     rb->buf[rb->wIndex] = 0;
 

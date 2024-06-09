@@ -6,11 +6,11 @@
 
 typedef struct kernel_ringbuff_info
 {
-    char *buf;
-    int baseSize;   // buf size
-    int idleSize;   // idle buf size
-    int rIndex;
-    int wIndex;
+    char *buf;      // 缓冲器地址
+    int baseSize;   // 缓冲区本身的大小
+    int idleSize;   // 当前缓冲区空闲的大小
+    int rIndex;     // 读位置索引
+    int wIndex;     // 写位置索引
 }ringbuf_t;
 
 

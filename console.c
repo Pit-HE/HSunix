@@ -1,4 +1,6 @@
-
+/*
+ * 控制台模块，提供控制台对字符读写的接口
+ */
 #include <stdarg.h>
 #include "types.h"
 #include "param.h"

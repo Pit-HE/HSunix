@@ -204,13 +204,13 @@ static int alloc3_desc(int *idx)
 
 /* 虚拟磁盘的读写接口 
  * 
- * blockno: 要读写的块编号
- * data:    存放数据的缓冲器地址
+ * blknum:  要读写的块编号
+ * data:    存放数据的缓冲区地址(缓冲区大小必须为1024)
  * write:   是读取还是写数据
  */
-void virtio_disk_io(uint blockno, uchar *data, io_type type)
+void virtio_disk_io(uint blknum, uchar data[1024], io_type type)
 {
-  uint64 sector = blockno * (BSIZE / 512);
+  uint64 sector = blknum * (BSIZE / 512);
 
   // allocate the three descriptors.
   int idx[3];

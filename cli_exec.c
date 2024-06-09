@@ -10,8 +10,8 @@
  */
 int cli_exec (char *cmd, int *retp)
 {
-    int   argc = 0;
     char *param = NULL;
+    int   argc = 0, ret = 0;
     char *argv[CLI_ARG_MAX];
     cmd_function func = NULL;
 
@@ -39,9 +39,13 @@ int cli_exec (char *cmd, int *retp)
     }
 
     /* 执行该命令所对应的函数 */
-    *retp = func(argc, argv);
-    if (*retp < 0)
+    ret = func(argc, argv);
+    if (ret < 0)
         kprintf ("Command execution failure\r\n");
+
+    /* 是否需要返回值 */
+    if (retp != NULL)
+        *retp = ret;
 
     return 0;
 }

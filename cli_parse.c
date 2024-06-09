@@ -79,6 +79,7 @@ int cli_parse_parameter (char *param, char *argv[CLI_ARG_MAX-1])
             ptr ++;
             index ++;
         }
+        /* 是否已经完成所有字符的解析 */
         if (index >= str_len)
             break;
 
@@ -86,9 +87,9 @@ int cli_parse_parameter (char *param, char *argv[CLI_ARG_MAX-1])
         if (argc >= CLI_ARG_MAX)
             break;
 
-        /* 处理字符串 */
         if (*ptr == '"')
         {
+            /* 处理字符串 */
             ptr++;
             index++;
             argv[argc] = ptr;
@@ -100,25 +101,30 @@ int cli_parse_parameter (char *param, char *argv[CLI_ARG_MAX-1])
                 ptr++;
                 index++;
             }
+            /* 是否已经完成所有字符的解析 */
             if (index >= str_len)
                 break;
+
             *ptr = '\0';
             ptr++;
             index++;
         }
-        /* 处理普通参数 */
         else
         {
+            /* 处理普通参数 */
             argv[argc] = ptr;
             argc += 1;
 
+            /* 查找参数结束的位置 */
             while ((*ptr != ' ') && (index < str_len))
             {
                 ptr ++;
                 index ++;
             }
+            /* 是否已经完成所有字符的解析 */
             if (index >= str_len)
                 break;
+
             *ptr = '\0';
             ptr++;
             index++;

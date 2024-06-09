@@ -27,6 +27,41 @@ void idle_main (void)
 }
 
 
+
+
+
+/* 在文件系统中创建默认的文件树结构 */
+void default_fsdir (void)
+{
+    mkdir("/fs", S_IRWXU);
+    
+    mkdir("/usr", S_IRWXU);
+    mkdir("/usr/tmp1", S_IRWXU);
+    mkdir("/usr/tmp2", S_IRWXU);
+
+    mkdir("/bin", S_IRWXU);
+    mkdir("/bin/bin", S_IRWXU);
+    mkdir("/bin/bin/stop", S_IRWXU);
+    mkfile("/bin/a.a", O_CREAT|O_RDWR, S_IRWXU);
+    mkfile("/bin/b.b", O_CREAT|O_RDWR, S_IRWXU);
+
+    mkdir("/home", S_IRWXU);
+    mkfile("/home/abc.o", O_CREAT|O_RDWR, S_IRWXU);
+    mkfile("/home/123.o", O_CREAT|O_RDWR, S_IRWXU);
+    mkdir("/home/study", S_IRWXU);
+    mkdir("/home/study/tmp1", S_IRWXU);
+    mkdir("/home/study/tmp2", S_IRWXU);
+    mkdir("/home/book", S_IRWXU);
+    mkdir("/home/book/usr", S_IRWXU);
+    mkdir("/home/book/sys", S_IRWXU);
+    mkfile("/home/book/a.a", O_CREAT|O_RDWR, S_IRWXU);
+    mkfile("/home/book/b.b", O_CREAT|O_RDWR, S_IRWXU);
+
+    mkfile("/a.a", O_CREAT|O_RDWR, S_IRWXU);
+    mkfile("/b.b", O_CREAT|O_RDWR, S_IRWXU);
+}
+
+
 void test_main (void)
 {
  #if 0
@@ -79,8 +114,7 @@ void test_main (void)
         kError(eSVC_Process, E_STATUS);
 
     /* 调用测试用例执行测试 */
-    extern void proc_selfInspection (void);
-    proc_selfInspection();
+    default_fsdir();
 
     while(1)
     {
