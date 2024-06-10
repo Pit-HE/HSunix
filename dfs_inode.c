@@ -8,7 +8,7 @@
 
 
 /* 返回 inode 中第 bn 个数据块的磁盘块号 */
-static uint bmap(struct dinode *dnode, uint bn)
+static uint bmap(struct disk_sb *sb, struct dinode *dnode, uint bn)
 {
 	uint addr, *tmp;
 	struct Iobuf *buf;
@@ -20,7 +20,7 @@ static uint bmap(struct dinode *dnode, uint bn)
 		if((addr = dnode->addrs[bn]) == 0)
 		{
 			/* 获取设备中的空闲磁盘块编号 */
-			addr = dbmap_alloc();
+			addr = dbmap_alloc(sb);
 			if(addr == 0)
 				return 0;
 
@@ -38,7 +38,7 @@ static uint bmap(struct dinode *dnode, uint bn)
 		if((addr = dnode->ex_addr) == 0)
 		{
 			/* 获取空闲磁盘块编号 */
-			addr = dbmap_alloc();
+			addr = dbmap_alloc(sb);
 			if(addr == 0)
 				return 0;
 
@@ -55,7 +55,7 @@ static uint bmap(struct dinode *dnode, uint bn)
 		if((addr = tmp[bn]) == 0)
 		{
 			/* 获取空闲磁盘块的编号 */
-			addr = dbmap_alloc();
+			addr = dbmap_alloc(sb);
 			if(addr)
 			{
 				/* 将索引项与磁盘块建立联系 */
@@ -110,8 +110,8 @@ static char *skipelem (char *path, char *name)
 /************************************************************
  *      对外的函数接口
  ***********************************************************/
-/* 读取磁盘 dnode 中的数据 */
-int dnode_read (struct dinode *dnode, char *dst, uint off, uint n)
+/* 读取磁盘节点 dnode 所占有的磁盘块中的数据 */
+int dnode_read (struct disk_sb *sb, struct dinode *dnode, char *dst, uint off, uint n)
 {
 	uint idx, m, addr;
 	struct Iobuf * buf;
@@ -127,7 +127,7 @@ int dnode_read (struct dinode *dnode, char *dst, uint off, uint n)
 	for(idx = 0; idx < n; idx += m, off += m, dst += m)
 	{
 		/* 获取要读的磁盘块编号 */
-		addr = bmap(dnode, off / BSIZE);
+		addr = bmap(sb, dnode, off / BSIZE);
 
 		/* 完成数据的读取 */
 		if(addr == 0)
@@ -149,8 +149,9 @@ int dnode_read (struct dinode *dnode, char *dst, uint off, uint n)
 	return idx;
 }
 
-/* 将数据写入磁盘 dnode */
-int dnode_write(struct dinode *dnode, char *src, uint off, uint n)
+/* 将数据写入磁盘节点 dnode 所占有的磁盘块中 */
+int dnode_write(struct disk_sb *sb, struct dinode *dnode, 
+        char *src, uint off, uint n)
 {
     uint tot, m;
 	struct Iobuf *buf;
@@ -166,7 +167,7 @@ int dnode_write(struct dinode *dnode, char *src, uint off, uint n)
 	for(tot = 0; tot < n; tot += m, off += m, src += m)
 	{
 		/* 获取要写的磁盘块编号 */
-		uint addr = bmap(dnode, off / BSIZE);
+		uint addr = bmap(sb, dnode, off / BSIZE);
 
 		/* 完成数据的写入 */
 		if(addr == 0)
@@ -188,16 +189,19 @@ int dnode_write(struct dinode *dnode, char *src, uint off, uint n)
         iob_free(buf);
 	}
 
+    /* 更新磁盘节点所记录的数据大小 */
 	if(off > dnode->size)
 		dnode->size = off;
 
-    dinode_put(dnode);
+    /* 将磁盘索引节点的信息写回磁盘中 */
+    dnode_flush(sb, dnode);
 
 	return tot;
 }
 
 /* 解析文件的绝对路径，返回对应的 dnode 对象 */
-struct dinode* dnode_find (struct dinode *root, char *path, char *name)
+struct dinode *dnode_find (struct disk_sb *sb, 
+        struct dinode *root, char *path, char *name)
 {
     struct dinode *temp = root;
 
@@ -213,7 +217,7 @@ struct dinode* dnode_find (struct dinode *root, char *path, char *name)
 			return temp;
 
 		/* 在目录项中查找指定名字的 inode */
-		if((temp = ddir_read(temp, name, 0)) == 0)
+		if((temp = ddir_read(sb, temp, name, 0)) == 0)
 			return NULL;
 	}
 
@@ -222,9 +226,9 @@ struct dinode* dnode_find (struct dinode *root, char *path, char *name)
 }
 
 /* 释放之前申请的 dnode 对象 */
-int dnode_release (struct dinode *dnode)
+int dnode_release (struct disk_sb *sb, struct dinode *dnode)
 {
-    dinode_put(dnode);
+    dnode_free(sb, dnode);
     return 0;
 }
 
@@ -236,7 +240,7 @@ struct dinode* dnode_getroot (struct disk_sb *sb)
     struct dinode *node = NULL;
     struct dinode *dnode = NULL;
 
-    dnode = dinode_alloc(0);
+    dnode = dnode_alloc(sb, 0);
     if (dnode == NULL)
 		return NULL;
 
@@ -257,7 +261,8 @@ struct dinode* dnode_getroot (struct disk_sb *sb)
 }
 
 /* 读取磁盘中 dir 的数据 */
-struct dinode *ddir_read(struct dinode *dnode, char *name, uint *poff)
+struct dinode *ddir_read(struct disk_sb *sb, struct dinode *dnode, 
+    char *name, uint *poff)
 {
     uint off;
 	struct disk_dirent dir;
@@ -270,7 +275,7 @@ struct dinode *ddir_read(struct dinode *dnode, char *name, uint *poff)
 	for(off = 0; off < dnode->size; off += sizeof(dir))
 	{
 		/* 读取 dinode 中目录条目的内容 */
-        if (dnode_read(dnode, (char*)&dir, off, sizeof(dir)) != sizeof(dir))
+        if (dnode_read(sb, dnode, (char*)&dir, off, sizeof(dir)) != sizeof(dir))
             kErrPrintf("dirlookup read");
 
 		/* 寻找非空闲的目录项 */
@@ -285,21 +290,21 @@ struct dinode *ddir_read(struct dinode *dnode, char *name, uint *poff)
                 *poff = off;
 
 			/* 获取目录项的 inode */
-			return dinode_alloc(dir.inum);
+			return dnode_alloc(sb, dir.inum);
 		}
 	}
 	return NULL;
 }
 
-/* 将数据写入磁盘 dir */
-int ddir_write(struct dinode *dnode, char *name, uint inum)
+/* 在目录节点中创建新的目录项 */
+int ddir_write(struct disk_sb *sb, struct dinode *dnode, char *name, uint inum)
 {
     int off;
 	struct disk_dirent dir;
 	struct dinode *ip;
 
 	/* 检查要创建的目录项是否已经存在 */
-	if((ip = ddir_read(dnode, name, 0)) != 0)
+	if((ip = ddir_read(sb, dnode, name, 0)) != 0)
 	{
 		return - 1;
 	}
@@ -308,7 +313,7 @@ int ddir_write(struct dinode *dnode, char *name, uint inum)
 	for(off = 0; off < dnode->size; off += sizeof(dir))
 	{
 		/* 读取具体的目录项内容 */
-        if (dnode_read(dnode, (char *)&dir, off, sizeof(dir)) != sizeof(dir))
+        if (dnode_read(sb, dnode, (char *)&dir, off, sizeof(dir)) != sizeof(dir))
             kErrPrintf("dirlink read");
 
 		/* 查找空闲的目录项 */
@@ -323,7 +328,7 @@ int ddir_write(struct dinode *dnode, char *name, uint inum)
 	dir.inum = inum;
 
 	/* 将修改的目录项信息，写回到目录 inode */
-    if (dnode_write(dnode, (char *)&dir, off, sizeof(dir)) != sizeof(dir))
+    if (dnode_write(sb, dnode, (char *)&dir, off, sizeof(dir)) != sizeof(dir))
     {
         return -1;
     }

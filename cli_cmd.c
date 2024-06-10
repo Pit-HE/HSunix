@@ -301,6 +301,7 @@ int cmd_diskfs_test (int argc, char *argv[])
     struct disk_sb *disksb = NULL;
     struct dinode *root = NULL;
     struct dinode *node = NULL;
+    char *buf = NULL;
 
     disksb = dsb_read();
     if (disksb == NULL)
@@ -310,10 +311,55 @@ int cmd_diskfs_test (int argc, char *argv[])
     if (root == NULL)
         return -1;
 
-    node = ddir_read(root, "cat", 0);
+    node = ddir_read(disksb, root, "README", 0);
     if (node == NULL)
         return -1;
 
+    /* 读取 xv6 中 README 文件的内容 */
+    buf = kalloc(1024);
+    if (0 >= dnode_read(disksb, node, buf, 0, 1020))
+        return -1;
+    kprintf("\r\n%s\r\n", buf);
+
+/**********************************************/
+    /* 创建新的磁盘文件对象 */
+    uint blknum;
+    struct dinode *mknode = NULL;
+
+    /* 获取空闲的磁盘节点 */
+    blknum = dnode_get(disksb, T_FILE);
+
+    /* 在内存中创建磁盘节点 */
+    mknode = dnode_alloc(disksb, blknum);
+
+    /* 将数据写入磁盘索引节点 */
+    dnode_write(disksb, mknode, buf, 0, 1020);
+
+    /* 在指定路径下创建指定名字的对象 */
+    ddir_write(disksb, root, "ookkoo", blknum);
+
+    dnode_free(disksb, mknode);
+    dnode_put(disksb, mknode);
+
+/**********************************************/
+    /* 读取刚创建的磁盘文件对象 */
+    char *arr = NULL;
+    struct dinode *tmp = NULL;
+
+    tmp = ddir_read(disksb, root, "ookkoo", 0);
+    if (tmp == NULL)
+        return -1;
+    /* 读取 xv6 中 README 文件的内容 */
+    arr = kalloc(1024);
+    if (0 >= dnode_read(disksb, tmp, arr, 0, 1000))
+        return -1;
+    kprintf("\r\n%s\r\n", arr);
+
+    return 0;
+}
+
+int cmd_diskfs_create (int argc, char *agrv[])
+{
     return 0;
 }
 
@@ -428,6 +474,11 @@ struct cli_cmd func_list[] =
         &cmd_diskfs_test,
         "diskfs",
         "test case disk file system\r\n"
+    },
+    {/* diskmk */
+        &cmd_diskfs_create,
+        "diskmk",
+        "Example Test the creation function of a disk file system\r\n"
     }
 };
 #define CMD_LIST_LEN sizeof(func_list)/sizeof(func_list[0])

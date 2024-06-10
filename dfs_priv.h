@@ -26,9 +26,9 @@ struct disk_sb;
 // Bitmap bits per block
 #define BPB (BSIZE * 8)
 // Block of free map containing bit for block b
-#define BBLOCK(b, sb) ((b)/BPB + sb.bmapstart)
+#define BBLOCK(b, sb) ((b)/BPB + sb->bmapstart)
 // Block containing inode i
-#define IBLOCK(i, sb) ((i) / (BSIZE / sizeof(struct dinode)) + sb.inodestart)
+#define IBLOCK(i, sb) ((i) / (BSIZE / sizeof(struct dinode)) + sb->inodestart)
 // root i-number
 #define ROOTINO     1
 
@@ -81,23 +81,24 @@ struct disk_dirent
 };
 
 /********************* dfs_inode ***********************/
-int dnode_read (struct dinode *dnode, char *dst, uint off, uint n);
-int dnode_write(struct dinode *dnode, char *src, uint off, uint n);
-struct dinode* dnode_find (struct dinode *dnode, char *path, char *name);
-int dnode_release (struct dinode *dnode);
+int dnode_read (struct disk_sb *sb, struct dinode *dnode, char *dst, uint off, uint n);
+int dnode_write(struct disk_sb *sb, struct dinode *dnode, char *src, uint off, uint n);
+struct dinode* dnode_find (struct disk_sb *sb, struct dinode *dnode, char *path, char *name);
+int dnode_release (struct disk_sb *sb, struct dinode *dnode);
 struct dinode* dnode_getroot (struct disk_sb *sb);
-struct dinode *ddir_read(struct dinode *dnode, char *name, uint *poff);
-int ddir_write(struct dinode *dnode, char *name, uint inum);
+struct dinode *ddir_read(struct disk_sb *sb, struct dinode *dnode, char *name, uint *poff);
+int ddir_write(struct disk_sb *sb, struct dinode *dnode, char *name, uint inum);
 
 /********************* dfs_block ***********************/
 struct disk_sb *dsb_read (void);
 void dsb_write (struct disk_sb *sb);
-struct dinode *dinode_get (uint type);
-void dinode_put (struct dinode *dnode);
-struct dinode *dinode_alloc (uint inum);
-void dinode_free (struct dinode *dnode);
-uint dbmap_alloc (void);
-void dbmap_free  (uint blknum);
+void dnode_flush (struct disk_sb *sb, struct dinode *dnode);
+int dnode_get (struct disk_sb *sb, uint type);
+void dnode_put (struct disk_sb *sb, struct dinode *dnode);
+struct dinode *dnode_alloc (struct disk_sb *sb, uint inum);
+void dnode_free (struct disk_sb *sb, struct dinode *dnode);
+uint dbmap_alloc (struct disk_sb *sb);
+void dbmap_free  (struct disk_sb *sb, uint blknum);
 void dblk_zero   (uint blknum);
 uint dblk_write  (uint blknum, char *data, uint len);
 uint dblk_read   (uint blknum, char *data, uint len);
