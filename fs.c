@@ -38,20 +38,20 @@ int vfs_open (char *path, uint flags, uint mode)
     fd = fd_alloc();
     if (fd < 0)
     {
-        kErr_printf("fail: vfs_open alloc fd !\r\n");
+        kErrPrintf("fail: vfs_open alloc fd !\r\n");
         return -1;
     }
 
     file = fd_get(fd);
     if (file == NULL)
     {
-        kErr_printf("fail: vfs_open get fd !\r\n");
+        kErrPrintf("fail: vfs_open get fd !\r\n");
         return -1;
     }
 
     if (0 > file_open(file, (char *)path, flags, mode))
     {
-        kErr_printf("fail: vfs_open open file !\r\n");
+        kErrPrintf("fail: vfs_open open file !\r\n");
         fd_free(fd);
         return -1;
     }
@@ -68,14 +68,14 @@ int vfs_close (int fd)
     file = fd_get(fd);
     if (file < 0)
     {
-        kErr_printf("fail: vfs_close get fd !\r\n");
+        kErrPrintf("fail: vfs_close get fd !\r\n");
         return -1;
     }
 
     ret = file_close(file);
     if (0 > ret)
     {
-        kErr_printf("fail: vfs_close close file !\r\n");
+        kErrPrintf("fail: vfs_close close file !\r\n");
         return -1;
     }
 
@@ -92,7 +92,7 @@ int vfs_write (int fd, void *buf, int len)
     file = fd_get(fd);
     if (file < 0)
     {
-        kErr_printf("fail: vfs_write get fd !\r\n");
+        kErrPrintf("fail: vfs_write get fd !\r\n");
         return -1;
     }
 
@@ -107,7 +107,7 @@ int vfs_read (int fd, void *buf, int len)
     file = fd_get(fd);
     if (file < 0)
     {
-        kErr_printf("fail: vfs_read get fd !\r\n");
+        kErrPrintf("fail: vfs_read get fd !\r\n");
         return -1;
     }
 
@@ -123,14 +123,14 @@ int vfs_creat (char *path, uint mode)
     fd = fd_alloc();
     if (fd < 0)
     {
-        kErr_printf("fail: vfs_open alloc fd !\r\n");
+        kErrPrintf("fail: vfs_open alloc fd !\r\n");
         return -1;
     }
 
     file = fd_get(fd);
     if (file == NULL)
     {
-        kErr_printf("fail: vfs_open get fd !\r\n");
+        kErrPrintf("fail: vfs_open get fd !\r\n");
         return -1;
     }
 
@@ -138,7 +138,7 @@ int vfs_creat (char *path, uint mode)
         O_WRONLY | O_CREAT | O_TRUNC, mode);
     if (ret < 0)
     {
-        kErr_printf("fail: vfs_open open file !\r\n");
+        kErrPrintf("fail: vfs_open open file !\r\n");
         fd_free(fd);
         return -1;
     }
@@ -151,7 +151,7 @@ int vfs_unlink (char *path)
 {
     if (path == NULL)
     {
-        kErr_printf("fail: vfs_unlink path !\r\n");
+        kErrPrintf("fail: vfs_unlink path !\r\n");
         return -1;
     }
 
@@ -167,7 +167,7 @@ int vfs_fsync (int fd)
     file = fd_get(fd);
     if (file == NULL)
     {
-        kErr_printf("fail: vfs_fsync get fd !\r\n");
+        kErrPrintf("fail: vfs_fsync get fd !\r\n");
         return -1;
     }
 
@@ -182,7 +182,7 @@ int vfs_fstatfs (int fd, struct statfs *buf)
     file = fd_get(fd);
     if (file == NULL)
     {
-        kErr_printf("fail: vfs_fstatfs get fd !\r\n");
+        kErrPrintf("fail: vfs_fstatfs get fd !\r\n");
         return -1;
     }
 
@@ -197,7 +197,7 @@ int vfs_stat (int fd, struct stat *buf)
     file = fd_get(fd);
     if (file == NULL)
     {
-        kErr_printf("fail: vfs_stat get fd !\r\n");
+        kErrPrintf("fail: vfs_stat get fd !\r\n");
         return -1;
     }
 
@@ -220,7 +220,7 @@ int vfs_lseek (int fd, uint off, int whence)
     file = fd_get(fd);
     if (file < 0)
     {
-        kErr_printf("fail: vfs_lseek get fd !\r\n");
+        kErrPrintf("fail: vfs_lseek get fd !\r\n");
         return -1;
     }
     return file_lseek(file, off, whence);

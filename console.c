@@ -45,7 +45,7 @@ int console_wCmd (char *src, int len)
     }
     return i;
 }
-void console_wChar (char src)
+void console_wChar (void *v, char src)
 {
     console_putc(src);
 }
@@ -76,6 +76,7 @@ int console_rChar (void)
 
     return ch;
 }
+
 
 /******************************************/
 /* 控制台为注册成内核文件设备而封装的接口 */
@@ -119,6 +120,8 @@ void init_console (void)
 
         dev_register(dev);
     }
+
+    init_printf(NULL, console_wChar);
 }
 
 

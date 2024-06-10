@@ -9,17 +9,21 @@
 
 void init_plic (void)
 {
-    /* Set uart interrupt priority */
-    *(uint32*)(PLIC + 4*UART0_IRQ) = 1;
+    /* 使能串口中断 */
+    *(uint32*)(PLIC + UART0_IRQ*4) = 1;
+    // 使能虚拟磁盘中断
+    *(uint32*)(PLIC + VIRTIO0_IRQ*4) = 1; 
 }
 
 void init_plichart (void)
 {
+    int id = getCpuID();
+
     /* Enable uart interrupt */
-    *(uint32*)(PLIC_SENABLE(getCpuID())) = (1 << UART0_IRQ);
+    *(uint32*)(PLIC_SENABLE(id)) = (1 << UART0_IRQ) | (1 << VIRTIO0_IRQ);
 
     /* Open core interrupt priority zero */
-    *(uint32*)(PLIC_SPRIORITY(getCpuID())) = 0;
+    *(uint32*)(PLIC_SPRIORITY(id)) = 0;
 }
 
 int plic_claim (void)

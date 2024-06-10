@@ -46,10 +46,32 @@ int dfs_getdents (struct File *file, struct dirent *dirp, uint count)
  ***************************************************/
 int dfs_mount (struct FsDevice *fsdev, uint flag, void *data)
 {
+    struct diskfs_sb *disksb = NULL;
+
+    if ((fsdev == NULL) || (data == NULL))
+        return -1;
+
+    disksb = dsb_read();
+    if (disksb == NULL)
+        return -1;
+
+    fsdev->data = disksb;
+
     return 0;
 }
 int dfs_unmount (struct FsDevice *fsdev)
 {
+    struct diskfs_sb *disksb = NULL;
+
+    if (fsdev == NULL)
+        return -1;
+    disksb = (struct diskfs_sb *)fsdev->data;
+    if (disksb == NULL)
+        return -1;
+    fsdev->data = NULL;
+
+    dsb_write(disksb);
+
     return 0;
 }
 int dfs_statfs (struct FsDevice *fsdev, struct statfs *buf)
@@ -71,6 +93,8 @@ int dfs_rename (struct DirItem *old_ditem, struct DirItem *new_ditem)
 int dfs_lookup (struct FsDevice *fsdev, 
         struct Inode *inode, const char *path)
 {
+
+
     return 0;
 }
 int dfs_create (struct FsDevice *fsdev, struct Inode *inode, char *path)
@@ -120,6 +144,9 @@ void init_dfs (void)
 {
     /* 虚拟磁盘初始化 */
     virtio_disk_init();
+
+    /* 初始化磁盘缓冲区模块 */
+    init_iobuf();
 
     /* 将 dfs 注册为内核文件系统对象 */
     fsobj_register("dfs", &dfs_fops, &dfs_fsops, TRUE);

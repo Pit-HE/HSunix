@@ -34,7 +34,7 @@ int dev_interrupt (void)
 
     /***** 外部中断 *****/
     if ((scause & 0x8000000000000000L) &&
-        (scause & 0xF) == 9)
+        (scause & 0xff) == 9)
     {
         irq = plic_claim();
         switch (irq)

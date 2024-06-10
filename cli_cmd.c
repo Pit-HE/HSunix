@@ -295,7 +295,18 @@ int cmd_clear(int argc, char *argv[])
     return 0;
 }
 
+#include "dfs_priv.h"
+int cmd_diskfs_test (int argc, char *argv[])
+{
+    struct diskfs_sb *disksb = NULL;
+    disksb = dsb_read();
+    if (disksb == NULL)
+        return -1;
+    
+    tfp_printf("Hello World!");
 
+    return 0;
+}
 
 /***********************************************************
  *      记录所有交互命令的数组，以及解析该数组的命令行接口
@@ -402,7 +413,12 @@ struct cli_cmd func_list[] =
     {/* clear */
         &cmd_clear,
         "clear",
-        "Clear screen and move cursor to top-left corner"
+        "Clear screen and move cursor to top-left corner\r\n"
+    },
+    {/* diskfs */
+        &cmd_diskfs_test,
+        "diskfs",
+        "test case disk file system\r\n"
     }
 };
 #define CMD_LIST_LEN sizeof(func_list)/sizeof(func_list[0])

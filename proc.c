@@ -6,14 +6,14 @@
 
 
 /**********************************************/
-static uint64           kPidToken = 1;
-static CpuCB          kCpusList[NCPU];
-static ListEntry_t     kUnregistList;
-static ListEntry_t     kRegistList;
-static ListEntry_t     kReadyList;
-static ListEntry_t     kPendList;
-static ProcCB        *kInitProcCB;
-static ProcCB        *kIdleProcCB;
+static uint64       kPidToken = 1;
+static CpuCB        kCpusList[NCPU];
+static ListEntry_t  kUnregistList;
+static ListEntry_t  kRegistList;
+static ListEntry_t  kReadyList;
+static ListEntry_t  kPendList;
+static ProcCB      *kInitProcCB;
+static ProcCB      *kIdleProcCB;
 
 /***********************************************
  *  Process file public library function
@@ -290,9 +290,9 @@ void init_proc (void)
 /* 就绪进程调度器 */
 void scheduler (void)
 {
-    CpuCB         *cpu;
-    ProcCB        *pcb;
-    ListEntry_t    *ptr;
+    CpuCB *cpu = NULL;
+    ProcCB *pcb = NULL;
+    ListEntry_t *ptr = NULL;
 
     intr_on();
     if (kReadyList.next == &kReadyList)

@@ -35,7 +35,7 @@ void cli_logo (void)
     kprintf("| |  | |  ____) | | |_| | | | | | | |  >  <  \r\n");
     kprintf("|_|  |_| |_____/   \\__ _| |_| |_| |_| /_/\\_\\ \r\n");
     kprintf("\r\n\r\n");
-    kprintf("\033[1;33m HSunix running in RISC64-V architecture.\033[0m \r\n");
+    kprintf("\033[1;33m HSunix running in riscv64 architecture.\033[0m \r\n");
     kprintf("\033[1;33m Usr 'help' to list all command.\033[0m \r\n");
 }
 

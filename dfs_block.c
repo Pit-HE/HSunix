@@ -6,14 +6,14 @@
 #include "defs.h"
 #include "dfs_priv.h"
 
-struct superblock dd_sb;
+struct diskfs_sb dd_sb;
 
 
 
 /**************** 对磁盘超级块的操作 *****************/
 #if 1
 /* 获取磁盘中记录的超级块信息 */
-struct superblock *dsb_read (void)
+struct diskfs_sb *dsb_read (void)
 {
     struct Iobuf *buf = NULL;
 
@@ -26,7 +26,7 @@ struct superblock *dsb_read (void)
 }
 
 /* 将内存中的超级块信息写入磁盘 */
-void dsb_write (void)
+void dsb_write (struct diskfs_sb *sb)
 {
 	struct Iobuf *buf = NULL;
 
@@ -34,7 +34,7 @@ void dsb_write (void)
     buf = iob_read(1);
 
 	/* 将超级块的信息写入磁盘对象中 */
-	kmemmove(buf->data, &dd_sb, sizeof(struct superblock));
+	kmemmove(buf->data, sb, sizeof(struct diskfs_sb));
 
 	iob_write(buf);
 	iob_release(buf);
@@ -44,7 +44,7 @@ void dsb_write (void)
 
 /************** 对磁盘索引节点块的操作 ***************/
 #if 1
-/* 从磁盘获取一个空闲的磁盘索引节点 */
+/* 获取一个空闲的磁盘索引节点 */
 struct dinode *dinode_alloc (uint type)
 {
 	int inum;

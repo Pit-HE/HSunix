@@ -46,7 +46,7 @@ static void uprintptr(uint64 x)
 }
 
 // Print to the console. only understands %d, %x, %p, %s.
-void printf (char *fmt, ...)
+void uprintf (char *fmt, ...)
 {
   va_list ap;
   int i, c;

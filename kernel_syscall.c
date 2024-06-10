@@ -36,7 +36,7 @@ static uint64 sys_getpid (int arg[])
 }
 static uint64 sys_putc (int arg[])
 {
-    console_wChar((char)arg[0]);
+    console_wChar(NULL, (char)arg[0]);
     return 0;
 }
 static uint64 sys_pgdir (int arg[])

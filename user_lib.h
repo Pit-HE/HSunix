@@ -25,7 +25,7 @@ void    seek    (void);
 void    fstat   (void);
 void    fsync   (void);
 void    dup     (void);
-void    printf (char *fmt, ...);
+void    uprintf (char *fmt, ...);
 
 
 

@@ -12,7 +12,7 @@
 
 struct Iobuf;
 struct dinode;
-struct superblock;
+struct diskfs_sb;
 
 
 #define DFS_MAGIC   0x10203040
@@ -36,7 +36,7 @@ struct Iobuf
 };
 
 /* 管理磁盘超级块格式的结构体 */
-struct superblock
+struct diskfs_sb
 {
   uint magic;      // Must be FSMAGIC
   uint size;       // Size of file system image (blocks)
@@ -63,8 +63,8 @@ struct dinode
 
 
 /********************* dfs_block ***********************/
-struct superblock *dsb_read (void);
-void dsb_write (void);
+struct diskfs_sb *dsb_read (void);
+void dsb_write (struct diskfs_sb *sb);
 struct dinode *dinode_alloc (uint type);
 void dinode_updata (struct dinode *dnode);
 uint dbmap_alloc (void);

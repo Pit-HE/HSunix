@@ -14,9 +14,9 @@ void user_processEntry (void)
         userCnt++;
 
         /* 通过系统接口打印用户空间的内容 */ 
-        printf ("userspace: pid = %d\r\n",getpid());
-        printf ("userspace: cnt = %d\r\n", userCnt);
-        printf ("userspace: time = %d\r\n", gettime());
+        uprintf ("userspace: pid = %d\r\n",getpid());
+        uprintf ("userspace: cnt = %d\r\n", userCnt);
+        uprintf ("userspace: time = %d\r\n", gettime());
 
         sleep(1000);
     }

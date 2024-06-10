@@ -13,6 +13,6 @@ typedef unsigned short uint16;
 typedef unsigned int   uint32;
 typedef unsigned long  uint64;
 
-typedef int bool;
-
-typedef uint64 pde_t;
+typedef unsigned char  bool;
+typedef unsigned long  pde_t;
+typedef unsigned long  size_t;

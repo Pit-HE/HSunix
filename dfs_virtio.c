@@ -7,6 +7,7 @@
 //
 // qemu ... -drive file=fs.img,if=none,format=raw,id=x0 -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 //
+
 #include "param.h"
 #include "defs.h"
 #include "memlayout.h"
@@ -40,13 +41,14 @@ static struct disk
   uint16 used_idx; // we've looked this far in used[2..NUM].
 
   char status[NUM];
-  int  iflag[NUM];
-  int  sleeplock;
 
   // disk command headers.
   // one-for-one with descriptors, for convenience.
   struct virtio_blk_req ops[NUM];
+
 } disk;
+int  sleeplock;
+
 
 /* 虚拟磁盘初始化 */
 void virtio_disk_init(void)
@@ -159,14 +161,17 @@ static int alloc_desc()
 static void free_desc(int i)
 {
   if (i >= NUM)
-    kError(eSVC_fs, E_PARAM);
+    kError(eSVC_fs, E_STATUS);
+    
   if (disk.free[i])
     kError(eSVC_fs, E_STATUS);
+
   disk.desc[i].addr = 0;
   disk.desc[i].len = 0;
   disk.desc[i].flags = 0;
   disk.desc[i].next = 0;
   disk.free[i] = 1;
+  
   do_resume(&disk.free[0]);
 }
 
@@ -202,18 +207,14 @@ static int alloc3_desc(int *idx)
   return 0;
 }
 
-/* 虚拟磁盘的读写接口 
- * 
- * blknum:  要读写的块编号
- * data:    存放数据的缓冲区地址(缓冲区大小必须为1024)
- * write:   是读取还是写数据
- */
+/* 虚拟磁盘的读写接口 */
 void virtio_disk_io(uint blknum, uchar *data, io_type type)
 {
+  int idx[3];
+  struct virtio_blk_req *buf0;
   uint64 sector = blknum * (BSIZE / 512);
 
   // allocate the three descriptors.
-  int idx[3];
   while (1)
   {
     if (alloc3_desc(idx) == 0)
@@ -225,7 +226,8 @@ void virtio_disk_io(uint blknum, uchar *data, io_type type)
 
   // format the three descriptors.
   // qemu's virtio-blk.c reads them.
-  struct virtio_blk_req *buf0 = &disk.ops[idx[0]];
+
+  buf0 = &disk.ops[idx[0]];
 
   if (type == io_write)
     buf0->type = VIRTIO_BLK_T_OUT; // write the disk
@@ -255,7 +257,7 @@ void virtio_disk_io(uint blknum, uchar *data, io_type type)
   disk.desc[idx[2]].next = 0;
 
   // record struct buf for virtio_disk_intr().
-  disk.iflag[idx[0]] = 1;
+  sleeplock = 1;
 
   // tell the device the first index in our chain of descriptors.
   disk.avail->ring[disk.avail->idx % NUM] = idx[0];
@@ -270,17 +272,16 @@ void virtio_disk_io(uint blknum, uchar *data, io_type type)
   *R(VIRTIO_MMIO_QUEUE_NOTIFY) = 0; // value is queue number
 
   // Wait for virtio_disk_intr() to say request has finished.
-  while (disk.iflag[idx[0]] == 1)
+  while (sleeplock == 1)
   {
-    do_suspend(&disk.sleeplock);
+    do_suspend(&sleeplock);
   }
 
-  disk.iflag[idx[0]] = 0;
   free_chain(idx[0]);
 }
 
 /* 虚拟磁盘的中断回调函数 */
-void virtio_disk_isr(void)
+void virtio_disk_isr()
 {
   // the device won't raise another interrupt until we tell it
   // we've seen this interrupt, which the following line does.
@@ -301,10 +302,10 @@ void virtio_disk_isr(void)
     int id = disk.used->ring[disk.used_idx % NUM].id;
 
     if (disk.status[id] != 0)
-        kError(eSVC_fs, E_STATUS);
+      kError(eSVC_fs, E_STATUS);
 
-    disk.iflag[id] = 0; // disk is done with buf
-    do_resume(&disk.sleeplock);
+    sleeplock = 0;
+    do_resume(&sleeplock);
 
     disk.used_idx += 1;
   }

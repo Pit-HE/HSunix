@@ -33,15 +33,15 @@ int cli_exec (char *cmd, int *retp)
     func = cli_cmd_get(cmd);
     if (func == NULL)
     {
-        kprintf("%s:command not found\r\n", cmd);
-        kprintf("   Enter 'help' to view the command list\r\n");
+        kErrPrintf("%s:command not found\r\n", cmd);
+        kErrPrintf("   Enter 'help' to view the command list\r\n");
         return -1;
     }
 
     /* 执行该命令所对应的函数 */
     ret = func(argc, argv);
     if (ret < 0)
-        kprintf ("Command execution failure\r\n");
+        kErrPrintf ("Command execution failure\r\n");
 
     /* 是否需要返回值 */
     if (retp != NULL)

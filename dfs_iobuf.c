@@ -19,6 +19,8 @@ void init_iobuf (void)
     int i;
     struct Iobuf *buf = NULL;
 
+    i = sizeof(struct Iobuf);
+
     /* 初始化两个结构体链表 */
     list_init(&gBufIdleList);
     list_init(&gBufDataList);
@@ -49,6 +51,7 @@ void iob_write (struct Iobuf *buf)
     virtio_disk_io(buf->blknum, buf->data, io_write);
 }
 
+uchar iob_tmp_sb_buff[2048];
 /* 获取指定磁盘块内缓存的数据 */
 struct Iobuf *iob_read (uint blknum)
 {
@@ -59,12 +62,12 @@ struct Iobuf *iob_read (uint blknum)
     list_for_each (list, &gBufDataList)
     {
         buf = list_container_of(list, struct Iobuf, list);
-        if (buf->blknum == blknum)
+        if ((buf == NULL) || (buf->blknum == blknum))
             break;
     }
 
     /* 若没有与磁盘块对应的缓冲对象，则创建它 */ 
-    if (buf->blknum != blknum)
+    if ((buf == NULL) || (buf->blknum != blknum))
     {
         /* 空闲缓冲器对象是否为空 */
         if (list_empty(&gBufIdleList))

@@ -11,7 +11,7 @@
 #include "kerror.h"
 #include "device.h"
 #include "ringbuff.h"
-
+#include "tinyprintf.h"
 
 /******************** uart ********************/
 void uart_init      (void);
@@ -26,7 +26,7 @@ void init_console       (void);
 void console_isr        (int c);
 int  console_wString    (char *src);
 int  console_wCmd       (char *src, int len);
-void console_wChar      (char  src);
+void console_wChar      (void *, char  src);
 int  console_rCmd       (char *src, int len);
 int  console_rChar      (void);
 
@@ -107,10 +107,6 @@ void plic_complete  (int irq);
 void do_syscall(void);
 
 
-/******************** kprintf ********************/
-void kprintf (char*, ...);
-
-
 /******************** switch ********************/
 void switch_to (Context *old, Context *new);
 
@@ -124,6 +120,7 @@ void kPortEnableInterrupt (void);
 
 /******************** error *********************/
 void kError (eService SVC, eCode code);
+void kErrPrintf (char *fmt, ...);
 
 
 /******************** ringbuff ******************/
@@ -137,6 +134,7 @@ int  kRingbuf_delChar   (ringbuf_t *rb);
 int  kRingbuf_putState  (ringbuf_t *rb);
 int  kRingbuf_getState  (ringbuf_t *rb);
 int  kRingbuf_getLength (ringbuf_t *rb);
+
 
 /******************** cli ***********************/
 void init_cli (void);

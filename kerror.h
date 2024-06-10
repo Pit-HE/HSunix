@@ -41,7 +41,5 @@ typedef enum kernel_error_code_list
 }eCode;
 
 
-#define  kErr_printf    kprintf
-
 
 #endif
