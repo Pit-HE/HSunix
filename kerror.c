@@ -16,4 +16,7 @@ void kErrPrintf (char *fmt, ...)
     va_start(va, fmt);
     tfp_format(NULL, console_wChar, fmt, va);
     va_end(va);
+
+    while(1)
+    {}
 }

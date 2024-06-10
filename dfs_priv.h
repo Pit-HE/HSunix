@@ -11,18 +11,24 @@
 // [ boot block | super block | log | inode blocks | free bit map | data blocks]
 
 struct Iobuf;
-struct dinode;
+struct disk_inode;
 struct diskfs_sb;
 
 
+#define T_DIR     1   // Directory
+#define T_FILE    2   // File
+#define T_DEVICE  3   // Device
+
 #define DFS_MAGIC   0x10203040
 #define NDIRECT     12
+#define NINDIRECT   (BSIZE / sizeof(uint))
+#define MAXFILE     (NDIRECT + NINDIRECT)
 // Bitmap bits per block
 #define BPB (BSIZE * 8)
 // Block of free map containing bit for block b
 #define BBLOCK(b, sb) ((b)/BPB + sb.bmapstart)
 // Block containing inode i
-#define IBLOCK(i, sb) ((i) / (BSIZE / sizeof(struct dinode)) + sb.inodestart)
+#define IBLOCK(i, sb) ((i) / (BSIZE / sizeof(struct disk_inode)) + sb.inodestart)
 
 
 /* 用于缓存磁盘信息的结构体 */
@@ -49,7 +55,7 @@ struct diskfs_sb
 };
 
 /* 描述磁盘上的 inode 节点属性 */
-struct dinode
+struct disk_inode
 {
   short type;           // File type
   short major;          // Major device number (T_DEVICE only)
@@ -60,13 +66,25 @@ struct dinode
   uint extend_addr;     // 当磁盘需要扩展时，记录新扩展磁盘块的编号
 };
 
+/* 描述磁盘上的目录信息
+ * ( 属于 dnode 中的一种数据类型 )
+ */
+struct disk_dirent
+{
+  /* 与目录项对应的 inode 节点编号,
+     为 0 时表示该目录条目空闲 */
+  ushort inum;
+
+  /* 目录条目的名字 */
+  char name[16];
+};
 
 
 /********************* dfs_block ***********************/
 struct diskfs_sb *dsb_read (void);
 void dsb_write (struct diskfs_sb *sb);
-struct dinode *dinode_alloc (uint type);
-void dinode_updata (struct dinode *dnode);
+struct disk_inode *dinode_alloc (uint type);
+void dinode_updata (struct disk_inode *dnode);
 uint dbmap_alloc (void);
 void dbmap_free  (uint blknum);
 void dblk_zero   (uint blknum);

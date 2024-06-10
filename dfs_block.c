@@ -45,27 +45,27 @@ void dsb_write (struct diskfs_sb *sb)
 /************** 对磁盘索引节点块的操作 ***************/
 #if 1
 /* 获取一个空闲的磁盘索引节点 */
-struct dinode *dinode_alloc (uint type)
+struct disk_inode *dinode_alloc (uint type)
 {
 	int inum;
 	struct Iobuf *buf = NULL;
-	struct dinode *dnode;
+	struct disk_inode *dnode;
 
-	/* 遍历超级块上的所有 dinode */
+	/* 遍历超级块上的所有 disk_inode */
 	for(inum = 1; inum < dd_sb.ninodes; inum++)
 	{
-		/* 遍历索引节点磁盘块上记录的所有 dinode 信息 */
+		/* 遍历索引节点磁盘块上记录的所有 disk_inode 信息 */
 		buf = iob_read(IBLOCK(inum, dd_sb));
-		dnode = (struct dinode *)buf->data + (inum % 
-			(BSIZE / sizeof(struct dinode)));
+		dnode = (struct disk_inode *)buf->data + (inum % 
+			(BSIZE / sizeof(struct disk_inode)));
 
 		/* 寻找未分配的磁盘 dnode */
 		if(dnode->type == 0)
 		{
-			/* 清空 dinode 的数据 */
+			/* 清空 disk_inode 的数据 */
 			kmemset(dnode, 0, sizeof(*dnode));
 
-			/* 设置当前磁盘 dinode 的类型 */
+			/* 设置当前磁盘 disk_inode 的类型 */
 			dnode->type = type;
 
 			/* mark it allocated on the disk */
@@ -74,7 +74,7 @@ struct dinode *dinode_alloc (uint type)
 			/* 释放占用的 buf */
 			iob_release(buf);
 
-			/* 获取与 dinode 对应的内存 inode */
+			/* 获取与 disk_inode 对应的内存 inode */
 			return dnode;
 		}
 		iob_release(buf);
@@ -84,18 +84,18 @@ struct dinode *dinode_alloc (uint type)
 }
 
 /* 将指定的磁盘节点写回到磁盘中 */
-void dinode_updata (struct dinode *dnode)
+void dinode_updata (struct disk_inode *dnode)
 {
 	struct Iobuf *buf = NULL;
-	struct dinode *bnode = NULL;
+	struct disk_inode *bnode = NULL;
 
-	/* 获取内存 inode 对应的磁盘 dinode 所在的磁盘块 */
+	/* 获取内存 inode 对应的磁盘 disk_inode 所在的磁盘块 */
 	buf = iob_read(IBLOCK(dnode->nlink, dd_sb));
-	bnode = (struct dinode *)buf->data + (dnode->nlink %
-		(BSIZE / sizeof(struct dinode)));
+	bnode = (struct disk_inode *)buf->data + (dnode->nlink %
+		(BSIZE / sizeof(struct disk_inode)));
 
-	/* 将内存 inode 信息写入磁盘 dinode */
-	kmemmove(bnode, dnode, sizeof(struct dinode));
+	/* 将内存 inode 信息写入磁盘 disk_inode */
+	kmemmove(bnode, dnode, sizeof(struct disk_inode));
 
 	/* 将磁盘块写回到日志系统 */
 	iob_write(buf);

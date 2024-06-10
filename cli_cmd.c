@@ -302,8 +302,6 @@ int cmd_diskfs_test (int argc, char *argv[])
     disksb = dsb_read();
     if (disksb == NULL)
         return -1;
-    
-    tfp_printf("Hello World!");
 
     return 0;
 }
