@@ -46,7 +46,7 @@ int dfs_getdents (struct File *file, struct dirent *dirp, uint count)
  ***************************************************/
 int dfs_mount (struct FsDevice *fsdev, uint flag, void *data)
 {
-    struct diskfs_sb *disksb = NULL;
+    struct disk_sb *disksb = NULL;
 
     if ((fsdev == NULL) || (data == NULL))
         return -1;
@@ -61,11 +61,11 @@ int dfs_mount (struct FsDevice *fsdev, uint flag, void *data)
 }
 int dfs_unmount (struct FsDevice *fsdev)
 {
-    struct diskfs_sb *disksb = NULL;
+    struct disk_sb *disksb = NULL;
 
     if (fsdev == NULL)
         return -1;
-    disksb = (struct diskfs_sb *)fsdev->data;
+    disksb = (struct disk_sb *)fsdev->data;
     if (disksb == NULL)
         return -1;
     fsdev->data = NULL;

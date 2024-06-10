@@ -42,7 +42,7 @@ void init_iobuf (void)
 }
 
 /* 将缓冲区数据写入磁盘 */
-void iob_write (struct Iobuf *buf)
+void iob_flush (struct Iobuf *buf)
 {
     if (buf == NULL)
         return;
@@ -51,9 +51,8 @@ void iob_write (struct Iobuf *buf)
     virtio_disk_io(buf->blknum, buf->data, io_write);
 }
 
-uchar iob_tmp_sb_buff[2048];
 /* 获取指定磁盘块内缓存的数据 */
-struct Iobuf *iob_read (uint blknum)
+struct Iobuf *iob_alloc (uint blknum)
 {
     ListEntry_t *list = NULL;
     struct Iobuf *buf = NULL;
@@ -63,7 +62,10 @@ struct Iobuf *iob_read (uint blknum)
     {
         buf = list_container_of(list, struct Iobuf, list);
         if ((buf == NULL) || (buf->blknum == blknum))
+        {
+            buf->ref += 1;
             break;
+        }
     }
 
     /* 若没有与磁盘块对应的缓冲对象，则创建它 */ 
@@ -74,12 +76,12 @@ struct Iobuf *iob_read (uint blknum)
             return NULL;
         
         /* 从空闲链表获取可用对象，并将其移除 */
-        list = gBufDataList.next;
+        list = gBufIdleList.next;
         list_del(list);
         
         /* 初始化该缓冲区对象 */
         buf = list_container_of(list, struct Iobuf, list);
-        buf->ref = 0;
+        buf->ref = 1;
         buf->blknum = blknum;
         buf->valid = FALSE;
 
@@ -98,7 +100,7 @@ struct Iobuf *iob_read (uint blknum)
 }
 
 /* 释放指定的磁盘块 */
-void iob_release (struct Iobuf *buf)
+void iob_free (struct Iobuf *buf)
 {
     if (buf == NULL)
         return;
@@ -112,6 +114,10 @@ void iob_release (struct Iobuf *buf)
 
     /* 当缓冲区对象引用计数为空时，释放该对象 */
     list_del(&buf->list);
+    buf->ref = 0;
+    buf->blknum = 0;
+    buf->valid = FALSE;
+    kmemset(buf->data, 0, BSIZE);
     list_add_after(&gBufIdleList, &buf->list);
 }
 

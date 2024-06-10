@@ -11,8 +11,8 @@
 // [ boot block | super block | log | inode blocks | free bit map | data blocks]
 
 struct Iobuf;
-struct disk_inode;
-struct diskfs_sb;
+struct dinode;
+struct disk_sb;
 
 
 #define T_DIR     1   // Directory
@@ -28,8 +28,9 @@ struct diskfs_sb;
 // Block of free map containing bit for block b
 #define BBLOCK(b, sb) ((b)/BPB + sb.bmapstart)
 // Block containing inode i
-#define IBLOCK(i, sb) ((i) / (BSIZE / sizeof(struct disk_inode)) + sb.inodestart)
-
+#define IBLOCK(i, sb) ((i) / (BSIZE / sizeof(struct dinode)) + sb.inodestart)
+// root i-number
+#define ROOTINO     1
 
 /* 用于缓存磁盘信息的结构体 */
 struct Iobuf
@@ -42,7 +43,7 @@ struct Iobuf
 };
 
 /* 管理磁盘超级块格式的结构体 */
-struct diskfs_sb
+struct disk_sb
 {
   uint magic;      // Must be FSMAGIC
   uint size;       // Size of file system image (blocks)
@@ -55,7 +56,7 @@ struct diskfs_sb
 };
 
 /* 描述磁盘上的 inode 节点属性 */
-struct disk_inode
+struct dinode
 {
   short type;           // File type
   short major;          // Major device number (T_DEVICE only)
@@ -63,7 +64,7 @@ struct disk_inode
   short nlink;          // Number of links to inode in file system
   uint size;            // Size of file (bytes)
   uint addrs[NDIRECT];  // Data block addresses
-  uint extend_addr;     // 当磁盘需要扩展时，记录新扩展磁盘块的编号
+  uint ex_addr;         // 当磁盘需要扩展时，记录新扩展磁盘块的编号
 };
 
 /* 描述磁盘上的目录信息
@@ -76,15 +77,25 @@ struct disk_dirent
   ushort inum;
 
   /* 目录条目的名字 */
-  char name[16];
+  char name[14];
 };
 
+/********************* dfs_inode ***********************/
+int dnode_read (struct dinode *dnode, char *dst, uint off, uint n);
+int dnode_write(struct dinode *dnode, char *src, uint off, uint n);
+struct dinode* dnode_find (struct dinode *dnode, char *path, char *name);
+int dnode_release (struct dinode *dnode);
+struct dinode* dnode_getroot (struct disk_sb *sb);
+struct dinode *ddir_read(struct dinode *dnode, char *name, uint *poff);
+int ddir_write(struct dinode *dnode, char *name, uint inum);
 
 /********************* dfs_block ***********************/
-struct diskfs_sb *dsb_read (void);
-void dsb_write (struct diskfs_sb *sb);
-struct disk_inode *dinode_alloc (uint type);
-void dinode_updata (struct disk_inode *dnode);
+struct disk_sb *dsb_read (void);
+void dsb_write (struct disk_sb *sb);
+struct dinode *dinode_get (uint type);
+void dinode_put (struct dinode *dnode);
+struct dinode *dinode_alloc (uint inum);
+void dinode_free (struct dinode *dnode);
 uint dbmap_alloc (void);
 void dbmap_free  (uint blknum);
 void dblk_zero   (uint blknum);
@@ -93,9 +104,9 @@ uint dblk_read   (uint blknum, char *data, uint len);
 
 /********************* dfs_iobuf **********************/
 void init_iobuf (void);
-void iob_write (struct Iobuf *buf);
-struct Iobuf *iob_read (uint blknum);
-void iob_release (struct Iobuf *buf);
+void iob_flush (struct Iobuf *buf);
+struct Iobuf *iob_alloc (uint blknum);
+void iob_free (struct Iobuf *buf);
 void iob_get (struct Iobuf *buf);
 void iob_put (struct Iobuf *buf);
 

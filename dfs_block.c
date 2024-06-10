@@ -6,38 +6,40 @@
 #include "defs.h"
 #include "dfs_priv.h"
 
-struct diskfs_sb dd_sb;
+struct disk_sb dd_sb;
 
 
 
 /**************** 对磁盘超级块的操作 *****************/
 #if 1
 /* 获取磁盘中记录的超级块信息 */
-struct diskfs_sb *dsb_read (void)
+struct disk_sb *dsb_read (void)
 {
     struct Iobuf *buf = NULL;
 
     /* 读取超级块所在的磁盘块 */
-    buf = iob_read(1);
+    buf = iob_alloc(1);
     /* 获取超级块的信息 */
     kmemmove(&dd_sb, buf->data, sizeof(dd_sb));
+
+	iob_free(buf);
 
     return &dd_sb;
 }
 
 /* 将内存中的超级块信息写入磁盘 */
-void dsb_write (struct diskfs_sb *sb)
+void dsb_write (struct disk_sb *sb)
 {
 	struct Iobuf *buf = NULL;
 
     /* 读取超级块所在的磁盘块 */
-    buf = iob_read(1);
+    buf = iob_alloc(1);
 
 	/* 将超级块的信息写入磁盘对象中 */
-	kmemmove(buf->data, sb, sizeof(struct diskfs_sb));
+	kmemmove(buf->data, sb, sizeof(struct disk_sb));
 
-	iob_write(buf);
-	iob_release(buf);
+	iob_flush(buf);
+	iob_free(buf);
 }
 
 #endif
@@ -45,70 +47,120 @@ void dsb_write (struct diskfs_sb *sb)
 /************** 对磁盘索引节点块的操作 ***************/
 #if 1
 /* 获取一个空闲的磁盘索引节点 */
-struct disk_inode *dinode_alloc (uint type)
+struct dinode *dinode_get (uint type)
 {
 	int inum;
 	struct Iobuf *buf = NULL;
-	struct disk_inode *dnode;
+	struct dinode *node = NULL;
+	struct dinode *dnode = NULL;
 
-	/* 遍历超级块上的所有 disk_inode */
+	dnode = (struct dinode *)kalloc(sizeof(struct dinode));
+	if (dnode == NULL)
+		return NULL;
+
+	/* 遍历超级块上的所有 dinode */
 	for(inum = 1; inum < dd_sb.ninodes; inum++)
 	{
-		/* 遍历索引节点磁盘块上记录的所有 disk_inode 信息 */
-		buf = iob_read(IBLOCK(inum, dd_sb));
-		dnode = (struct disk_inode *)buf->data + (inum % 
-			(BSIZE / sizeof(struct disk_inode)));
+		/* 遍历索引节点磁盘块上记录的所有 dinode 信息 */
+		buf = iob_alloc(IBLOCK(inum, dd_sb));
+		node = (struct dinode *)buf->data + (inum % 
+			(BSIZE / sizeof(struct dinode)));
 
 		/* 寻找未分配的磁盘 dnode */
-		if(dnode->type == 0)
+		if(node->type == 0)
 		{
-			/* 清空 disk_inode 的数据 */
-			kmemset(dnode, 0, sizeof(*dnode));
+			/* 清空 dinode 的数据 */
+			kmemset(node, 0, sizeof(struct dinode));
 
-			/* 设置当前磁盘 disk_inode 的类型 */
+			/* 设置当前磁盘 dinode 的类型 */
+			node->type = type;
+			node->nlink = inum;
+
 			dnode->type = type;
+			dnode->nlink = inum;
 
 			/* mark it allocated on the disk */
-			iob_write(buf);
+			iob_flush(buf);
+			iob_free(buf);
 
-			/* 释放占用的 buf */
-			iob_release(buf);
-
-			/* 获取与 disk_inode 对应的内存 inode */
+			/* 获取与 dinode 对应的内存 inode */
 			return dnode;
 		}
-		iob_release(buf);
+		iob_free(buf);
 	}
 	kprintf("ialloc: no inodes\n");
 	return NULL;
 }
 
 /* 将指定的磁盘节点写回到磁盘中 */
-void dinode_updata (struct disk_inode *dnode)
+void dinode_put (struct dinode *dnode)
 {
 	struct Iobuf *buf = NULL;
-	struct disk_inode *bnode = NULL;
+	struct dinode *node = NULL;
 
-	/* 获取内存 inode 对应的磁盘 disk_inode 所在的磁盘块 */
-	buf = iob_read(IBLOCK(dnode->nlink, dd_sb));
-	bnode = (struct disk_inode *)buf->data + (dnode->nlink %
-		(BSIZE / sizeof(struct disk_inode)));
+	/* 获取内存 inode 对应的磁盘 dinode 所在的磁盘块 */
+	buf = iob_alloc(IBLOCK(dnode->nlink, dd_sb));
+	node = (struct dinode *)buf->data + (dnode->nlink %
+		(BSIZE / sizeof(struct dinode)));
 
-	/* 将内存 inode 信息写入磁盘 disk_inode */
-	kmemmove(bnode, dnode, sizeof(struct disk_inode));
+	/* 将内存 inode 信息写入磁盘 dinode */
+	kmemmove(node, dnode, sizeof(struct dinode));
 
 	/* 将磁盘块写回到日志系统 */
-	iob_write(buf);
+	iob_flush(buf);
+	iob_free(buf);
 
-	/* 释放占用的 buf */
-	iob_release(buf);
+	kfree(dnode);
+}
+
+/* 获取存放 dinode 的内存空间，并读取对应的磁盘信息 */
+struct dinode *dinode_alloc (uint inum)
+{
+	struct Iobuf *buf = NULL;
+	struct dinode *node = NULL;
+	struct dinode *temp = NULL;
+
+	/* 获取存放磁盘节点的空间 */
+    node = (struct dinode *)kalloc(sizeof(struct dinode));
+	if (node == NULL)
+		return NULL;
+
+	/* 是否需要读取磁盘内记录的索引节点的信息 */
+	if (inum == 0)
+		return node;
+
+	/* 获取磁盘节点所在的磁盘块 */
+	buf = iob_alloc(IBLOCK(inum, dd_sb));
+	if (buf == NULL)
+		return NULL;
+	
+	/* 获取磁盘节点具体的位置 */
+	temp = (struct dinode *)buf->data + inum % (BSIZE / sizeof(struct dinode));
+
+	/* 将磁盘节点的信息拷贝到内存对象中 */
+	kmemcpy(node, temp, sizeof(struct dinode));
+	iob_free(buf);
+
+	return node;
+}
+
+/* 释放一块存放磁盘 dinode 信息的内存空间 */
+void dinode_free (struct dinode *dnode)
+{
+	if (dnode == NULL)
+		return;
+
+	/* 将磁盘节点的信息写回磁盘 */
+	dinode_put(dnode);
+	/* 释放磁盘节点占用的内存空间 */
+	kfree(dnode);
 }
 
 #endif
 
 /**************** 对磁盘位图块的操作 *****************/
 #if 1
-/* 申请空闲的磁盘块 */
+/* 获取当前空闲磁盘块的编号 */
 uint dbmap_alloc (void)
 {
     int blknum, bi, map;
@@ -118,7 +170,7 @@ uint dbmap_alloc (void)
 	for(blknum = 0; blknum < dd_sb.size; blknum += BPB)
 	{
 		/* 获取该块对象对应的位图所在的磁盘块 */
-		buf = iob_read(BBLOCK(blknum, dd_sb));
+		buf = iob_alloc(BBLOCK(blknum, dd_sb));
 
 		/* 遍历该位图磁盘块上的每一个块 */
 		for(bi = 0; bi < BPB && blknum + bi < dd_sb.size; bi++)
@@ -132,10 +184,10 @@ uint dbmap_alloc (void)
 				buf->data[bi / 8] |= map;
 
 				/* 将位图所在的磁盘块写回磁盘 */
-                iob_write(buf);
+                iob_flush(buf);
 
 				/* 释放占用的 buf */
-                iob_release(buf);
+                iob_free(buf);
 
 				/* 获取空闲的磁盘块，并将其清零 */
 				dblk_zero(blknum + bi);
@@ -145,20 +197,20 @@ uint dbmap_alloc (void)
 			}
 		}
 		/* 释放占用的 buf */
-		iob_release(buf);
+		iob_free(buf);
 	}
 	kprintf("balloc: out of blocks\n");
 	return 0;
 }
 
-/* 释放已经申请的磁盘块 */
+/* 释放已经获取的磁盘块 */
 void dbmap_free (uint blknum)
 {
     struct Iobuf * buf;
 	int bi, map;
 
 	/* 获取该块对象对应位图所在的磁盘块 */
-	buf = iob_read(BBLOCK(blknum, dd_sb));
+	buf = iob_alloc(BBLOCK(blknum, dd_sb));
 
 	/* 清除磁盘块在位图中的已分配记录 */
 	bi = blknum % BPB;
@@ -170,10 +222,8 @@ void dbmap_free (uint blknum)
 	buf->data[bi / 8] &= ~map;
 
 	/* 将位图所在的块写回磁盘 */
-    iob_write(buf);
-
-	/* 释放该 buf */
-    iob_release(buf);
+    iob_flush(buf);
+    iob_free(buf);
 }
 
 #endif
@@ -187,7 +237,7 @@ void dblk_zero (uint blknum)
     struct Iobuf *buf = NULL;
 
     /* 将该磁盘块内容清空 */
-    buf = iob_read(blknum);
+    buf = iob_alloc(blknum);
     if (buf != NULL)
         kmemset(buf->data, 0, BSIZE);
 }
@@ -197,15 +247,15 @@ uint dblk_write (uint blknum, char *data, uint len)
 {
 	struct Iobuf *buf = NULL;
 
-	buf = iob_read(blknum);
+	buf = iob_alloc(blknum);
 
 	if (len > BSIZE)
 		len = BSIZE;
 
 	kmemmove(&buf->data, data, len);
 
-	iob_write(buf);
-	iob_release(buf);
+	iob_flush(buf);
+	iob_free(buf);
 
 	return len;
 }
@@ -215,7 +265,7 @@ uint dblk_read (uint blknum, char *data, uint len)
 {
 	struct Iobuf *buf = NULL;
 
-	buf = iob_read(blknum);
+	buf = iob_alloc(blknum);
 
 	if (len > BSIZE)
 		len = BSIZE;

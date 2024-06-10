@@ -298,9 +298,20 @@ int cmd_clear(int argc, char *argv[])
 #include "dfs_priv.h"
 int cmd_diskfs_test (int argc, char *argv[])
 {
-    struct diskfs_sb *disksb = NULL;
+    struct disk_sb *disksb = NULL;
+    struct dinode *root = NULL;
+    struct dinode *node = NULL;
+
     disksb = dsb_read();
     if (disksb == NULL)
+        return -1;
+
+    root = dnode_getroot(disksb);
+    if (root == NULL)
+        return -1;
+
+    node = ddir_read(root, "cat", 0);
+    if (node == NULL)
         return -1;
 
     return 0;
