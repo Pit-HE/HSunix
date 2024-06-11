@@ -28,7 +28,9 @@
     "string_view": "c",
     "unordered_map": "c",
     "*.tcc": "c",
-    "stdarg.h": "c"
+    "stdarg.h": "c",
+    "initializer_list": "c",
+    "utility": "c"
   },
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",

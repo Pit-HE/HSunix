@@ -74,7 +74,7 @@ static uint bmap(struct disk_sb *sb, struct dinode *dnode, uint bn)
 }
 
 /* 获取文件路径中第一个节点的名字 */
-static char *skipelem (char *path, char *name)
+char *disk_path_getlast (char *path, char *name)
 {
     char *str;
 	int len;
@@ -207,7 +207,7 @@ struct dinode *dnode_find (struct disk_sb *sb,
     struct dinode *temp = root;
 
     /* 循环解析路径中的下一个元素 */
-	while((path = skipelem(path, name)) != 0)
+	while((path = disk_path_getlast(path, name)) != 0)
 	{
 		/* 解析到的 inode 必须是文件夹 */
 		if(temp->type != T_DIR)
@@ -256,7 +256,7 @@ struct dinode* dnode_getroot (struct disk_sb *sb)
     kmemcpy(dnode, node, sizeof(struct dinode));
 
     /* 释放该缓冲区 */
-    iob_free(buf);
+    // iob_free(buf);	/* 使用频率较高不做释放处理 */
 
     return dnode;
 }
@@ -335,5 +335,73 @@ int ddir_write(struct disk_sb *sb, struct dinode *dnode, char *name, uint inum)
     }
 
 	return 0;
+}
+
+struct disk_dirent *ddir_get (struct disk_sb *sb, struct dinode *dnode, char *name)
+{
+	uint off;
+	struct disk_dirent *dir;
+
+	/* 确认当前的 dinode 是文件目录 */
+	if(dnode->type != T_DIR)
+		kErrPrintf("dirlookup not DIR");
+	
+	dir = (struct disk_dirent *)kalloc(sizeof(struct disk_dirent));
+	if (dir == NULL)
+		return NULL;
+
+	/* 遍历 dinode 内的所有目录条目 */
+	for(off = 0; off < dnode->size; off += sizeof(dir))
+	{
+		/* 读取 dinode 中目录条目的内容 */
+        if (dnode_read(sb, dnode, (char*)dir, off, sizeof(dir)) != sizeof(dir))
+            kErrPrintf("dirlookup read");
+
+		/* 寻找非空闲的目录项 */
+		if(dir->inum == 0)
+			continue;
+
+		/* 比较是否为寻找的目录条目 */
+		if(kstrcmp(name, dir->name) == 0)
+		{
+			/* 获取目录项的 inode */
+			return dir;
+		}
+	}
+	return NULL;
+}
+
+void ddir_put (struct disk_sb *sb, struct dinode *dnode, struct disk_dirent *dir)
+{
+	uint off;
+	struct dinode *node;
+
+	if ((sb == NULL) || (dnode == NULL) || (dir == NULL))
+		return;
+
+	node = ddir_read(sb, dnode, dir->name, &off);
+	if (node == 0)
+		return;
+
+	dnode_write(sb, dnode, (char*)dir, off, sizeof(struct disk_dirent));
+
+	kfree(dir);
+}
+
+void ddir_rename (struct disk_sb *sb, struct dinode *dnode, struct disk_dirent *dir, char *name)
+{
+	uint off;
+	struct dinode *node;
+
+	if ((sb == NULL) || (dnode == NULL) || (dir == NULL))
+		return;
+
+	node = ddir_read(sb, dnode, dir->name, &off);
+	if (node == 0)
+		return;
+
+	kstrcpy(dir->name, name);
+	
+	dnode_write(sb, dnode, (char *)dir, off, sizeof(struct disk_dirent));
 }
 

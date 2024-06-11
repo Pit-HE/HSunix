@@ -267,10 +267,11 @@ int cmd_mount (int argc, char *argv[])
 {
     int ret;
 
-    if ((argc != 2) || (argv[1] == NULL))
+    if ((argc != 3) || 
+        (argv[1] == NULL) || (argv[2] == NULL))
         return -1;
 
-    ret = vfs_mount("tmpfs", argv[1], 
+    ret = vfs_mount(argv[1], argv[2], 
         O_RDWR | O_CREAT | O_DIRECTORY, NULL);
     return ret;
 }
@@ -338,9 +339,7 @@ int cmd_diskfs_test (int argc, char *argv[])
     /* 在指定路径下创建指定名字的对象 */
     ddir_write(disksb, root, "ookkoo", blknum);
 
-    /*  */
     dnode_put(disksb, mknode);
-    /*  */
     dnode_free(disksb, mknode);
 
 /**********************************************/
@@ -459,7 +458,7 @@ struct cli_cmd func_list[] =
         &cmd_mount,
         "mount",
         "Hang the message system to the specified path\r\n    \
-            example: mount /fs"
+            example: mount tmpfs /fs | mount diskfs /fs"
     },
     {/* unmount */
         &cmd_unmount,

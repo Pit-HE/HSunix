@@ -335,7 +335,8 @@ int ramfs_getdents (struct File *file, struct dirent *dirp, uint count)
         return -1;
 
     /* 获取 inode 对应的 ramfs 的 node 节点 */
-    if ((node = file->inode->data) == NULL)
+    node = file->inode->data;
+    if (node == NULL)
         return -1;
 
     /* 记录要读取的文件对象的数量 */
@@ -487,8 +488,7 @@ int ramfs_stat (struct File *file, struct stat *buf)
 {
     struct ramfs_node *node = NULL;
 
-    if ((file == NULL) || (buf == NULL) || 
-        (buf == NULL))
+    if ((file == NULL) || (buf == NULL))
         return -1;
 
     /* 获取文件路径所对应的节点 */

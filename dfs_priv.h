@@ -81,6 +81,7 @@ struct disk_dirent
 };
 
 /********************* dfs_inode ***********************/
+char *disk_path_getlast (char *path, char *name);
 int dnode_read (struct disk_sb *sb, struct dinode *dnode, char *dst, uint off, uint n);
 int dnode_write(struct disk_sb *sb, struct dinode *dnode, char *src, uint off, uint n);
 struct dinode* dnode_find (struct disk_sb *sb, struct dinode *dnode, char *path, char *name);
@@ -88,6 +89,9 @@ int dnode_release (struct disk_sb *sb, struct dinode *dnode);
 struct dinode* dnode_getroot (struct disk_sb *sb);
 struct dinode *ddir_read(struct disk_sb *sb, struct dinode *dnode, char *name, uint *poff);
 int ddir_write(struct disk_sb *sb, struct dinode *dnode, char *name, uint inum);
+struct disk_dirent *ddir_get (struct disk_sb *sb, struct dinode *dnode, char *name);
+void ddir_put (struct disk_sb *sb, struct dinode *dnode, struct disk_dirent *dir);
+void ddir_rename (struct disk_sb *sb, struct dinode *dnode, struct disk_dirent *dir, char *name);
 
 /********************* dfs_block ***********************/
 struct disk_sb *dsb_read (void);
