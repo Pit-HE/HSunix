@@ -6,6 +6,8 @@
 #include "defs.h"
 #include "dfs_priv.h"
 
+struct dinode *root_node = NULL;
+
 
 /* 返回 inode 中第 bn 个数据块的磁盘块号 */
 static uint bmap(struct disk_sb *sb, struct dinode *dnode, uint bn)
@@ -74,7 +76,7 @@ static uint bmap(struct disk_sb *sb, struct dinode *dnode, uint bn)
 }
 
 /* 获取文件路径中第一个节点的名字 */
-char *disk_path_getlast (char *path, char *name)
+char *disk_path_getfirst (char *path, char *name)
 {
     char *str;
 	int len;
@@ -106,6 +108,10 @@ char *disk_path_getlast (char *path, char *name)
 	return path;
 }
 
+char *disk_path_getlast (char *path, char *name)
+{
+	return path_getfirst(path, name);
+}
 
 /************************************************************
  *      对外的函数接口
@@ -217,7 +223,7 @@ struct dinode *dnode_find (struct disk_sb *sb,
 	}
 
     /* 循环解析路径中的下一个元素 */
-	while((path = disk_path_getlast(path, name)) != 0)
+	while((path = disk_path_getfirst(path, name)) != 0)
 	{
 		/* 解析到的 inode 必须是文件夹 */
 		if(temp->type != T_DIR)
@@ -249,26 +255,30 @@ struct dinode* dnode_getroot (struct disk_sb *sb)
     uint blknum;
     struct Iobuf *buf = NULL;
     struct dinode *node = NULL;
-    struct dinode *dnode = NULL;
 
-    dnode = dnode_alloc(sb, 0);
-    if (dnode == NULL)
+	/* 是否已经获取到磁盘文件系统的根目录 */
+	if (root_node != NULL)
+		return root_node;
+
+	/* 分配内存空间，获取磁盘内根节点的信息 */
+    root_node = dnode_alloc(sb, 0);
+    if (root_node == NULL)
 		return NULL;
 
     /* 获取根目录节点所在的磁盘块 */
     blknum = ROOTINO / (BSIZE / sizeof(struct dinode)) + sb->inodestart;
     buf = iob_alloc(blknum);
 
-    /* 获取根目录节点所在磁盘块的位置 */
+    /* 获取根节点所在磁盘块的位置 */
     node = (struct dinode *)buf->data + ROOTINO % (BSIZE / sizeof(struct dinode));
 
     /* 拷贝根目录节点的信息 */
-    kmemcpy(dnode, node, sizeof(struct dinode));
+    kmemcpy(root_node, node, sizeof(struct dinode));
 
     /* 释放该缓冲区 */
-    // iob_free(buf);	/* 使用频率较高不做释放处理 */
+    iob_free(buf);
 
-    return dnode;
+    return root_node;
 }
 
 /* 读取磁盘中 dir 的数据 */

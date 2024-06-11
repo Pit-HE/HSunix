@@ -81,6 +81,7 @@ struct disk_dirent
 };
 
 /********************* dfs_inode ***********************/
+char *disk_path_getfirst (char *path, char *name);
 char *disk_path_getlast (char *path, char *name);
 int dnode_read (struct disk_sb *sb, struct dinode *dnode, char *dst, uint off, uint n);
 int dnode_write(struct disk_sb *sb, struct dinode *dnode, char *src, uint off, uint n);

@@ -219,8 +219,9 @@ int ditem_destroy (struct DirItem *ditem)
 struct DirItem *ditem_get (struct FsDevice *fsdev, 
         const char *path)
 {
-    struct DirItem *ditem = NULL;
+    char *ap_path = NULL;
     struct Inode *inode = NULL;
+    struct DirItem *ditem = NULL;
 
     if ((fsdev == NULL) || (path == NULL))
         return NULL;
@@ -234,16 +235,18 @@ struct DirItem *ditem_get (struct FsDevice *fsdev,
         if (inode == NULL)
             return NULL;
 
+        ap_path = ditem_pathformat(fsdev, path);
+
         /* 获取与该目录项对应的实体文件系统成员 */
-        if (0 > fsdev->fs->fsops->lookup(fsdev, inode, path))
+        if (0 > fsdev->fs->fsops->lookup(fsdev, inode, ap_path))
         {
             inode_put(inode);
             return NULL;
         }
 
         /* 创建新的目录项记录已存在的文件成员 */
-        ditem = ditem_create(fsdev, path);
-        if (NULL == ditem)
+        ditem = ditem_create(fsdev, ap_path);
+        if (ditem == NULL)
         {
             inode_put(inode);
             return NULL;
