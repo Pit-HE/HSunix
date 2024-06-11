@@ -186,6 +186,7 @@ int dnode_write(struct disk_sb *sb, struct dinode *dnode,
         kmemmove(buf->data + (off % BSIZE), src, m);
 
 		/* 将 buf 写回磁盘块中 */
+		iob_flush(buf);
         iob_free(buf);
 	}
 

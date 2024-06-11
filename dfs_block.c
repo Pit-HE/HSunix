@@ -113,6 +113,9 @@ void dnode_put (struct disk_sb *sb, struct dinode *dnode)
 	struct Iobuf *buf = NULL;
 	struct dinode *node = NULL;
 
+	if ((sb == NULL) || (dnode == NULL))
+		return;
+
 	/* 获取内存 inode 对应的磁盘 dinode 所在的磁盘块 */
 	buf = iob_alloc(IBLOCK(dnode->nlink, sb));
 	node = (struct dinode *)buf->data + (dnode->nlink %
@@ -152,19 +155,19 @@ struct dinode *dnode_alloc (struct disk_sb *sb, uint inum)
 
 	/* 将磁盘节点的信息拷贝到内存对象中 */
 	kmemcpy(node, temp, sizeof(struct dinode));
+	node->nlink = inum;
+
 	iob_free(buf);
 
 	return node;
 }
 
-/* 释放一块存放磁盘 dinode 信息的内存空间 */
+/* 释放存放磁盘 dinode 信息的内存空间 */
 void dnode_free (struct disk_sb *sb, struct dinode *dnode)
 {
 	if (dnode == NULL)
 		return;
 
-	/* 将磁盘节点的信息写回磁盘 */
-	dnode_put(sb, dnode);
 	/* 释放磁盘节点占用的内存空间 */
 	kfree(dnode);
 }
@@ -193,20 +196,20 @@ uint dbmap_alloc (struct disk_sb *sb)
 			/* 获取一个空闲的磁盘块 */
 			if((buf->data[bi / 8] & map) == 0)
 			{
-				/* 置起该磁盘块的标准为已分配 */
-				buf->data[bi / 8] |= map;
+                /* 置起该磁盘块的标准为已分配 */
+                buf->data[bi / 8] |= map;
 
-				/* 将位图所在的磁盘块写回磁盘 */
+                /* 将位图所在的磁盘块写回磁盘 */
                 iob_flush(buf);
 
-				/* 释放占用的 buf */
+                /* 释放占用的 buf */
                 iob_free(buf);
 
-				/* 获取空闲的磁盘块，并将其清零 */
-				dblk_zero(blknum + bi);
+                /* 获取空闲的磁盘块，并将其清零 */
+                dblk_zero(blknum + bi);
 
-				/* 返回磁盘块的编号 */
-				return blknum + bi;
+                /* 返回磁盘块的编号 */
+                return blknum + bi;
 			}
 		}
 		/* 释放占用的 buf */
@@ -251,7 +254,11 @@ void dblk_zero (uint blknum)
     /* 将该磁盘块内容清空 */
     buf = iob_alloc(blknum);
     if (buf != NULL)
+	{
         kmemset(buf->data, 0, BSIZE);
+	}
+	iob_flush(buf);
+	iob_free(buf);
 }
 
 /* 将数据写入磁盘块中 */
@@ -283,6 +290,9 @@ uint dblk_read (uint blknum, char *data, uint len)
 		len = BSIZE;
 	
 	kmemmove(data, &buf->data, len);
+
+	iob_flush(buf);
+	iob_free(buf);
 
 	return len;
 }

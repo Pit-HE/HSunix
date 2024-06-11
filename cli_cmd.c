@@ -338,8 +338,10 @@ int cmd_diskfs_test (int argc, char *argv[])
     /* 在指定路径下创建指定名字的对象 */
     ddir_write(disksb, root, "ookkoo", blknum);
 
-    dnode_free(disksb, mknode);
+    /*  */
     dnode_put(disksb, mknode);
+    /*  */
+    dnode_free(disksb, mknode);
 
 /**********************************************/
     /* 读取刚创建的磁盘文件对象 */
