@@ -31,6 +31,7 @@ int cmd_cd (int argc, char *argv[])
 int cmd_ls (int argc, char *argv[])
 {
     DIR *dir = NULL;
+    uint count = 0;
     struct dirent *dirent = NULL;
     ProcCB *pcb = getProcCB();
 
@@ -58,25 +59,18 @@ int cmd_ls (int argc, char *argv[])
         dirent = readdir(dir);
         if (dirent != NULL)
         {
-            /* 显示类型 */
-            if (dirent->type == INODE_DIR)
-                kprintf ("d--   ");
-            else if (dirent->type == INODE_FILE)
-                kprintf ("f--   ");
-
-            /* 显示大小 */
-            if (dirent->datasize < 10)
-                kprintf (" %d    ", dirent->datasize);
-            else if (dirent->datasize < 100)
-                kprintf (" %d   ", dirent->datasize);
-            else if (dirent->datasize < 1000)
-                kprintf (" %d  ", dirent->datasize);
-
             /* 显示名字 */
-            kprintf ("%s\r\n",dirent->name);
+            kprintf ("%-15s",dirent->name);
+            count += 1;
+            if (count >= 5)
+            {
+                count = 0;
+                kprintf ("\r\n");
+            }
         }
     }while(dirent != NULL);
     closedir(dir);
+    kprintf("\r\n");
 
     return 0;
 }

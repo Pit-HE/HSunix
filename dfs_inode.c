@@ -204,7 +204,17 @@ int dnode_write(struct disk_sb *sb, struct dinode *dnode,
 struct dinode *dnode_find (struct disk_sb *sb, 
         struct dinode *root, char *path, char *name)
 {
+	char *tmp_path = path;
     struct dinode *temp = root;
+
+	/* 处理获取文件系统挂载路径的情况 */
+	while(*tmp_path == '/' && *tmp_path)
+        tmp_path++;
+    if (*tmp_path == '\0')
+	{
+		name[0] = '\0';
+        return root;
+	}
 
     /* 循环解析路径中的下一个元素 */
 	while((path = disk_path_getlast(path, name)) != 0)

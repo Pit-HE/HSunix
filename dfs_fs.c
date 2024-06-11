@@ -238,7 +238,7 @@ int dfs_mount (struct FsDevice *fsdev, uint flag, void *data)
 {
     struct disk_sb *disksb = NULL;
 
-    if ((fsdev == NULL) || (data == NULL))
+    if (fsdev == NULL)
         return -1;
 
     disksb = dsb_read();
@@ -377,14 +377,21 @@ int dfs_lookup (struct FsDevice *fsdev,
     parent_node = dnode_find(sb, root, (char*)path, name);
     if (parent_node == NULL)
         return -1;
-    
-    node = ddir_read(sb, parent_node, name, 0);
-    if (node == NULL)
+
+    if (name[0] != '\0')
     {
+        node = ddir_read(sb, parent_node, name, 0);
+        if (node == NULL)
+        {
+            dnode_free(sb, parent_node);
+            return -1;
+        }
         dnode_free(sb, parent_node);
-        return -1;
     }
-    dnode_free(sb, parent_node);
+    else
+    {
+        node = root;
+    }
 
     inode->data = node;
     inode->size = node->size;
@@ -500,5 +507,5 @@ void init_dfs (void)
     init_iobuf();
 
     /* 将 dfs 注册为内核文件系统对象 */
-    fsobj_register("diskfs", &dfs_fops, &dfs_fsops, TRUE);
+    fsobj_register("diskfs", &dfs_fops, &dfs_fsops, FALSE);
 }
