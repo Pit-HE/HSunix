@@ -50,7 +50,7 @@ uint bmap (struct disk_inode *dnode, uint bn)
 		}
 
 		/* 读取磁盘块的内容 */
-        buf = iob_alloc(addr);
+        buf = dbuf_alloc(addr);
 		tmp = (uint *)buf->data;
 
 		/* 将磁盘块格式化为一个个索引项，
@@ -64,10 +64,10 @@ uint bmap (struct disk_inode *dnode, uint bn)
 				/* 将索引项与磁盘块建立联系 */
 				tmp[bn] = addr;
 				/* 将修改后的索引信息写回磁盘 */
-                iob_flush(buf);
+                dbuf_flush(buf);
 			}
 		}
-        iob_free(buf);
+        dbuf_free(buf);
 		return addr;
 	}
 
@@ -132,14 +132,14 @@ struct disk_sb *dsb_get (void)
 		return NULL;
 
     /* 读取超级块所在的磁盘块 */
-    buf = iob_alloc(1);
+    buf = dbuf_alloc(1);
 	if (buf == NULL)
 		return NULL;
 
     /* 获取超级块的信息 */
     kmemmove(superblock, buf->data, sizeof(struct disk_sb));
 
-	iob_free(buf);
+	dbuf_free(buf);
 
     return superblock;
 }
@@ -153,13 +153,13 @@ void dsb_put (void)
 		return;
 
     /* 读取超级块所在的磁盘块 */
-    buf = iob_alloc(1);
+    buf = dbuf_alloc(1);
 
 	/* 将超级块的信息写入磁盘对象中 */
 	kmemmove(buf->data, superblock, sizeof(struct disk_sb));
 
-	iob_flush(buf);
-	iob_free(buf);
+	dbuf_flush(buf);
+	dbuf_free(buf);
 }
 
 #endif
@@ -176,7 +176,7 @@ uint dbmap_alloc (void)
 	for(blknum = 0; blknum < superblock->size; blknum += (BSIZE * 8))
 	{
 		/* 获取该块对象对应的位图所在的磁盘块 */
-		buf = iob_alloc(BBLOCK(blknum, superblock));
+		buf = dbuf_alloc(BBLOCK(blknum, superblock));
 
 		/* 遍历该位图磁盘块上的每一个块 */
 		for(bi = 0; bi < (BSIZE * 8) && blknum + bi < superblock->size; bi++)
@@ -190,10 +190,10 @@ uint dbmap_alloc (void)
                 buf->data[bi / 8] |= map;
 
                 /* 将位图所在的磁盘块写回磁盘 */
-                iob_flush(buf);
+                dbuf_flush(buf);
 
                 /* 释放占用的 buf */
-                iob_free(buf);
+                dbuf_free(buf);
 
                 /* 获取空闲的磁盘块，并将其清零 */
                 dblk_zero(blknum + bi);
@@ -203,7 +203,7 @@ uint dbmap_alloc (void)
 			}
 		}
 		/* 释放占用的 buf */
-		iob_free(buf);
+		dbuf_free(buf);
 	}
 	kprintf("balloc: out of blocks\n");
 	return 0;
@@ -216,7 +216,7 @@ void dbmap_free (uint blknum)
 	int bi, map;
 
 	/* 获取该块对象对应位图所在的磁盘块 */
-	buf = iob_alloc(BBLOCK(blknum, superblock));
+	buf = dbuf_alloc(BBLOCK(blknum, superblock));
 
 	/* 清除磁盘块在位图中的已分配记录 */
 	bi = blknum % (BSIZE * 8);
@@ -228,8 +228,8 @@ void dbmap_free (uint blknum)
 	buf->data[bi / 8] &= ~map;
 
 	/* 将位图所在的块写回磁盘 */
-    iob_flush(buf);
-    iob_free(buf);
+    dbuf_flush(buf);
+    dbuf_free(buf);
 }
 
 #endif
@@ -242,13 +242,13 @@ void dblk_zero (uint blknum)
     struct disk_buf *buf = NULL;
 
     /* 将该磁盘块内容清空 */
-    buf = iob_alloc(blknum);
+    buf = dbuf_alloc(blknum);
     if (buf != NULL)
 	{
         kmemset(buf->data, 0, BSIZE);
 	}
-	iob_flush(buf);
-	iob_free(buf);
+	dbuf_flush(buf);
+	dbuf_free(buf);
 }
 
 #endif

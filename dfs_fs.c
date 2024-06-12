@@ -175,10 +175,10 @@ int dfs_getdents (struct File *file, struct dirent *dirp, uint count)
         return -1;
     end = file->off + num;
 
-    /* 遍历父节点 disk_inode 内的所有目录条目 */
-	for(off = 0; off < parent->size; off += sizeof(dir))
+    /* 遍历父节点 disk_inode 内的所有目录项 */
+	for(off = 0; off < parent->size; off += sizeof(struct disk_dirent))
 	{
-        dinode_read(parent, (char*)&dir, off, sizeof(dir));
+        dinode_read(parent, (char *)&dir, off, sizeof(struct disk_dirent));
 
         /* 跳过被清空的成员 */
         if (dir.inum == 0)
@@ -358,6 +358,8 @@ int dfs_lookup (struct FsDevice *fsdev,
     {
         /* 从父节点里获取指定名字的磁盘节点 */
         dir = ddir_get(parent, name);
+        if (dir == NULL)
+            return -1;
         node = dinode_alloc(dir->inum);
         ddir_put(parent, dir);
 
@@ -407,7 +409,7 @@ int dfs_create (struct FsDevice *fsdev, struct Inode *inode, char *path)
     node = dinode_alloc(inum);
 
     /* 在父节点中创建索引新节点的磁盘目录项 */
-    if (-1 == ddir_write(parent, name, inum))
+    if (-1 == ddir_create(parent, name, inum))
     {
         dinode_put(node);
         dinode_free(node);
@@ -478,7 +480,7 @@ void init_dfs (void)
     virtio_disk_init();
 
     /* 初始化磁盘缓冲区模块 */
-    init_iobuf();
+    init_diskbuf();
 
     /* 将 dfs 注册为内核文件系统对象 */
     fsobj_register("diskfs", &dfs_fops, &dfs_fsops, FALSE);

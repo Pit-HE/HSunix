@@ -80,7 +80,7 @@ uint dinode_get (uint type)
 	for(inum = 1; inum < superblock->ninodes; inum++)
 	{
 		/* 遍历索引节点磁盘块上记录的所有 disk_inode 信息 */
-		buf = iob_alloc(IBLOCK(inum, superblock));
+		buf = dbuf_alloc(IBLOCK(inum, superblock));
 		node = (struct disk_inode *)buf->data + (inum % 
 			(BSIZE / sizeof(struct disk_inode)));
 
@@ -95,13 +95,13 @@ uint dinode_get (uint type)
 			node->nlink = inum;
 
 			/* mark it allocated on the disk */
-			iob_flush(buf);
-			iob_free(buf);
+			dbuf_flush(buf);
+			dbuf_free(buf);
 
 			/* 获取与 disk_inode 对应的内存 inode */
 			return inum;
 		}
-		iob_free(buf);
+		dbuf_free(buf);
 	}
 	kprintf("ialloc: no inodes\n");
 	return -1;
@@ -119,19 +119,19 @@ void dinode_put (struct disk_inode *dnode)
 		return;
 
 	/* 释放磁盘节点占用的所有磁盘块 */
-	dinode_clear(node);
+	dinode_clear(dnode);
 
 	/* 获取内存 inode 对应的磁盘 disk_inode 所在的磁盘块 */
-	buf = iob_alloc(IBLOCK(dnode->nlink, superblock));
+	buf = dbuf_alloc(IBLOCK(dnode->nlink, superblock));
 	node = (struct disk_inode *)buf->data + (dnode->nlink %
 		(BSIZE / sizeof(struct disk_inode)));
 
 	/* 清空该磁盘节点的内容 */
-	kmemmove(node, 0, sizeof(struct disk_inode));
+	kmemset(node, 0, sizeof(struct disk_inode));
 
 	/* 将磁盘块写回到日志系统 */
-	iob_flush(buf);
-	iob_free(buf);
+	dbuf_flush(buf);
+	dbuf_free(buf);
 }
 
 /* 获取存放 disk_inode 的内存空间，并读取对应的磁盘信息
@@ -155,7 +155,7 @@ struct disk_inode *dinode_alloc (uint inum)
 		return node;
 
 	/* 获取磁盘节点所在的磁盘块 */
-	buf = iob_alloc(IBLOCK(inum, superblock));
+	buf = dbuf_alloc(IBLOCK(inum, superblock));
 	if (buf == NULL)
 		return NULL;
 	
@@ -166,7 +166,7 @@ struct disk_inode *dinode_alloc (uint inum)
 	kmemcpy(node, temp, sizeof(struct disk_inode));
 	node->nlink = inum;
 
-	iob_free(buf);
+	dbuf_free(buf);
 
 	return node;
 }
@@ -194,7 +194,7 @@ void dinode_flush (struct disk_inode *dnode)
 	struct disk_inode *node = NULL;
 
 	/* 获取内存 inode 对应的磁盘 disk_inode 所在的磁盘块 */
-	buf = iob_alloc(IBLOCK(dnode->nlink, superblock));
+	buf = dbuf_alloc(IBLOCK(dnode->nlink, superblock));
 	node = (struct disk_inode *)buf->data + (dnode->nlink %
 		(BSIZE / sizeof(struct disk_inode)));
 
@@ -202,7 +202,7 @@ void dinode_flush (struct disk_inode *dnode)
 	kmemmove(node, dnode, sizeof(struct disk_inode));
 
 	/* 将磁盘块写回到日志系统 */
-	iob_flush(buf);
+	dbuf_flush(buf);
 }
 
 /* 清空磁盘索引节点占用的所有磁盘块 */
@@ -211,6 +211,9 @@ void dinode_clear (struct disk_inode *dnode)
 	int i, j;
 	uint *a = NULL;
 	struct disk_buf *buf = NULL;
+
+	if (dnode == NULL)
+		return;
 
 	/* 释放 inode 占有的所有磁盘块 */
 	for(i = 0; i < NDIRECT; i++)
@@ -226,7 +229,7 @@ void dinode_clear (struct disk_inode *dnode)
 	if(dnode->ex_addr)
 	{
 		/* 读出最后一个磁盘块的内容 */
-		buf = iob_alloc(dnode->ex_addr);
+		buf = dbuf_alloc(dnode->ex_addr);
 		a = (uint *)buf->data;
 
 		/* 处理在最后一个磁盘块中的扩展 */
@@ -238,7 +241,7 @@ void dinode_clear (struct disk_inode *dnode)
 			}
 		}
 		/* 释放 buf 的占用 */
-		iob_free(buf);
+		dbuf_free(buf);
 
 		/* 也释放最后一个磁盘块的映射 */
 		dbmap_free(dnode->ex_addr);
@@ -254,7 +257,7 @@ void dinode_clear (struct disk_inode *dnode)
 int dinode_read (struct disk_inode *dnode, char *dst, uint off, uint n)
 {
 	uint idx, m, addr;
-	struct disk_buf * buf;
+	struct disk_buf *buf = NULL;
 
 	/* 读取的数据大小是合理的 */
 	if((off > dnode->size) || ((off + n) < off))
@@ -274,7 +277,7 @@ int dinode_read (struct disk_inode *dnode, char *dst, uint off, uint n)
 			break;
 
 		/* 读取指定磁盘块映射的 buf */
-        buf = iob_alloc(addr);
+        buf = dbuf_alloc(addr);
 
 		/* 计算当前 inode 剩余的可读空间 */
         if ((n - idx) < (BSIZE - off % BSIZE))
@@ -284,7 +287,7 @@ int dinode_read (struct disk_inode *dnode, char *dst, uint off, uint n)
 
 		/* 将磁盘块的数据拷贝到用户空间的缓冲区 */
         kmemmove(dst, buf->data + (off % BSIZE), m);
-        iob_free(buf);
+        dbuf_free(buf);
 	}
 	return idx;
 }
@@ -313,7 +316,7 @@ int dinode_write(struct disk_inode *dnode, char *src, uint off, uint n)
 			break;
 
 		/* 获取磁盘块上的内容 */
-		buf = iob_alloc(addr);
+		buf = dbuf_alloc(addr);
 
 		/* 计算当前 inode 剩余的可写空间 */
         if ((n - tot) < (BSIZE - off % BSIZE))
@@ -325,8 +328,8 @@ int dinode_write(struct disk_inode *dnode, char *src, uint off, uint n)
         kmemmove(buf->data + (off % BSIZE), src, m);
 
 		/* 将 buf 写回磁盘块中 */
-		iob_flush(buf);
-        iob_free(buf);
+		dbuf_flush(buf);
+        dbuf_free(buf);
 	}
 
     /* 更新磁盘节点所记录的数据大小 */
@@ -359,7 +362,7 @@ struct disk_inode* dinode_getroot (void)
 
     /* 获取根目录节点所在的磁盘块 */
     blknum = (ROOT_INUM / (BSIZE / sizeof(struct disk_inode))) + superblock->inodestart;
-    buf = iob_alloc(blknum);
+    buf = dbuf_alloc(blknum);
 
     /* 获取根节点所在磁盘块的位置 */
     node = (struct disk_inode *)buf->data + (ROOT_INUM % (BSIZE / sizeof(struct disk_inode)));
@@ -368,7 +371,7 @@ struct disk_inode* dinode_getroot (void)
     kmemcpy(root_node, node, sizeof(struct disk_inode));
 
     /* 释放该缓冲区 */
-    iob_free(buf);
+    dbuf_free(buf);
 
     return root_node;
 }

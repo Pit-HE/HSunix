@@ -64,7 +64,7 @@ struct disk_inode
 struct disk_dirent
 {
   /* 记录节点在磁盘索引分区中的偏移值 (0 时表示空闲) */
-  uint inum;
+  ushort inum;
 
   /* 记录磁盘索引节点的名字 */
   char name[14];
@@ -84,12 +84,11 @@ struct disk_inode* dinode_getroot (void);
 
 /********************* dfs_dirent ***********************/
 int  ddir_read   (struct disk_inode *dnode, struct disk_dirent *dir, char *name);
-int  ddir_write  (struct disk_inode *dnode, char *name, uint inum);
+int  ddir_create (struct disk_inode *dnode, char *name, uint inum);
 void ddir_put    (struct disk_inode *dnode, struct disk_dirent *dir);
 void ddir_flush  (struct disk_inode *dnode, struct disk_dirent *dir);
 void ddir_rename (struct disk_inode *dnode, struct disk_dirent *dir, char *name);
 void ddir_release(struct disk_inode *dnode, struct disk_dirent *dir);
-int  ddir_check  (struct disk_inode *dnode, char *name);
 int  ddir_check  (struct disk_inode *dnode, char *name);
 struct disk_dirent *ddir_get (struct disk_inode *dnode, char *name);
 
@@ -104,12 +103,12 @@ void  dsb_put (void);
 struct disk_sb *dsb_get (void);
 
 /********************* dfs_iobuf **********************/
-void init_iobuf (void);
-void iob_flush  (struct disk_buf *buf);
-void iob_free (struct disk_buf *buf);
-void iob_get  (struct disk_buf *buf);
-void iob_put  (struct disk_buf *buf);
-struct disk_buf *iob_alloc (uint blknum);
+void init_diskbuf (void);
+void dbuf_flush  (struct disk_buf *buf);
+void dbuf_free (struct disk_buf *buf);
+void dbuf_get  (struct disk_buf *buf);
+void dbuf_put  (struct disk_buf *buf);
+struct disk_buf *dbuf_alloc (uint blknum);
 
 /********************* dfs_virtio *********************/
 void virtio_disk_io  (uint blknum, uchar *data, io_type write);

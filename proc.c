@@ -238,45 +238,45 @@ void init_proc (void)
 
     /* Init processs */
     kInitProcCB = allocProcCB();
-    stack = (char *)kalloc(2048);
+    stack = (char *)kallocPhyPage();
     kstrcpy(kInitProcCB->name, "init");
     kInitProcCB->context.ra = (uint64)init_main;
     kInitProcCB->stackAddr  = (uint64)stack;
-    kInitProcCB->stackSize  = (uint64)2048;
-    kInitProcCB->context.sp = (uint64)(stack + 2048);
+    kInitProcCB->stackSize  = (uint64)4096;
+    kInitProcCB->context.sp = (uint64)(stack + 4096);
     wakeProcCB(kInitProcCB);
 
     /* Idle processs */
     kIdleProcCB = allocProcCB();
-    stack = (char *)kalloc(2048);
+    stack = (char *)kallocPhyPage();
     kstrcpy(kIdleProcCB->name, "idle");
     kIdleProcCB->context.ra = (uint64)idle_main;
     kIdleProcCB->stackAddr  = (uint64)stack;
-    kIdleProcCB->stackSize  = (uint64)2048;
-    kIdleProcCB->context.sp = (uint64)(stack + 2048);
+    kIdleProcCB->stackSize  = (uint64)4096;
+    kIdleProcCB->context.sp = (uint64)(stack + 4096);
     wakeProcCB(kIdleProcCB);
 
     /* test process */
     pcb = allocProcCB();
-    stack = (char *)kalloc(2048);
+    stack = (char *)kallocPhyPage();
     kstrcpy(pcb->name, "test");
     pcb->context.ra = (uint64)test_main;
     pcb->stackAddr  = (uint64)stack;
-    pcb->stackSize  = (uint64)2048;
-    pcb->context.sp = (uint64)(stack + 2048);
+    pcb->stackSize  = (uint64)4096;
+    pcb->context.sp = (uint64)(stack + 4096);
     wakeProcCB(pcb);
 
     /* 只要注释以下的进程创建，
      * 便能关闭用户模式切换的测试功能,之后系统正常工作
      */
     // pcb = allocProcCB();
-    // stack = (char *)kalloc(2048);
+    // stack = (char *)kallocPhyPage();
     // kstrcpy(pcb->name, "user");
     // void user_ret (void);
     // pcb->context.ra = (uint64)user_ret;
     // pcb->stackAddr  = (uint64)stack;
-    // pcb->stackSize  = (uint64)2048;
-    // pcb->context.sp = (uint64)(stack + 2048);
+    // pcb->stackSize  = (uint64)4096;
+    // pcb->context.sp = (uint64)(stack + 4096);
     // /* 设置进程在用户模式下执行的函数 */
     // void user_processEntry (void);
     // pcb->trapFrame->epc = (uint64)user_processEntry;

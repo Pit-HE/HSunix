@@ -15,7 +15,7 @@ ListEntry_t gBufDataList;
 
 
 /* 目前暂时创建 20 个缓冲区用于管理 */
-void init_iobuf (void)
+void init_diskbuf (void)
 {
     int i;
     struct disk_buf *buf = NULL;
@@ -43,7 +43,7 @@ void init_iobuf (void)
 }
 
 /* 将缓冲区数据写入磁盘 */
-void iob_flush (struct disk_buf *buf)
+void dbuf_flush (struct disk_buf *buf)
 {
     if (buf == NULL)
         return;
@@ -53,7 +53,7 @@ void iob_flush (struct disk_buf *buf)
 }
 
 /* 获取指定磁盘块内缓存的数据 */
-struct disk_buf *iob_alloc (uint blknum)
+struct disk_buf *dbuf_alloc (uint blknum)
 {
     ListEntry_t *list = NULL;
     struct disk_buf *buf = NULL;
@@ -101,7 +101,7 @@ struct disk_buf *iob_alloc (uint blknum)
 }
 
 /* 释放指定的磁盘块 */
-void iob_free (struct disk_buf *buf)
+void dbuf_free (struct disk_buf *buf)
 {
     if (buf == NULL)
         return;
@@ -123,13 +123,13 @@ void iob_free (struct disk_buf *buf)
 }
 
 /* 获取指定的缓冲区对象 */
-void iob_get (struct disk_buf *buf)
+void dbuf_get (struct disk_buf *buf)
 {
     buf->ref += 1;
 }
 
 /* 释放指定的缓冲区对象 */
-void iob_put (struct disk_buf *buf)
+void dbuf_put (struct disk_buf *buf)
 {
     buf->ref -= 1;
 }
