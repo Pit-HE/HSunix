@@ -53,7 +53,7 @@ int path_getlast (const char *path, char *parentPath, char *name)
 {
     char *ptr = NULL;
 
-    if ((path == NULL) || (parentPath == NULL) || (name == NULL))
+    if ((path == NULL) || (name == NULL))
         return -1;
 
     /* 获取最后一个'/'的位置 */
@@ -62,24 +62,33 @@ int path_getlast (const char *path, char *parentPath, char *name)
     /* 在路径的开头 */
     if (ptr == path)
     {
-        parentPath[0] = '/';
-        parentPath[1] = '\0';
+        if (parentPath != NULL)
+        {
+            parentPath[0] = '/';
+            parentPath[1] = '\0';
+        }
     }
     /* 该路径没有 '/' 
      * (处理文件目标在根目录下的情况) 
      */
     else if (ptr == NULL)
     {
-        parentPath[0] = '/';
-        parentPath[1] = '\0';
+        if (parentPath != NULL)
+        {
+            parentPath[0] = '/';
+            parentPath[1] = '\0';
+        }
         kstrcpy(name, path);
         return 0;
     }
     /* 在路径的最后一个 '/' 处 */
     else
     {
-        kmemcpy(parentPath, path, ptr - path);
-        parentPath[ptr - path] = '\0';
+        if (parentPath != NULL)
+        {
+            kmemcpy(parentPath, path, ptr - path);
+            parentPath[ptr - path] = '\0';
+        }
     }
 
     /* 拷贝时跳过'/' */

@@ -7,12 +7,12 @@
 
 
 /****************************************************
- *      dfs 文件系统文件操作接口
+ *      dfs 文件操作接口
  ***************************************************/
 int dfs_open (struct File *file)
 {
     struct Inode *inode = NULL;
-    struct dinode *node = NULL;
+    struct disk_inode *node = NULL;
 
     if ((file == NULL) || (file->magic != FILE_MAGIC))
         return -1;
@@ -59,8 +59,7 @@ int dfs_ioctl (struct File *file, int cmd, void *args)
 int dfs_read (struct File *file, void *buf, uint count)
 {
     uint rLen;
-    struct disk_sb *sb = NULL;
-    struct dinode *node = NULL;
+    struct disk_inode *node = NULL;
 
     if ((file == NULL) || (buf == NULL) || 
         (count == 0))
@@ -76,15 +75,14 @@ int dfs_read (struct File *file, void *buf, uint count)
     else
         rLen = count;
 
-    dnode_read(sb, node, buf, file->off, rLen);
+    dinode_read(node, buf, file->off, rLen);
     file->off += rLen;
 
     return rLen;
 }
 int dfs_write (struct File *file, void *buf, uint count)
 {
-    struct disk_sb *sb = NULL;
-    struct dinode *node = NULL;
+    struct disk_inode *node = NULL;
 
     if ((file == NULL) || (buf == NULL) || 
         (count == 0) || (file->inode == NULL))
@@ -94,12 +92,8 @@ int dfs_write (struct File *file, void *buf, uint count)
     if (node == NULL)
         return -1;
 
-    sb = (struct disk_sb*)file->ditem->fsdev->data;
-    if ((sb == NULL) || (sb->magic != DFS_MAGIC))
-        return -1;
-
     /* 当写入的数据大于文件大小时，扩大该文件的大小 */
-    count = dnode_write(sb, node, buf, file->off, count);
+    count = dinode_write(node, buf, file->off, count);
 
     file->off += count;
 
@@ -107,31 +101,25 @@ int dfs_write (struct File *file, void *buf, uint count)
 }
 int dfs_flush (struct File *file)
 {
-    struct disk_sb *sb = NULL;
-    struct dinode *node = NULL;
+    struct disk_inode *node = NULL;
 
     if (file == NULL)
         return -1;
 
     /* 获取要操作的目标节点 */ 
-    node = (struct dinode *)file->inode->data;
+    node = (struct disk_inode *)file->inode->data;
     if (node == NULL)
         return -1;
 
-    /* 获取磁盘的超级块对象 */
-    sb = (struct disk_sb *)file->ditem->fsdev->data;
-    if ((sb == NULL) || (sb->magic != DFS_MAGIC))
-        return -1;
-
     /* 将磁盘节点的信息写回到磁盘 */
-    dnode_flush(sb, node);
+    dinode_flush(node);
 
     return 0;
 }
 int dfs_lseek (struct File *file, uint offs, uint type)
 {
     int ret = -1;
-    struct dinode *node = NULL;
+    struct disk_inode *node = NULL;
 
     if ((file == NULL) || (file->inode == NULL))
         return -1;
@@ -169,26 +157,16 @@ int dfs_getdents (struct File *file, struct dirent *dirp, uint count)
     uint num = 0, end = 0;
     uint cnt = 0, idx = 0;
     struct disk_dirent dir;
-    struct disk_sb *sb = NULL;
-    struct dinode *node = NULL;
-    struct dinode *root = NULL;
-    struct dinode *parent_node = NULL;
+    struct disk_inode *node = NULL;
+    struct disk_inode *parent = NULL;
 
     if ((file == NULL) || (dirp == NULL) ||
         (file->inode == NULL))
         return -1;
-    
-    sb = (struct disk_sb*)file->ditem->fsdev->data;
-    if ((sb == NULL) || (sb->magic != DFS_MAGIC))
-        return -1;
-
-    root = dnode_getroot(sb);
-    if (root == NULL)
-        return -1;
 
     /* 解析该路径中目标文件的名字，以及其父路径的磁盘节点 */
-    parent_node = dnode_find(sb, root, file->ditem->path, name);
-    if (parent_node == NULL)
+    parent = dinode_parent(file->ditem->path, name);
+    if (parent == NULL)
         return -1;
 
     /* 记录要读取的文件对象的数量 */
@@ -197,35 +175,33 @@ int dfs_getdents (struct File *file, struct dirent *dirp, uint count)
         return -1;
     end = file->off + num;
 
-    /* 遍历父节点 dinode 内的所有目录条目 */
-	for(off = 0; off < parent_node->size; off += sizeof(dir))
+    /* 遍历父节点 disk_inode 内的所有目录条目 */
+	for(off = 0; off < parent->size; off += sizeof(dir))
 	{
-        dnode_read(sb, parent_node, (char*)&dir, off, sizeof(dir));
+        dinode_read(parent, (char*)&dir, off, sizeof(dir));
 
-        /* 是否已经遍历完所有成员 */
+        /* 跳过被清空的成员 */
         if (dir.inum == 0)
-            break;
+            continue;
 
         /* 避免获取相同的成员 */
         if (idx >= file->off)
         {
-            node = dnode_alloc(sb, dir.inum);
+            if (dir.inum != 0)
+            {
+                node = dinode_alloc(dir.inum);
 
-            kstrcpy(dirp[cnt].name, dir.name);
-            if (node->type == T_FILE)
-                dirp[cnt].type = INODE_FILE;
-            else if (node->type == T_DIR)
-                dirp[cnt].type = INODE_DIR;
-            dirp[cnt].namelen = kstrlen(dir.name);
-            dirp[cnt].objsize = sizeof(struct dirent);
-            dirp[cnt].datasize = node->size;
+                kstrcpy(dirp[cnt].name, dir.name);
+                dirp[cnt].type = (node->type == DISK_DIR) ? INODE_DIR:INODE_FILE;
+                dirp[cnt].namelen = kstrlen(dir.name);
+                dirp[cnt].objsize = sizeof(struct dirent);
+                dirp[cnt].datasize = node->size;
 
-            dnode_free(sb, node);
-
+                dinode_free(node);
+            }
             cnt += 1;
             file->off += 1;
         }
-        
         /* 限制本次读取的数量 */
         if (++idx >= end)
             break;
@@ -235,36 +211,26 @@ int dfs_getdents (struct File *file, struct dirent *dirp, uint count)
     return cnt * sizeof(struct dirent);
 }
 
+
 /****************************************************
- *      dfs 文件系统文件操作接口
+ *      dfs 文件系统操作接口
  ***************************************************/
 int dfs_mount (struct FsDevice *fsdev, uint flag, void *data)
 {
-    struct disk_sb *sb = NULL;
-
     if (fsdev == NULL)
         return -1;
-
-    sb = dsb_read();
-    if ((sb == NULL) || (sb->magic != DFS_MAGIC))
-        return -1;
-
-    fsdev->data = sb;
+    fsdev->data = dsb_get();
+    dinode_getroot();
 
     return 0;
 }
 int dfs_unmount (struct FsDevice *fsdev)
 {
-    struct disk_sb *sb = NULL;
-
     if (fsdev == NULL)
         return -1;
-    sb = (struct disk_sb *)fsdev->data;
-    if ((sb == NULL) || (sb->magic != DFS_MAGIC))
-        return -1;
-    fsdev->data = NULL;
 
-    dsb_write(sb);
+    fsdev->data = NULL;
+    dsb_put();
 
     return 0;
 }
@@ -287,32 +253,46 @@ int dfs_statfs (struct FsDevice *fsdev, struct statfs *buf)
 
     return 0;
 }
+/* 目前只能删除文件，而不能删除目录 */
 int dfs_unlink (struct DirItem *ditem)
 {
-    // struct disk_sb *sb = NULL;
-    // struct dinode *node = NULL;
+    char name[16];
+    struct disk_inode *node = NULL;
+    struct disk_inode *parent = NULL;
+    struct disk_dirent *dir = NULL;
 
-    // if ((ditem == NULL) ||
-    //     (ditem->magic != DIRITEM_MAGIC))
-    //     return -1;
+    if ((ditem == NULL) ||
+        (ditem->magic != DIRITEM_MAGIC))
+        return -1;
 
-    // sb = (struct disk_sb *)ditem->fsdev->data;
-    // if (sb == NULL)
-    //     return -1;
+    /* 解析文件路径中的父节点，以及文件目标的名字 */
+    parent = dinode_parent(ditem->path, name);
+    if (parent == NULL)
+        return -1;
+    
+    /* 从父节点中获取指定名字的目录项与磁盘节点 */
+    dir = ddir_get(parent, name);
+    node = dinode_alloc(dir->inum);
 
-    // /* 获取路径所对应的文件节点 */
-    // node = (struct dinode *)ditem->inode->data;
-    // if (node == NULL)
-    //     return -1;
+    if (node->type == DISK_FILE)
+    {
+        /* 释放单个文件 */
+        ddir_release(parent, dir);
 
-    // dnode_put(sb, node);
-    // dnode_free(sb, node);
+        /* 释放该文件占用的内存空间 */
+        dinode_put(node);
+        dinode_free(node);
+    }
+    else
+    {
+        /* TODO */
+    }
 
     return -1;
 }
 int dfs_stat (struct File *file, struct stat *buf)
 {
-    struct dinode *node = NULL;
+    struct disk_inode *node = NULL;
 
     if ((file == NULL) || (buf == NULL))
         return -1;
@@ -331,19 +311,10 @@ int dfs_stat (struct File *file, struct stat *buf)
 int dfs_rename (struct DirItem *old_ditem, struct DirItem *new_ditem)
 {
     char old_name[16], new_name[16];
-    struct disk_sb *sb = NULL;
-    struct dinode *root = NULL;
     struct disk_dirent *dir = NULL;
-    struct dinode *parent_node = NULL;
+    struct disk_inode *parent_node = NULL;
 
     if ((old_ditem == NULL) || (new_ditem == NULL))
-        return -1;
-    
-    sb = old_ditem->fsdev->data;
-    if ((sb == NULL) || (sb->magic != DFS_MAGIC))
-        return -1;
-    root = dnode_getroot(sb);
-    if (root == NULL)
         return -1;
 
     disk_path_getlast(old_ditem->path, old_name);
@@ -353,12 +324,12 @@ int dfs_rename (struct DirItem *old_ditem, struct DirItem *new_ditem)
     if (new_name[0] == '\0')
         return -1;
 
-    parent_node = dnode_find(sb, root, old_ditem->path, old_name);
+    parent_node = dinode_parent(old_ditem->path, old_name);
 
     /* 修改磁盘节点所对应的目录项中记录的节点名字 */
-    dir = ddir_get(sb, parent_node, old_name);
-    ddir_rename(sb, parent_node, dir, new_name);
-    ddir_put(sb, parent_node, dir);
+    dir = ddir_get(parent_node, old_name);
+    ddir_rename(parent_node, dir, new_name);
+    ddir_put(parent_node, dir);
 
     /* 修改虚拟文件系统中目录项记录的文件信息 */
     kstrcpy(old_ditem->path, new_ditem->path);
@@ -370,98 +341,76 @@ int dfs_lookup (struct FsDevice *fsdev,
         struct Inode *inode, const char *path)
 {
     char name[16];
-    struct disk_sb *sb = NULL;
-    struct dinode *node = NULL;
-    struct dinode *root = NULL;
-    struct dinode *parent_node = NULL;
+    struct disk_inode *node = NULL;
+    struct disk_inode *parent = NULL;
+    struct disk_dirent *dir = NULL;
 
     if ((fsdev == NULL) || (inode == NULL) || (path == NULL))
         return -1;
 
-    sb = (struct disk_sb *)fsdev->data;
-    if ((sb == NULL) || (sb->magic != DFS_MAGIC))
-        return -1;
-
-    root = dnode_getroot(sb);
-    if (root == NULL)
-        return -1;
-
     /* 解析该路径中目标文件的名字，以及其父路径的磁盘节点 */
-    parent_node = dnode_find(sb, root, (char*)path, name);
-    if (parent_node == NULL)
+    parent = dinode_parent((char*)path, name);
+    if (parent == NULL)
         return -1;
 
     /* 要解析的路径是否为文件系统的挂载路径 */
     if (name[0] != '\0')
     {
         /* 从父节点里获取指定名字的磁盘节点 */
-        node = ddir_read(sb, parent_node, name, 0);
+        dir = ddir_get(parent, name);
+        node = dinode_alloc(dir->inum);
+        ddir_put(parent, dir);
 
-        /* 禁止释放根节点 */
-        if (parent_node != root)
-            dnode_free(sb, parent_node);
+        dinode_free(parent);
         if (node == NULL)
             return -1;
     }
     else
     {
-        node = root;
+        node = parent;
     }
 
     /* 将磁盘节点与虚拟文件系统节点建立关联 */
+    inode->flags = O_RDWR;
     inode->data = node;
     inode->size = node->size;
-    inode->flags = O_RDWR;
-    inode->mode  = S_IRWXU;
-
-    if (node->type == T_DIR)
-        inode->type = INODE_DIR;
-    else
-        inode->type = INODE_FILE;
+    inode->mode = S_IRWXU;
+    inode->type = (node->type == DISK_DIR) ? INODE_DIR : INODE_FILE;
 
     return 0;
 }
+/* 创建新的磁盘索引节点 */
 int dfs_create (struct FsDevice *fsdev, struct Inode *inode, char *path)
 {
-    uint blknum;
+    uint inum;
     char name[16];
-    struct disk_sb *sb = NULL;
-    struct dinode *node = NULL;
-    struct dinode *root = NULL;
-    struct dinode *parent_node = NULL;
+    struct disk_inode *node = NULL;
+    struct disk_inode *parent = NULL;
 
     if ((fsdev == NULL) || (inode == NULL) || (path == NULL))
         return -1;
 
-    sb = fsdev->data;
-    if ((sb == NULL) || (sb->magic != DFS_MAGIC))
-        return -1;
-
-    root = dnode_getroot(sb);
-    if (root == NULL)
-        return -1;
-
     /* 获取文件路径中的父节点与文件名 */
-    parent_node = dnode_find(sb, root, path, name);
-    if ((parent_node == NULL) || (name[0] == '\0'))
+    parent = dinode_parent(path, name);
+    if ((parent == NULL) || (name[0] == '\0'))
         return -1;
-    if (parent_node->type != T_DIR)
+    if (parent->type != DISK_DIR)
         return -1;
 
     /* 从磁盘的索引节点块中获取一个空闲的对象 */
     if (inode->type == INODE_FILE)
-        blknum = dnode_get(sb, T_FILE);
+        inum = dinode_get(DISK_FILE);
     else
-        blknum = dnode_get(sb, T_DIR);
+        inum = dinode_get(DISK_DIR);
 
     /* 在内存中创建与磁盘节点对应的内存节点 */
-    node = dnode_alloc(sb, blknum);
+    node = dinode_alloc(inum);
 
     /* 在父节点中创建索引新节点的磁盘目录项 */
-    if (0 > ddir_write(sb, parent_node, name, blknum))
+    if (-1 == ddir_write(parent, name, inum))
     {
-        dnode_put(sb, node);
-        dnode_free(sb, node);
+        dinode_put(node);
+        dinode_free(node);
     }
 
     /* 将新创建的磁盘节点与虚拟文件系统的节点建立联系 */
@@ -473,30 +422,26 @@ int dfs_create (struct FsDevice *fsdev, struct Inode *inode, char *path)
 /* 释放单个索引节点的内容 */
 int dfs_free (struct FsDevice *fsdev, struct Inode *inode)
 {
-    struct disk_sb *sb = NULL;
-    struct dinode *node = NULL;
+    struct disk_inode *node = NULL;
 
     if ((fsdev == NULL) || (inode == NULL))
         return -1;
-    
-    sb = fsdev->data;
-    if ((sb == NULL) || (sb->magic != DFS_MAGIC))
-        return -1;
 
-    node = (struct dinode *)inode->data;
+    node = (struct disk_inode *)inode->data;
     if (node == NULL)
         return -1;
     
-    dnode_put(sb, node);
-    dnode_free(sb, node);
+    dinode_put(node);
+    dinode_free(node);
 
     return 0;
 }
 
+
 /****************************************************
  *      dfs 文件系统的结构体信息
  ***************************************************/
-/* dfs 文件系统的文件操作接口 */
+/* dfs 的文件操作接口 */
 struct FileOperation dfs_fops =
 {
     .open     = dfs_open,
@@ -510,7 +455,7 @@ struct FileOperation dfs_fops =
     .stat     = dfs_stat,
     .rename   = dfs_rename,
 };
-/* dfs 文件系统的系统操作接口 */
+/* dfs 的文件系统操作接口 */
 struct FileSystemOps dfs_fsops =
 {
     .mount   = dfs_mount,

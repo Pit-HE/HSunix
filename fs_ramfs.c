@@ -161,7 +161,7 @@ struct ramfs_node *_path_getnode (struct ramfs_sb *sb, const char *path)
 
 
 /****************************************************
- *      ramfs 文件系统文件操作接口
+ *      ramfs 的文件操作接口
  ***************************************************/
 /* 开启指定的文件，使其能被文件系统的接口所操作 */
 int ramfs_open (struct File *file)
@@ -379,7 +379,7 @@ int ramfs_getdents (struct File *file, struct dirent *dirp, uint count)
 
 
 /****************************************************
- *      ramfs 文件系统文件操作接口
+ *      ramfs 文件系统操作接口
  ***************************************************/
 /* 创建文件系统的超级块，并初始化 */
 int ramfs_mount (struct FsDevice *fsdev, uint flag, void *data)
@@ -648,7 +648,7 @@ int ramfs_free (struct FsDevice *fsdev, struct Inode *inode)
 /****************************************************
  *      ramfs 文件系统的结构体信息
  ***************************************************/
-/* ramfs 文件系统的文件操作接口 */
+/* ramfs 的文件操作接口 */
 struct FileOperation ramfs_fops =
 {
     .open     = ramfs_open,
@@ -662,7 +662,7 @@ struct FileOperation ramfs_fops =
     .stat     = ramfs_stat,
     .rename   = ramfs_rename,
 };
-/* ramfs 文件系统的系统操作接口 */
+/* ramfs 的文件系统操作接口 */
 struct FileSystemOps ramfs_fsops =
 {
     .mount   = ramfs_mount,
@@ -678,16 +678,10 @@ struct FileSystemOps ramfs_fsops =
 /****************************************************
  *      ramfs 文件系统对外的接口
  ***************************************************/
-/* 初始化当前文件系统, 并注册到系统内核 */
+/* 注册两个实体文件系统，用于测试虚拟文件系统的挂载功能 */
 void init_ramfs (void)
 {
-    fsobj_register("ramfs", &ramfs_fops, 
-        &ramfs_fsops, TRUE);
-
-    /* 注册两个实体文件系统，
-     * 方便测试虚拟文件系统的多级挂载功能
-     */
-    fsobj_register("tmpfs", &ramfs_fops, 
-        &ramfs_fsops, TRUE);
+    fsobj_register("ramfs", &ramfs_fops, &ramfs_fsops, TRUE);
+    fsobj_register("tmpfs", &ramfs_fops, &ramfs_fsops, TRUE);
 }
 

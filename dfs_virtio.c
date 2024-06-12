@@ -1,5 +1,5 @@
 /*
- *  直接移植 xv6 系统中关于虚拟磁盘 IO 操作的代码，并做适配上的修改
+ *  直接移植 xv6 系统中关于虚拟磁盘 IO 的代码，并做适配上的修改
  */
 //
 // driver for qemu's virtio disk device.

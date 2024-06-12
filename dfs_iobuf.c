@@ -6,20 +6,21 @@
 #include "dfs_priv.h"
 
 
-/* 记录还未与磁盘建立联系的缓存对象 */
+/* 记录还未与磁盘建立联系的缓存区 */
 ListEntry_t gBufIdleList;
-/* 记录已经与磁盘建立联系的缓存对象 */
+
+/* 记录已经与磁盘建立联系的缓冲区 */
 ListEntry_t gBufDataList;
 
 
 
-/* 目前暂时创建 20 个缓存对象用于管理 */
+/* 目前暂时创建 20 个缓冲区用于管理 */
 void init_iobuf (void)
 {
     int i;
-    struct Iobuf *buf = NULL;
+    struct disk_buf *buf = NULL;
 
-    i = sizeof(struct Iobuf);
+    i = sizeof(struct disk_buf);
 
     /* 初始化两个结构体链表 */
     list_init(&gBufIdleList);
@@ -28,7 +29,7 @@ void init_iobuf (void)
     /* 创建可用的磁盘块对象 */
     for (i=0; i<20; i++)
     {
-        buf = (struct Iobuf *)kalloc(sizeof(struct Iobuf));
+        buf = (struct disk_buf *)kalloc(sizeof(struct disk_buf));
         if (buf == NULL)
             continue;
 
@@ -42,7 +43,7 @@ void init_iobuf (void)
 }
 
 /* 将缓冲区数据写入磁盘 */
-void iob_flush (struct Iobuf *buf)
+void iob_flush (struct disk_buf *buf)
 {
     if (buf == NULL)
         return;
@@ -52,15 +53,15 @@ void iob_flush (struct Iobuf *buf)
 }
 
 /* 获取指定磁盘块内缓存的数据 */
-struct Iobuf *iob_alloc (uint blknum)
+struct disk_buf *iob_alloc (uint blknum)
 {
     ListEntry_t *list = NULL;
-    struct Iobuf *buf = NULL;
+    struct disk_buf *buf = NULL;
 
     /* 遍历当前数组，该磁盘块是否已经缓存 */
     list_for_each (list, &gBufDataList)
     {
-        buf = list_container_of(list, struct Iobuf, list);
+        buf = list_container_of(list, struct disk_buf, list);
         if ((buf == NULL) || (buf->blknum == blknum))
         {
             buf->ref += 1;
@@ -80,7 +81,7 @@ struct Iobuf *iob_alloc (uint blknum)
         list_del(list);
         
         /* 初始化该缓冲区对象 */
-        buf = list_container_of(list, struct Iobuf, list);
+        buf = list_container_of(list, struct disk_buf, list);
         buf->ref = 1;
         buf->blknum = blknum;
         buf->valid = FALSE;
@@ -100,7 +101,7 @@ struct Iobuf *iob_alloc (uint blknum)
 }
 
 /* 释放指定的磁盘块 */
-void iob_free (struct Iobuf *buf)
+void iob_free (struct disk_buf *buf)
 {
     if (buf == NULL)
         return;
@@ -122,13 +123,13 @@ void iob_free (struct Iobuf *buf)
 }
 
 /* 获取指定的缓冲区对象 */
-void iob_get (struct Iobuf *buf)
+void iob_get (struct disk_buf *buf)
 {
     buf->ref += 1;
 }
 
 /* 释放指定的缓冲区对象 */
-void iob_put (struct Iobuf *buf)
+void iob_put (struct disk_buf *buf)
 {
     buf->ref -= 1;
 }
