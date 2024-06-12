@@ -261,40 +261,7 @@ void dblk_zero (uint blknum)
 	iob_free(buf);
 }
 
-/* 将数据写入磁盘块中 */
-uint dblk_write (uint blknum, char *data, uint len)
-{
-	struct Iobuf *buf = NULL;
 
-	buf = iob_alloc(blknum);
 
-	if (len > BSIZE)
-		len = BSIZE;
-
-	kmemmove(&buf->data, data, len);
-
-	iob_flush(buf);
-	iob_free(buf);
-
-	return len;
-}
-
-/* 从指定的磁盘块读取指定长度的数据 */ 
-uint dblk_read (uint blknum, char *data, uint len)
-{
-	struct Iobuf *buf = NULL;
-
-	buf = iob_alloc(blknum);
-
-	if (len > BSIZE)
-		len = BSIZE;
-	
-	kmemmove(data, &buf->data, len);
-
-	iob_flush(buf);
-	iob_free(buf);
-
-	return len;
-}
 
 #endif

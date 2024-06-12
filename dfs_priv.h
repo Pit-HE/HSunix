@@ -105,8 +105,6 @@ void dnode_free (struct disk_sb *sb, struct dinode *dnode);
 uint dbmap_alloc (struct disk_sb *sb);
 void dbmap_free  (struct disk_sb *sb, uint blknum);
 void dblk_zero   (uint blknum);
-uint dblk_write  (uint blknum, char *data, uint len);
-uint dblk_read   (uint blknum, char *data, uint len);
 
 /********************* dfs_iobuf **********************/
 void init_iobuf (void);

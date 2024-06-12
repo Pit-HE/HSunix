@@ -54,7 +54,7 @@ void cli_main (void)
         if (endflag == 0)
         {
             endflag++;
-            kprintf("admin:%s$ ", getProcCB()->cwd);
+            kprintf("\033[1;32madmin\033[0m:\033[1;34m%s\033[0m$ ", getProcCB()->cwd);
         }
 
         /* 从控制台获取单个字符 */

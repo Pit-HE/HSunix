@@ -97,33 +97,9 @@ int cmd_pwd (int argc, char *argv[])
 /* 输出文件内的数据 */
 int cmd_echo (int argc, char *argv[])
 {
-    int fd;
-    int rlen;
-    char tmpbuf[33];
-
     if ((argc != 2) || (argv[1] == NULL))
         return -1;
-    
-    /* 获取文件路径指定的文件对象 */
-    fd = vfs_open(argv[1], O_RDWR, S_IRWXU);
-    if (fd < 0)
-        return -1;
-
-    do
-    {
-        /* 读取文件对象的信息 */
-        rlen = vfs_read(fd, tmpbuf, 32);
-        tmpbuf[rlen] = '\0';
-
-        /* 打印读取到的信息 */
-        if (rlen)
-            kprintf("%s", tmpbuf);
-        if (rlen < 32)
-            kprintf("\r\n");
-    }while(rlen == 32);
-
-    /* 关闭已经打开的文件 */
-    vfs_close(fd);
+    kprintf("%s\r\n", argv[1]);
 
     return 0;
 }
@@ -131,11 +107,10 @@ int cmd_echo (int argc, char *argv[])
 /* 向指定文件输入数据 */
 int cmd_cat (int argc, char *argv[])
 {
-    int fd, wlen, val;
+    int fd, len, val;
+    char tmpbuf[33];
 
-    if (argc != 3)
-        return -1;
-    if ((argv[1] == NULL) || (argv[2] == NULL))
+    if ((1 >= argc) || (argc > 3))
         return -1;
     
     /* 打开指定路径下的文件对象 */
@@ -143,16 +118,33 @@ int cmd_cat (int argc, char *argv[])
     if (fd < 0)
         return -1;
 
-    /* 获取要写入的字符串长度 */
-    wlen = kstrlen(argv[2]);
+    if (argc == 2)
+    {/* 打印文件内容 */
+        do
+        {
+            /* 读取文件对象的信息 */
+            len = vfs_read(fd, tmpbuf, 32);
+            tmpbuf[len] = '\0';
 
-    /* 将偏移指针移动到文件末尾 */
-    vfs_lseek(fd, 0, SEEK_END);
+            /* 打印读取到的信息 */
+            if (len)
+                kprintf("%s", tmpbuf);
+            if (len < 32)
+                kprintf("\r\n");
+        }while(len == 32);
+    }
+    else
+    {/* 将数据写入到文件 */
+        len = kstrlen(argv[2]);
 
-    /* 将数据写入文件 */
-    val = vfs_write(fd, argv[2], wlen);
-    if (val != wlen)
-        return -1;
+        /* 将偏移指针移动到文件末尾 */
+        vfs_lseek(fd, 0, SEEK_END);
+
+        /* 将数据写入文件 */
+        val = vfs_write(fd, argv[2], len);
+        if (val != len)
+            return -1;
+    }
 
     /* 关闭已打开的文件 */
     vfs_close(fd);
@@ -290,74 +282,6 @@ int cmd_clear(int argc, char *argv[])
     return 0;
 }
 
-#include "dfs_priv.h"
-int cmd_diskfs_test (int argc, char *argv[])
-{
-    struct disk_sb *disksb = NULL;
-    struct dinode *root = NULL;
-    struct dinode *node = NULL;
-    char *buf = NULL;
-
-    disksb = dsb_read();
-    if (disksb == NULL)
-        return -1;
-
-    root = dnode_getroot(disksb);
-    if (root == NULL)
-        return -1;
-
-    node = ddir_read(disksb, root, "README", 0);
-    if (node == NULL)
-        return -1;
-
-    /* 读取 xv6 中 README 文件的内容 */
-    buf = kalloc(1024);
-    if (0 >= dnode_read(disksb, node, buf, 0, 1020))
-        return -1;
-    kprintf("\r\n%s\r\n", buf);
-
-/**********************************************/
-    /* 创建新的磁盘文件对象 */
-    uint blknum;
-    struct dinode *mknode = NULL;
-
-    /* 获取空闲的磁盘节点 */
-    blknum = dnode_get(disksb, T_FILE);
-
-    /* 在内存中创建磁盘节点 */
-    mknode = dnode_alloc(disksb, blknum);
-
-    /* 将数据写入磁盘索引节点 */
-    dnode_write(disksb, mknode, buf, 0, 1020);
-
-    /* 在指定路径下创建指定名字的对象 */
-    ddir_write(disksb, root, "ookkoo", blknum);
-
-    dnode_put(disksb, mknode);
-    dnode_free(disksb, mknode);
-
-/**********************************************/
-    /* 读取刚创建的磁盘文件对象 */
-    char *arr = NULL;
-    struct dinode *tmp = NULL;
-
-    tmp = ddir_read(disksb, root, "ookkoo", 0);
-    if (tmp == NULL)
-        return -1;
-    /* 读取 xv6 中 README 文件的内容 */
-    arr = kalloc(1024);
-    if (0 >= dnode_read(disksb, tmp, arr, 0, 1000))
-        return -1;
-    kprintf("\r\n%s\r\n", arr);
-
-    return 0;
-}
-
-int cmd_diskfs_create (int argc, char *agrv[])
-{
-    return 0;
-}
-
 /***********************************************************
  *      记录所有交互命令的数组，以及解析该数组的命令行接口
 ***********************************************************/
@@ -403,14 +327,15 @@ struct cli_cmd func_list[] =
     {/* echo */
         &cmd_echo,
         "echo",
-        "Data in the output file\r\n    \
-            example: echo a.a | echo /bin/a.a"
+        "Displays the specified string content\r\n    \
+            example: echo abc123"
     },
     {/* cat */
         &cmd_cat,
         "cat",
-        "Writes data to the specified file\r\n    \
-            example: cat a.a 1234567 | cat /bin/a.a 1234567"
+        "Display the file content or write the data to the file\r\n    \
+            example: cat a.a  (Display the file content) \r\n    \
+                     cat a.a abc123  (Write the data to the file)"
     },
     {/* rm */
         &cmd_rm,
@@ -465,16 +390,6 @@ struct cli_cmd func_list[] =
         "clear",
         "Clear screen and move cursor to top-left corner\r\n"
     },
-    {/* diskfs */
-        &cmd_diskfs_test,
-        "diskfs",
-        "test case disk file system\r\n"
-    },
-    {/* diskmk */
-        &cmd_diskfs_create,
-        "diskmk",
-        "Example Test the creation function of a disk file system\r\n"
-    }
 };
 #define CMD_LIST_LEN sizeof(func_list)/sizeof(func_list[0])
 

@@ -22,7 +22,7 @@ struct cli_cmd
 {
     cmd_function func;
     char name[CLI_CMD_LEN];
-    char info[128];
+    char *info;
 };
 
 

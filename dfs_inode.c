@@ -108,6 +108,7 @@ char *disk_path_getfirst (char *path, char *name)
 	return path;
 }
 
+/* 获取文件路径中最后一个节点的名字 */
 char *disk_path_getlast (char *path, char *name)
 {
 	return path_getfirst(path, name);
@@ -357,6 +358,7 @@ int ddir_write(struct disk_sb *sb, struct dinode *dnode, char *name, uint inum)
 	return 0;
 }
 
+/* 遍历目录节点内的信息，获取现有的目录条目 (与 ddir_put 成对使用) */
 struct disk_dirent *ddir_get (struct disk_sb *sb, struct dinode *dnode, char *name)
 {
 	uint off;
@@ -365,7 +367,7 @@ struct disk_dirent *ddir_get (struct disk_sb *sb, struct dinode *dnode, char *na
 	/* 确认当前的 dinode 是文件目录 */
 	if(dnode->type != T_DIR)
 		kErrPrintf("dirlookup not DIR");
-	
+
 	dir = (struct disk_dirent *)kalloc(sizeof(struct disk_dirent));
 	if (dir == NULL)
 		return NULL;
@@ -391,6 +393,7 @@ struct disk_dirent *ddir_get (struct disk_sb *sb, struct dinode *dnode, char *na
 	return NULL;
 }
 
+/* 释放已经获取到的目录条目，并将其内容写回磁盘 (与 ddir_get 成对使用) */
 void ddir_put (struct disk_sb *sb, struct dinode *dnode, struct disk_dirent *dir)
 {
 	uint off;
@@ -408,6 +411,7 @@ void ddir_put (struct disk_sb *sb, struct dinode *dnode, struct disk_dirent *dir
 	kfree(dir);
 }
 
+/* 修改指定目录条目的名字 */
 void ddir_rename (struct disk_sb *sb, struct dinode *dnode, struct disk_dirent *dir, char *name)
 {
 	uint off;
