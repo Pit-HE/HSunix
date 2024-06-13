@@ -220,3 +220,8 @@ int ddir_check (struct disk_inode *dnode, char *name)
 	return -1;
 }
 
+/* 将目录项中的所有文件与目录项递归释放 */
+void ddir_clear (struct disk_inode *dnode, struct disk_dirent *dir)
+{
+	/* TODO：递归遍历目录项中的所有文件对象 */
+}

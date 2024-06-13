@@ -126,24 +126,36 @@ int file_open (struct File *file, char *path, uint flag, uint mode)
         if (ditem != NULL)
         {
             inode = ditem->inode;
+
+            /* 判断获取到的类型是否一致 */
+            if ((inode->type == INODE_FILE) && (flag & O_DIRECTORY))
+            {
+                ditem_put(ditem);
+                goto _err_file_open;
+            }
+            if ((inode->type == INODE_DIR) && ((flag & O_DIRECTORY)==0))
+            {
+                ditem_put(ditem);
+                goto _err_file_open;
+            }
         }
         else
         {
             /* 判断是否要在实体文件系统中创建新的成员 */
             if ((flag & O_CREAT) != O_CREAT)
-                return -1;
+                goto _err_file_open;
             
             /* 创建新的 inode 成员 */
             inode = inode_getfs(fsdev, flag, mode);
             if (inode == NULL)
-                return -1;
+                goto _err_file_open;
 
             /* 在实体文件系统中创建对应成员 */
             ret = fsdev->fs->fsops->create(fsdev, inode, rp_path);
             if (ret < 0)
             {
                 inode_put(inode);
-                return -1;
+                goto _err_file_open;
             }
 
             /* 创建新的目录项 */
@@ -151,7 +163,7 @@ int file_open (struct File *file, char *path, uint flag, uint mode)
             if (ditem == NULL)
             {
                 inode_put(inode);
-                return -1;
+                goto _err_file_open;
             }
             ditem->inode = inode;
 
@@ -173,13 +185,13 @@ int file_open (struct File *file, char *path, uint flag, uint mode)
         /* 获取指定的设备 */
         dev = dev_get(path);
         if (dev == NULL)
-            return -1;
+            goto _err_file_open;
 
         inode = inode_getdev(dev, flag, S_IRWXU);
         if (inode == NULL)
         {
             dev_put(dev);
-            return -1;
+            goto _err_file_open;
         }
     }
 
@@ -194,6 +206,11 @@ int file_open (struct File *file, char *path, uint flag, uint mode)
         ret = inode->fops->open(file);
 
     return ret;
+
+_err_file_open:
+    kfree(rp_path);
+    kfree(ap_path);
+    return -1;
 }
 
 /* 关闭已打开的文件对象，注销已打开的文件描述符

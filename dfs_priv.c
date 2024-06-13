@@ -82,6 +82,9 @@ char *disk_path_getfirst (char *path, char *name)
     char *str;
 	int len;
 
+	if ((path == NULL) || (name == NULL))
+		return NULL;
+
 	/* 跳过第一个路径分隔符 */
 	while(*path == '/')
 		path++;

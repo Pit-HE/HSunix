@@ -178,15 +178,18 @@ int dfs_getdents (struct File *file, struct dirent *dirp, uint count)
     uint cnt = 0, idx = 0;
     struct disk_dirent dir;
     struct disk_inode *node = NULL;
-    struct disk_inode *parent = NULL;
+    struct disk_inode *temp = NULL;
 
     if ((file == NULL) || (dirp == NULL) ||
         (file->inode == NULL))
         return -1;
 
-    /* 解析该路径中目标文件的名字，以及其父路径的磁盘节点 */
-    parent = dinode_parent(file->ditem->path, name);
-    if (parent == NULL)
+    /* 解析该路径中文件对象的磁盘索引节点和名字 */
+    node = dinode_path(file->ditem->path, name);
+    if (node == NULL)
+        return -1;
+    /* 该文件对象必须是目录项 */
+    if (node->type != DISK_DIR)
         return -1;
 
     /* 记录要读取的文件对象的数量 */
@@ -195,10 +198,10 @@ int dfs_getdents (struct File *file, struct dirent *dirp, uint count)
         return -1;
     end = file->off + num;
 
-    /* 遍历父节点 disk_inode 内的所有目录项 */
-	for(off = 0; off < parent->size; off += sizeof(struct disk_dirent))
+    /* 遍历目标节点 disk_inode 内的所有目录项 */
+	for(off = 0; off < node->size; off += sizeof(struct disk_dirent))
 	{
-        dinode_read(parent, (char *)&dir, off, sizeof(struct disk_dirent));
+        dinode_read(node, (char *)&dir, off, sizeof(struct disk_dirent));
 
         /* 跳过被清空的成员 */
         if (dir.inum == 0)
@@ -209,15 +212,15 @@ int dfs_getdents (struct File *file, struct dirent *dirp, uint count)
         {
             if (dir.inum != 0)
             {
-                node = dinode_alloc(dir.inum);
+                temp = dinode_alloc(dir.inum);
 
                 kstrcpy(dirp[cnt].name, dir.name);
-                dirp[cnt].type = (node->type == DISK_DIR) ? INODE_DIR:INODE_FILE;
+                dirp[cnt].type = (temp->type == DISK_DIR) ? INODE_DIR:INODE_FILE;
                 dirp[cnt].namelen = kstrlen(dir.name);
                 dirp[cnt].objsize = sizeof(struct dirent);
-                dirp[cnt].datasize = node->size;
+                dirp[cnt].datasize = temp->size;
 
-                dinode_free(node);
+                dinode_free(temp);
             }
             cnt += 1;
             file->off += 1;
@@ -290,7 +293,7 @@ int dfs_unlink (struct DirItem *ditem)
     if (parent == NULL)
         return -1;
     
-    /* 从父节点中获取指定名字的目录项与磁盘节点 */
+    /* 从父节点中获取指定名字的目录项与其对应的磁盘节点 */
     dir = ddir_get(parent, name);
     node = dinode_alloc(dir->inum);
 
@@ -305,7 +308,12 @@ int dfs_unlink (struct DirItem *ditem)
     }
     else
     {
-        /* TODO */
+        /* 释放目录项中存放的所有文件对象 */
+        ddir_clear(node, dir);
+
+        /* 释放该文件占用的内存空间 */
+        dinode_put(node);
+        dinode_free(node);
     }
 
     return 0;

@@ -67,6 +67,64 @@ struct disk_inode *dinode_parent (char *path, char *name)
 	return node;
 }
 
+/* 解析文件的绝对路径，获取该文件对象的磁盘索引节点与名字
+ *
+ * path: 文件对象的绝对路径
+ * name: 存放该文件对象的名字
+ * 
+ * 返回值：该文件对象的磁盘索引节点
+ */
+struct disk_inode *dinode_path (char *path, char *name)
+{
+	char *tmp_path = path;
+	struct disk_dirent *dir = NULL;
+    struct disk_inode *node = root_node;
+	struct disk_inode *oldnode = NULL;
+	struct disk_dirent *olddir = NULL;
+
+	/* 处理获取文件系统挂载路径的情况 */
+	while(*tmp_path == '/' && *tmp_path)
+        tmp_path++;
+    if (*tmp_path == '\0')
+	{
+		name[0] = '\0';
+        return node;
+	}
+
+    /* 循环解析路径中的下一个元素 */
+	while((path = disk_path_getfirst(path, name)) != 0)
+	{
+		/* 解析到的 inode 必须是文件夹 */
+		if(node->type != DISK_DIR)
+			return NULL;
+
+		/* 路径是否解析完成 */
+		if(*name == '\0')
+			return node;
+
+		olddir = dir;
+		oldnode = node;
+
+		/* 在目录项中查找指定名字的 inode */
+		dir = ddir_get(node, name);
+		if (dir == NULL)
+			return NULL;
+		node = dinode_alloc(dir->inum);
+		if(node == NULL)
+		{
+			ddir_put(node, dir);
+			return NULL;
+		}
+
+		/* 释放之前占用的内存空间 */
+		ddir_put(node, olddir);
+		dinode_free(oldnode);
+	}
+
+	/* 是否需要释放对 inode 的占用 */
+	return node;
+}
+
 /* 获取一个空闲磁盘索引节点的编号 
  * ( 与 dinode_put 成对使用 )
  */
@@ -158,7 +216,7 @@ struct disk_inode *dinode_alloc (uint inum)
 	buf = dbuf_alloc(IBLOCK(inum, superblock));
 	if (buf == NULL)
 		return NULL;
-
+	
 	/* 获取磁盘节点具体的位置 */
 	temp = (struct disk_inode *)buf->data + inum % (BSIZE / sizeof(struct disk_inode));
 
@@ -225,7 +283,7 @@ void dinode_clear (struct disk_inode *dnode)
 		}
 	}
 
-	/* 释放扩展磁盘块中记录的所有磁盘块 */
+	/* 处理最后一个磁盘块的释放 */
 	if(dnode->ex_addr)
 	{
 		/* 读出最后一个磁盘块的内容 */
