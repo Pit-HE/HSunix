@@ -135,9 +135,7 @@ int mkdir (char *path, uint mode)
     ret = file_open(file, path, 
             O_CREAT | O_DIRECTORY | O_RDWR, mode);
     if (ret >= 0)
-    {
         file_close(file);
-    }
 
     file_free(file);
 

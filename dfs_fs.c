@@ -13,6 +13,7 @@ int dfs_open (struct File *file)
 {
     struct Inode *inode = NULL;
     struct disk_inode *node = NULL;
+    struct disk_inode *temp = NULL;
 
     if ((file == NULL) || (file->magic != FILE_MAGIC))
         return -1;
@@ -24,6 +25,13 @@ int dfs_open (struct File *file)
     node = inode->data;
     if (node == NULL)
         return -1;
+    
+    /* 从磁盘获取该节点最新的信息 */
+    temp = dinode_alloc(node->nlink);
+    if (temp == NULL)
+        return -1;
+    kmemmove(node, temp, sizeof(struct disk_inode));
+    dinode_free(temp);
     
     if (inode->flags & O_APPEND)
     {
@@ -50,6 +58,18 @@ int dfs_open (struct File *file)
 }
 int dfs_close (struct File *file)
 {
+    struct disk_inode *node = 0;
+
+    if (file == NULL)
+        return -1;
+
+    node = file->inode->data;
+    if (node == NULL)
+        return -1;
+
+    /* 将内存节点的信息写回到磁盘中 */
+    dinode_flush(node);
+
     return 0;
 }
 int dfs_ioctl (struct File *file, int cmd, void *args)

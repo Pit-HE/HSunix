@@ -158,7 +158,7 @@ struct disk_inode *dinode_alloc (uint inum)
 	buf = dbuf_alloc(IBLOCK(inum, superblock));
 	if (buf == NULL)
 		return NULL;
-	
+
 	/* 获取磁盘节点具体的位置 */
 	temp = (struct disk_inode *)buf->data + inum % (BSIZE / sizeof(struct disk_inode));
 
