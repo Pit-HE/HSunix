@@ -116,7 +116,10 @@ static struct FsDevice *find_fsdev (const char *path)
 
         /* 处理遍历链表结束都未找到目标的情况 */
         if (fsdev != nextdev)
+        {
+            fsdev = NULL;
             break;
+        }
     }
    
     return fsdev;
@@ -274,7 +277,8 @@ int fsdev_unmount (char *path)
 {
     int ret = 0;
     char *ap_path = NULL;
-    struct FsDevice *fsdev;
+    struct FsObject *fsobj = NULL;
+    struct FsDevice *fsdev = NULL;
 
     /* 获取要操作的绝对路径 */
     ap_path = path_parser(NULL, path);
@@ -285,8 +289,15 @@ int fsdev_unmount (char *path)
     fsdev = find_fsdev(ap_path);
     if (fsdev == NULL)
         return -1;
+    if (fsdev == root_fsdev)
+        return -1;
     if (fsdev->ref != 0)
         return -1;
+
+    fsobj = find_fsobj(fsdev->fs->name);
+    if (fsobj == NULL)
+        return -1;
+    fsobj->ref -= 1;
 
     remove_fsdev(fsdev);
 

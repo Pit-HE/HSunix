@@ -225,7 +225,7 @@ void dinode_clear (struct disk_inode *dnode)
 		}
 	}
 
-	/* 处理最后一个磁盘块的释放 */
+	/* 释放扩展磁盘块中记录的所有磁盘块 */
 	if(dnode->ex_addr)
 	{
 		/* 读出最后一个磁盘块的内容 */

@@ -151,7 +151,7 @@ int mkfile (char *path, uint flag, uint mode)
     if (path == NULL)
         return -1;
     
-    fd = vfs_open(path, O_CREAT|O_RDWR, S_IRWXU);
+    fd = vfs_open(path, flag, mode);
     if (fd < 0)
         return -1;
 

@@ -24,7 +24,10 @@ struct statfs
 struct stat
 {
     int  size;      /* 对象的大小 */
+    int  type;      /* 文件对象的类型 */
     char name[32];  /* 文件对象的名字 */
+    /* 文件对象所属的文件系统 */
+    char fsname[FS_NAME_LEN];
 };
 
 #define SEEK_SET	0	/* 设置值为距离文件开始位置的绝对值 */
@@ -33,6 +36,9 @@ struct stat
 #define SEEK_DATA	3	/* seek to the next data */
 #define SEEK_HOLE	4	/* seek to the next hole */
 #define SEEK_MAX	SEEK_HOLE
+
+#define VFS_DIR     1
+#define VFS_FILE    2
 
 
 int  vfs_pcbInit   (ProcCB *pcb, char *path);

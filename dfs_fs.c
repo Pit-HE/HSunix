@@ -288,7 +288,7 @@ int dfs_unlink (struct DirItem *ditem)
         /* TODO */
     }
 
-    return -1;
+    return 0;
 }
 int dfs_stat (struct File *file, struct stat *buf)
 {
@@ -304,6 +304,13 @@ int dfs_stat (struct File *file, struct stat *buf)
 
     /* 获取用户所需的节点信息 */
     buf->size = node->size;
+
+    if (node->type == DISK_DIR)
+        buf->type = VFS_DIR;
+    else if(node->type == DISK_FILE)
+        buf->type = VFS_FILE;
+
+    kstrcpy(buf->fsname, file->inode->fs->name);
     disk_path_getlast(file->ditem->path, buf->name);
 
     return 0;
@@ -402,7 +409,7 @@ int dfs_create (struct FsDevice *fsdev, struct Inode *inode, char *path)
     /* 从磁盘的索引节点块中获取一个空闲的对象 */
     if (inode->type == INODE_FILE)
         inum = dinode_get(DISK_FILE);
-    else
+    else if (inode->type == INODE_DIR)
         inum = dinode_get(DISK_DIR);
 
     /* 在内存中创建与磁盘节点对应的内存节点 */

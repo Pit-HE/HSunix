@@ -497,9 +497,16 @@ int ramfs_stat (struct File *file, struct stat *buf)
         return -1;
 
     /* 将节点信息写入缓冲区 */
-    buf->size = node->size;
-    kstrcpy(buf->name, node->name);
+    if (node->type == RAMFS_DIR)
+        buf->type = VFS_DIR;
+    else if (node->type == RAMFS_FILE)
+        buf->type = VFS_FILE;
 
+    buf->size = node->size;
+
+    kstrcpy(buf->name, node->name);
+    kstrcpy(buf->fsname, file->inode->fs->name);
+    
     return 0;
 }
 /* 修改指定文件对象的名字 */

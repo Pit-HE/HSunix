@@ -230,8 +230,13 @@ int cmd_stat (int argc, char *argv[])
     ret = vfs_stat(fd, &buf);
     vfs_close(fd);
 
-    kprintf("    size: %d\r\n", buf.size);
     kprintf("    name: %s\r\n", buf.name);
+    kprintf("    size: %d\r\n", buf.size);
+    if (buf.type == VFS_DIR)
+        kprintf("    type: dir\r\n");
+    else
+        kprintf("    type: file\r\n");
+    kprintf("    fsname: %s\r\n", buf.fsname);
 
     return ret;
 }
