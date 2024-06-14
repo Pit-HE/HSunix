@@ -110,7 +110,7 @@ struct disk_dirent *ddir_get (struct disk_inode *dnode, char *name)
 /* 释放已经获取到的目录项，并更新其在磁盘中的记录
  * ( 与 ddir_get 成对使用 )
  */
-void ddir_put (struct disk_inode *dnode, struct disk_dirent *dir)
+void ddir_put (struct disk_inode *dnode, struct disk_dirent *dir, bool clear)
 {
 	uint off;
 
@@ -121,6 +121,10 @@ void ddir_put (struct disk_inode *dnode, struct disk_dirent *dir)
     off = ddir_check(dnode, dir->name);
 	if (off == -1)
 		return;
+
+	/* 是否清除该目录项的内容 */
+	if (clear == TRUE)
+		kmemset(dir, 0, sizeof(struct disk_dirent));
 
 	/* 将目录项的内容写回磁盘 */
 	dinode_write(dnode, (char*)dir, off, sizeof(struct disk_dirent));
@@ -164,29 +168,6 @@ void ddir_rename (struct disk_inode *dnode, struct disk_dirent *dir, char *name)
 	dinode_write(dnode, (char *)dir, off, sizeof(struct disk_dirent));
 }
 
-/* 释放目录项在磁盘与内存中存储的内容 */
-void ddir_release (struct disk_inode *dnode, struct disk_dirent *dir)
-{
-	uint off;
-
-	if ((dnode == NULL) || (dir == NULL))
-		return;
-
-	/* 获取目录项在其父节点中的偏移值 */
-    off = ddir_check(dnode, dir->name);
-	if (off == -1)
-		return;
-
-	/* 清空目录项在磁盘中的内容 */
-	kmemset(dir, 0, sizeof(struct disk_dirent));
-
-	/* 清空磁盘中的目录项 */
-	dinode_write(dnode, (char*)dir, off, sizeof(struct disk_dirent));
-
-	/* 释放磁盘目录项占用的内存空间 */
-	kfree(dir);
-}
-
 /* 检查磁盘节点中是否存在指定名字的目录项 
  * 返回值：-1为失败，否则为目录项在磁盘节点存储空间的偏移值
  */
@@ -218,10 +199,4 @@ int ddir_check (struct disk_inode *dnode, char *name)
 			return off;
 	}
 	return -1;
-}
-
-/* 将目录项中的所有文件与目录项递归释放 */
-void ddir_clear (struct disk_inode *dnode, struct disk_dirent *dir)
-{
-	/* TODO：递归遍历目录项中的所有文件对象 */
 }

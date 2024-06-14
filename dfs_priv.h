@@ -75,9 +75,9 @@ uint dinode_get   (uint type);
 void dinode_put   (struct disk_inode *dnode);
 void dinode_free  (struct disk_inode *dnode);
 void dinode_flush (struct disk_inode *dnode);
-void dinode_clear (struct disk_inode *dnode);
 int  dinode_read  (struct disk_inode *dnode, char *dst, uint off, uint n);
 int  dinode_write (struct disk_inode *dnode, char *src, uint off, uint n);
+int  dinode_release (struct disk_inode *dnode);
 struct disk_inode *dinode_alloc   (uint inum);
 struct disk_inode* dinode_parent  (char *path, char *name);
 struct disk_inode *dinode_path    (char *path, char *name);
@@ -86,12 +86,10 @@ struct disk_inode* dinode_getroot (void);
 /********************* dfs_dirent ***********************/
 int  ddir_read   (struct disk_inode *dnode, struct disk_dirent *dir, char *name);
 int  ddir_create (struct disk_inode *dnode, char *name, uint inum);
-void ddir_put    (struct disk_inode *dnode, struct disk_dirent *dir);
+void ddir_put    (struct disk_inode *dnode, struct disk_dirent *dir, bool clear);
 void ddir_flush  (struct disk_inode *dnode, struct disk_dirent *dir);
 void ddir_rename (struct disk_inode *dnode, struct disk_dirent *dir, char *name);
-void ddir_release(struct disk_inode *dnode, struct disk_dirent *dir);
 int  ddir_check  (struct disk_inode *dnode, char *name);
-void ddir_clear  (struct disk_inode *dnode, struct disk_dirent *dir);
 struct disk_dirent *ddir_get (struct disk_inode *dnode, char *name);
 
 /********************* dfs_priv ***********************/

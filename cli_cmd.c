@@ -114,7 +114,7 @@ int cmd_cat (int argc, char *argv[])
         return -1;
     
     /* 打开指定路径下的文件对象 */
-    fd = vfs_open(argv[1], O_RDWR | O_CREAT, S_IRWXU);
+    fd = vfs_open(argv[1], O_RDWR, S_IRWXU);
     if (fd < 0)
         return -1;
 
@@ -155,9 +155,17 @@ int cmd_cat (int argc, char *argv[])
 /* 删除指定的文件或目录 */
 int cmd_rm (int argc, char *argv[])
 {
+    int fd;
+
     if ((argc != 2) || (argv[1] == NULL))
         return -1;
 
+    /* 确认要删除的文件存在 */
+    fd = vfs_open(argv[1], O_RDONLY, S_IRWXU);
+    if (fd < 0)
+        return -1;
+    vfs_close(fd);
+    
     return vfs_unlink(argv[1]);
 }
 
@@ -223,7 +231,7 @@ int cmd_stat (int argc, char *argv[])
     if ((argc != 2) || (argv[1] == NULL))
         return -1;
     
-    fd = vfs_open(argv[1],  O_RDONLY, S_IRWXU);
+    fd = vfs_open(argv[1], O_RDONLY, S_IRWXU);
     if (fd < 0)
         return -1;
 

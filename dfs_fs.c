@@ -297,24 +297,17 @@ int dfs_unlink (struct DirItem *ditem)
     dir = ddir_get(parent, name);
     node = dinode_alloc(dir->inum);
 
-    if (node->type == DISK_FILE)
-    {
-        /* 释放单个文件 */
-        ddir_release(parent, dir);
-
-        /* 释放该文件占用的内存空间 */
-        dinode_put(node);
-        dinode_free(node);
-    }
-    else
+    if (node->type == DISK_DIR)
     {
         /* 释放目录项中存放的所有文件对象 */
-        ddir_clear(node, dir);
-
-        /* 释放该文件占用的内存空间 */
-        dinode_put(node);
-        dinode_free(node);
+        dinode_release(node);
     }
+    /* 释放该文件占用的内存与磁盘空间 */
+    dinode_put(node);
+    dinode_free(node);
+
+    /* 释放目录项记录的内容 */
+    ddir_put(parent, dir, TRUE);
 
     return 0;
 }
@@ -364,7 +357,7 @@ int dfs_rename (struct DirItem *old_ditem, struct DirItem *new_ditem)
     /* 修改磁盘节点所对应的目录项中记录的节点名字 */
     dir = ddir_get(parent_node, old_name);
     ddir_rename(parent_node, dir, new_name);
-    ddir_put(parent_node, dir);
+    ddir_put(parent_node, dir, FALSE);
 
     /* 修改虚拟文件系统中目录项记录的文件信息 */
     kstrcpy(old_ditem->path, new_ditem->path);
@@ -396,7 +389,7 @@ int dfs_lookup (struct FsDevice *fsdev,
         if (dir == NULL)
             return -1;
         node = dinode_alloc(dir->inum);
-        ddir_put(parent, dir);
+        ddir_put(parent, dir, FALSE);
 
         dinode_free(parent);
         if (node == NULL)

@@ -9,6 +9,55 @@ extern struct disk_sb *superblock;
 extern struct disk_inode *root_node;
 
 
+/* 清空单个磁盘索引节点占用的所有磁盘块 */
+static void dinode_clear_single (struct disk_inode *dnode)
+{
+	int i, j;
+	uint *a = NULL;
+	struct disk_buf *buf = NULL;
+
+	if (dnode == NULL)
+		return;
+
+	/* 释放 inode 占有的所有磁盘块 */
+	for(i = 0; i < NDIRECT; i++)
+	{
+		if(dnode->addrs[i])
+		{
+			dbmap_free(dnode->addrs[i]);
+			dnode->addrs[i] = 0;
+		}
+	}
+
+	/* 处理最后一个磁盘块的释放 */
+	if(dnode->ex_addr)
+	{
+		/* 读出最后一个磁盘块的内容 */
+		buf = dbuf_alloc(dnode->ex_addr);
+		a = (uint *)buf->data;
+
+		/* 处理在最后一个磁盘块中的扩展 */
+		for(j = 0; j < NINDIRECT; j++)
+		{
+			if(a[j])
+			{
+				dbmap_free(a[j]);
+			}
+		}
+		/* 释放 buf 的占用 */
+		dbuf_free(buf);
+
+		/* 也释放最后一个磁盘块的映射 */
+		dbmap_free(dnode->ex_addr);
+		dnode->ex_addr = 0;
+	}
+	dnode->size = 0;
+
+	/* 将内存中的磁盘索引节点信息写回磁盘 */
+	dinode_flush(dnode);
+}
+
+
 /* 解析文件的绝对路径，获取该路径对象的父节点与对象名
  *
  * path: 文件对象的绝对路径
@@ -54,12 +103,12 @@ struct disk_inode *dinode_parent (char *path, char *name)
 		node = dinode_alloc(dir->inum);
 		if(node == NULL)
 		{
-			ddir_put(node, dir);
+			ddir_put(node, dir, FALSE);
 			return NULL;
 		}
 
 		/* 释放之前占用的内存空间 */
-		ddir_put(node, olddir);
+		ddir_put(node, olddir, FALSE);
 		dinode_free(oldnode);
 	}
 
@@ -112,12 +161,12 @@ struct disk_inode *dinode_path (char *path, char *name)
 		node = dinode_alloc(dir->inum);
 		if(node == NULL)
 		{
-			ddir_put(node, dir);
+			ddir_put(node, dir, FALSE);
 			return NULL;
 		}
 
 		/* 释放之前占用的内存空间 */
-		ddir_put(node, olddir);
+		ddir_put(node, olddir, FALSE);
 		dinode_free(oldnode);
 	}
 
@@ -177,7 +226,7 @@ void dinode_put (struct disk_inode *dnode)
 		return;
 
 	/* 释放磁盘节点占用的所有磁盘块 */
-	dinode_clear(dnode);
+	dinode_clear_single(dnode);
 
 	/* 获取内存 inode 对应的磁盘 disk_inode 所在的磁盘块 */
 	buf = dbuf_alloc(IBLOCK(dnode->nlink, superblock));
@@ -263,53 +312,6 @@ void dinode_flush (struct disk_inode *dnode)
 	dbuf_flush(buf);
 }
 
-/* 清空磁盘索引节点占用的所有磁盘块 */
-void dinode_clear (struct disk_inode *dnode)
-{
-	int i, j;
-	uint *a = NULL;
-	struct disk_buf *buf = NULL;
-
-	if (dnode == NULL)
-		return;
-
-	/* 释放 inode 占有的所有磁盘块 */
-	for(i = 0; i < NDIRECT; i++)
-	{
-		if(dnode->addrs[i])
-		{
-			dbmap_free(dnode->addrs[i]);
-			dnode->addrs[i] = 0;
-		}
-	}
-
-	/* 处理最后一个磁盘块的释放 */
-	if(dnode->ex_addr)
-	{
-		/* 读出最后一个磁盘块的内容 */
-		buf = dbuf_alloc(dnode->ex_addr);
-		a = (uint *)buf->data;
-
-		/* 处理在最后一个磁盘块中的扩展 */
-		for(j = 0; j < NINDIRECT; j++)
-		{
-			if(a[j])
-			{
-				dbmap_free(a[j]);
-			}
-		}
-		/* 释放 buf 的占用 */
-		dbuf_free(buf);
-
-		/* 也释放最后一个磁盘块的映射 */
-		dbmap_free(dnode->ex_addr);
-		dnode->ex_addr = 0;
-	}
-	dnode->size = 0;
-
-	/* 将内存中的磁盘索引节点信息写回磁盘 */
-	dinode_flush(dnode);
-}
 
 /* 读取磁盘节点 dnode 所占有的磁盘块中的数据 */
 int dinode_read (struct disk_inode *dnode, char *dst, uint off, uint n)
@@ -433,3 +435,41 @@ struct disk_inode* dinode_getroot (void)
 
     return root_node;
 }
+
+/* 将目录项中的所有文件与目录项递归释放 */
+int dinode_release (struct disk_inode *dnode)
+{
+	uint off;
+	struct disk_dirent tmp_dir;
+	struct disk_inode *tmp_node = NULL;
+
+	if (dnode == NULL)
+		return -1;
+
+	/* 遍历目录项中的所有文件对象 */
+	for(off = 0; off < dnode->size; off += sizeof(struct disk_dirent))
+	{
+		/* 获取磁盘节点中记录的目录项信息 */
+		if (dinode_read(dnode, (char*)&tmp_dir, off, sizeof(struct disk_dirent)) 
+				!= sizeof(struct disk_dirent))
+			return -1;
+
+		/* 获取该目录项所对应的磁盘节点 */
+		tmp_node = dinode_alloc(tmp_dir.inum);
+		if (tmp_node == NULL)
+			return -1;
+
+		/* 递归遍历子目录项中的所有文件对象 */
+		if (tmp_node->type == DISK_DIR)
+		{
+			if (-1 == dinode_release(tmp_node))
+				return -1;
+		}
+
+		/* 释放磁盘索引节点所占用的内存空间与磁盘资源 */
+		dinode_clear_single(tmp_node);
+		dinode_free(tmp_node);
+	}
+	return 0;
+}
+
