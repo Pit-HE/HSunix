@@ -55,15 +55,16 @@ void  init_kmem     (void);
 
 /******************** vm ********************/
 void    init_kvm    (void);
-Pagetable_t *uvm_create (void);
-void    uvm_unmap   (Pagetable_t *pagetable, uint64 va, uint64 npages, bool free);
-uint64  uvm_alloc   (Pagetable_t *pagetable, uint64 oldaddr, uint64 newaddr, int flag);
+uint64  kvm_phyaddr (Pagetable_t *pagetable, uint64 vAddr);
+void    kvm_map     (Pagetable_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag);
+void    uvm_unmap   (Pagetable_t *pagetable, uint64 vAddr, uint64 npages, bool free);
+uint64  uvm_alloc   (Pagetable_t *pagetable, uint64 start_addr, uint64 end_addr, int flag);
 uint64  uvm_free    (Pagetable_t *pagetable, uint64 oldsz, uint64 newsz);
 void    uvm_destroy (Pagetable_t *pagetable);
 int     uvm_copy    (Pagetable_t *destPage, Pagetable_t *srcPage, uint64 sz, bool alloc);
 int     copyout     (Pagetable_t *pagetable, uint64 dstva, char *src, uint64 len);
 int     copyin      (Pagetable_t *pagetable, char *dst, uint64 srcva, uint64 len);
-
+Pagetable_t *uvm_create (void);
 
 /******************** trap ********************/
 void init_trap      (void);

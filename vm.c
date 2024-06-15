@@ -101,6 +101,8 @@ static void freepages (Pagetable_t *pagetable)
     }
     kfreePhyPage(pagetable);
 }
+
+
 /*******************************************************/
 /* 获取虚拟地址对应的物理地址 */
 uint64 kvm_phyaddr (Pagetable_t *pagetable, uint64 vAddr)
@@ -132,18 +134,18 @@ void kvm_map (Pagetable_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int
 }
 
 /* 释放范围的页表条目所映射的物理内存页 */
-void uvm_unmap (Pagetable_t *pagetable, uint64 va, uint64 npages, bool free)
+void uvm_unmap (Pagetable_t *pagetable, uint64 vAddr, uint64 npages, bool free)
 {
     uint64  start, end;
     pte_t   *pte;
 
-    if ((va % PGSIZE) != 0)
+    if ((vAddr % PGSIZE) != 0)
         return;
     if (npages <= 0)
         return;
 
-    end = va + (npages * PGSIZE);
-    for (start = va; start < end; start += PGSIZE)
+    end = vAddr + (npages * PGSIZE);
+    for (start = vAddr; start < end; start += PGSIZE)
     {
         pte = _mmu(pagetable, start, FALSE);
 
@@ -174,16 +176,16 @@ Pagetable_t *uvm_create (void)
 }
 
 /* 为指定范围的虚拟地址映射可用的物理地址 */
-uint64 uvm_alloc (Pagetable_t *pagetable, uint64 oldaddr, uint64 newaddr, int flag)
+uint64 uvm_alloc (Pagetable_t *pagetable, uint64 start_addr, uint64 end_addr, int flag)
 {
     void    *mem;
     uint64  addr;
 
-    if ((newaddr % PGSIZE) != 0)
+    if ((end_addr % PGSIZE) != 0)
         return 0;
-    oldaddr = PGROUNDUP(oldaddr);
+    start_addr = PGROUNDUP(start_addr);
 
-    for (addr=oldaddr; addr < newaddr; addr += PGSIZE)
+    for (addr=start_addr; addr < end_addr; addr += PGSIZE)
     {
         mem = kallocPhyPage();
         if (mem == NULL)
@@ -191,17 +193,17 @@ uint64 uvm_alloc (Pagetable_t *pagetable, uint64 oldaddr, uint64 newaddr, int fl
         kmemset(mem, 0, PGSIZE);
 
         /* 建立映射关系 */
-        if (mappages(pagetable, oldaddr, (uint64)mem, 4096, PTE_R|PTE_U|flag) != 0)
+        if (mappages(pagetable, start_addr, (uint64)mem, 4096, PTE_R|PTE_U|flag) != 0)
         {
             /* 释放已申请的内存页 */
             kfreePhyPage(mem);
             goto error_map;
         }
     }
-    return newaddr;
-error_map:
+    return end_addr;
+ error_map:
     /* 处理之前已映射成功的内存页 */
-    uvm_unmap(pagetable, oldaddr, (addr - oldaddr)/PGSIZE, TRUE);
+    uvm_unmap(pagetable, start_addr, (addr - start_addr)/PGSIZE, TRUE);
     return 0;
 }
 
@@ -277,7 +279,7 @@ int uvm_copy (Pagetable_t *destPage, Pagetable_t *srcPage, uint64 sz, bool alloc
         }
     }
     return 0;
-error_cpy:
+ error_cpy:
     uvm_free(destPage, 0, i);
     return -1;
 }

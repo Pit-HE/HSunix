@@ -295,6 +295,14 @@ int cmd_clear(int argc, char *argv[])
     return 0;
 }
 
+int cmd_exec (int argc, char *argv[])
+{
+    int do_exec(char *path, char *argv[]);
+    do_exec("/fs/cat", NULL);
+
+    return 0;
+}
+
 /***********************************************************
  *      记录所有交互命令的数组，以及解析该数组的命令行接口
 ***********************************************************/
@@ -403,6 +411,11 @@ struct cli_cmd func_list[] =
         "clear",
         "Clear screen and move cursor to top-left corner\r\n"
     },
+    {/* cmd_exe */
+        &cmd_exec,
+        "exec",
+        "sdafsddfs"
+    }
 };
 #define CMD_LIST_LEN sizeof(func_list)/sizeof(func_list[0])
 

@@ -213,6 +213,10 @@ int vfs_rename (char *oldname, char *newname)
     return file_rename(oldname, newname);
 }
 
+/* 修改文件对象的偏移值
+ * 
+ * whence：要操作的类型，例如：SEEK_SET ...
+ */
 int vfs_lseek (int fd, uint off, int whence)
 {
     struct File *file = NULL;
