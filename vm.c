@@ -104,6 +104,31 @@ static void freepages (Pagetable_t *pagetable)
 
 
 /*******************************************************/
+/* 设置虚拟内存页中指定的权限标志 */
+int kvm_setflag (Pagetable_t *pagetable, uint64 vAddr, int flag)
+{
+    pte_t   *pte = NULL;
+
+    pte = _mmu(pagetable, vAddr, FALSE);
+    if (pte == NULL)
+        return -1;
+    
+    *pte |= flag;
+    return 0;
+}
+/* 清除虚拟内存页中指定的权限标志 */
+int kvm_clrflag (Pagetable_t *pagetable, uint64 vAddr, int flag)
+{
+    pte_t   *pte = NULL;
+
+    pte = _mmu(pagetable, vAddr, FALSE);
+    if (pte == NULL)
+        return -1;
+    
+    *pte &= ~flag;
+    return 0;
+}
+
 /* 获取虚拟地址对应的物理地址 */
 uint64 kvm_phyaddr (Pagetable_t *pagetable, uint64 vAddr)
 {

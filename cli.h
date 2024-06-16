@@ -6,7 +6,7 @@
 
 
 /* 当前命令行模块最大支持传入多少个命令参数 */
-#define CLI_ARG_MAX     8
+#define CLI_ARG_MAX     10
 
 /* 命令所占用的最大字符串长度 */
 #define CLI_CMD_LEN     10

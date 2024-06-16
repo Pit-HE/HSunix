@@ -55,6 +55,8 @@ void  init_kmem     (void);
 
 /******************** vm ********************/
 void    init_kvm    (void);
+int     kvm_setflag (Pagetable_t *pagetable, uint64 vAddr, int flag);
+int     kvm_clrflag (Pagetable_t *pagetable, uint64 vAddr, int flag);
 uint64  kvm_phyaddr (Pagetable_t *pagetable, uint64 vAddr);
 void    kvm_map     (Pagetable_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag);
 void    uvm_unmap   (Pagetable_t *pagetable, uint64 vAddr, uint64 npages, bool free);
