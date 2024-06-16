@@ -54,7 +54,7 @@ struct disk_inode
   short type;           // File type
   short major;          // Major device number (DISK_DEVICE only)
   short minor;          // Minor device number (DISK_DEVICE only)
-  short nlink;          // Number of links to inode in file system
+  short inum;          // Number of links to inode in file system
   uint size;            // Size of file (bytes)
   uint addrs[NDIRECT];  // Data block addresses
   uint ex_addr;         // 当磁盘需要扩展时，记录新扩展磁盘块的编号

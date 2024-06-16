@@ -199,7 +199,7 @@ uint dinode_get (uint type)
 
 			/* 设置当前磁盘 disk_inode 的类型 */
 			node->type = type;
-			node->nlink = inum;
+			node->inum = inum;
 
 			/* mark it allocated on the disk */
 			dbuf_flush(buf);
@@ -229,8 +229,8 @@ void dinode_put (struct disk_inode *dnode)
 	dinode_clear_single(dnode);
 
 	/* 获取内存 inode 对应的磁盘 disk_inode 所在的磁盘块 */
-	buf = dbuf_alloc(IBLOCK(dnode->nlink, superblock));
-	node = (struct disk_inode *)buf->data + (dnode->nlink %
+	buf = dbuf_alloc(IBLOCK(dnode->inum, superblock));
+	node = (struct disk_inode *)buf->data + (dnode->inum %
 		(BSIZE / sizeof(struct disk_inode)));
 
 	/* 清空该磁盘节点的内容 */
@@ -271,7 +271,7 @@ struct disk_inode *dinode_alloc (uint inum)
 
 	/* 将磁盘节点的信息拷贝到内存对象中 */
 	kmemcpy(node, temp, sizeof(struct disk_inode));
-	node->nlink = inum;
+	node->inum = inum;
 
 	dbuf_free(buf);
 
@@ -301,8 +301,8 @@ void dinode_flush (struct disk_inode *dnode)
 	struct disk_inode *node = NULL;
 
 	/* 获取内存 inode 对应的磁盘 disk_inode 所在的磁盘块 */
-	buf = dbuf_alloc(IBLOCK(dnode->nlink, superblock));
-	node = (struct disk_inode *)buf->data + (dnode->nlink %
+	buf = dbuf_alloc(IBLOCK(dnode->inum, superblock));
+	node = (struct disk_inode *)buf->data + (dnode->inum %
 		(BSIZE / sizeof(struct disk_inode)));
 
 	/* 将内存 inode 信息写入磁盘 disk_inode */

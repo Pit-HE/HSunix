@@ -27,7 +27,7 @@ int dfs_open (struct File *file)
         return -1;
     
     /* 从磁盘获取该节点最新的信息 */
-    temp = dinode_alloc(node->nlink);
+    temp = dinode_alloc(node->inum);
     if (temp == NULL)
         return -1;
     kmemmove(node, temp, sizeof(struct disk_inode));

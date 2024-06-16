@@ -100,7 +100,6 @@ static struct FileOperation console_dev_opt =
 /* 控制台的中断服务函数 */
 void console_isr (int c)
 {
-    console_putc(c);
     kRingbuf_putChar(&consState.rb, (char)c);
     do_resume(&consState.rb);
 }

@@ -11,7 +11,10 @@ void init_main (void)
     if (-1 == vfs_pcbInit(getProcCB(), "/"))
         kError(eSVC_Process, E_STATUS);
 
-    cli_main();
+    while (1)
+    {
+        cli_main();
+    }
 }
 
 void idle_main (void)
