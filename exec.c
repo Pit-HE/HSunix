@@ -78,6 +78,7 @@ int elf_para_create (Pagetable_t *pagetable, uint64 *sptop, char *argv[])
     {
         len = kstrlen(argv[argc]) + 1;
         sp -= len;
+        /* 按照 riscv 的格式执行 16 位对齐 */
         sp -= sp % 16;
         array[argc] = sp;
 
@@ -89,6 +90,7 @@ int elf_para_create (Pagetable_t *pagetable, uint64 *sptop, char *argv[])
     /* 将记录参数数组存放地址的数据写入栈空间内 */
     len = (argc + 1) * sizeof(uint64);
     sp -= len;
+    /* 按照 riscv 的格式执行 16 位对齐 */
     sp -= sp % 16;
     if (0 > copyout(pagetable, sp, (char *)array, len))
         return -1;
@@ -108,9 +110,9 @@ int do_exec(char *path, char *argv[])
 {
     int fd, i;
     uint64 argc, off, sptop;
-    // ProcCB *pcb = NULL;
     struct elf_ehdr elf;
     struct elf_phdr phdr;
+    ProcCB *pcb = getProcCB();
     Pagetable_t *pgtab = NULL;
 
     fd = vfs_open(path, O_RDWR, S_IRWXU);
@@ -124,7 +126,7 @@ int do_exec(char *path, char *argv[])
         goto _err_exec_open;
 
     /* 创建新的虚拟内存页 */
-    pgtab = uvm_create();
+    pgtab = proc_allocpagetable(pcb);
     if (pgtab == NULL)
         goto _err_exec_open;
 
@@ -163,20 +165,21 @@ int do_exec(char *path, char *argv[])
     if (argc < 0)
         goto _err_exec_uvm; 
 
-    /* 将虚拟页表的信息写入进程中 */
-    // pcb = getProcCB();
-    // pcb->pageTab = pgtab;
-    // pcb->memSize = phdr.p_memsz;
-    // pcb->stackSize = PGSIZE;
-    // pcb->trapFrame->epc = elf.e_entry;
-    // pcb->trapFrame->sp  = sptop;
+    /* 释放进程原先的虚拟内存页资源 */
+    proc_freepagetable(pcb->pageTab, pcb->memSize);
 
-    uvm_destroy(pgtab);
+    /* 将虚拟页表的信息写入进程中 */
+    pcb->pageTab = pgtab;
+    pcb->memSize = phdr.p_memsz;
+    pcb->stackSize = PGSIZE;
+    pcb->trapFrame->epc = elf.e_entry;
+    pcb->trapFrame->sp  = sptop;
+
     vfs_close(fd);
     return argc;
 
 _err_exec_uvm:
-    uvm_destroy(pgtab);
+    proc_freepagetable(pgtab, phdr.p_memsz);
 
 _err_exec_open:
     vfs_close(fd);

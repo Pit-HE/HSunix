@@ -370,6 +370,8 @@ int copyin (Pagetable_t *pagetable, char *dst, uint64 srcva, uint64 len)
     return 0;
 }
 
+
+
 /* 初始化虚拟内存管理模块 */
 void init_kvm (void)
 {

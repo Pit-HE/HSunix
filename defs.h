@@ -98,6 +98,9 @@ int     do_kill     (int pid);
 int     do_sleep    (int ms);
 int     KillState   (ProcCB *pcb);
 void    wakeProcCB  (ProcCB *pcb);
+Pagetable_t *proc_allocpagetable (ProcCB *pcb);
+int proc_freepagetable (Pagetable_t *pgtabl, uint64 pg_size);
+
 
 /******************** plic ********************/
 void init_plic      (void);

@@ -113,6 +113,8 @@ void dumpProcCB (void)
         kprintf("\n");
     }
 }
+
+/* 申请可用的进程 PID */
 int allocPid (void)
 {
     return (kPidToken++);
@@ -138,7 +140,7 @@ ProcCB *allocProcCB (void)
     }
 
     /* 为进程申请在用户模式中使用的栈 */
-    pcb->trapFrame->sp = (uint64)kalloc(2048);
+    pcb->trapFrame->sp = (uint64)kallocPhyPage();
     if (pcb->trapFrame->sp == 0)
     {
         kfree (pcb->trapFrame);
@@ -564,4 +566,18 @@ int do_sleep (int ms)
 int KillState (ProcCB *pcb)
 {
     return pcb->killState;
+}
+
+/* 申请已初始化的进程页表 */
+Pagetable_t *proc_allocpagetable (ProcCB *pcb)
+{
+    Pagetable_t *pgtab = NULL;
+
+    return pgtab;
+}
+
+/* 释放进程虚拟页表占用的所有物理内存空间 */
+int proc_freepagetable (Pagetable_t *pgtabl, uint64 pg_size)
+{
+    return 0;
 }
