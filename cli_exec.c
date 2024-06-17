@@ -23,8 +23,7 @@ int cli_exec (char *cmd, int *retp)
     param = cli_parse_cmd(cmd);
 
     /* 将命令存储在第一位 */
-    argc += 1;
-    argv[0] = cmd;
+    argv[argc++] = cmd;
 
     /* 解析参数的内容 */
     argc += cli_parse_parameter(param, &argv[1]);

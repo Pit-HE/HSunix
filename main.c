@@ -13,7 +13,7 @@ void main (void)
     init_kmem();
     init_dev();
     init_console();
-    // init_kvm();
+    init_kvm();
     init_trap();
     init_plic();
     init_plichart();

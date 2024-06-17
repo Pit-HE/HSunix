@@ -114,12 +114,9 @@ static struct FsDevice *find_fsdev (const char *path)
             }
         }
 
-        /* 处理遍历链表结束都未找到目标的情况 */
+        /*  */
         if (fsdev != nextdev)
-        {
-            fsdev = NULL;
             break;
-        }
     }
    
     return fsdev;

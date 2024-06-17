@@ -297,8 +297,11 @@ int cmd_clear(int argc, char *argv[])
 
 int cmd_exec (int argc, char *argv[])
 {
+    if (argc < 2)
+        return -1;
+
     int do_exec(char *path, char *argv[]);
-    do_exec("/fs/cat", NULL);
+    do_exec("/fs/cat", argv);
 
     return 0;
 }

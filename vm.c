@@ -116,6 +116,7 @@ int kvm_setflag (Pagetable_t *pagetable, uint64 vAddr, int flag)
     *pte |= flag;
     return 0;
 }
+
 /* 清除虚拟内存页中指定的权限标志 */
 int kvm_clrflag (Pagetable_t *pagetable, uint64 vAddr, int flag)
 {
@@ -206,7 +207,7 @@ uint64 uvm_alloc (Pagetable_t *pagetable, uint64 start_addr, uint64 end_addr, in
     void    *mem;
     uint64  addr;
 
-    if ((end_addr % PGSIZE) != 0)
+    if (start_addr > end_addr)
         return 0;
     start_addr = PGROUNDUP(start_addr);
 
