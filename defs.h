@@ -13,6 +13,8 @@
 #include "ringbuff.h"
 #include "tinyprintf.h"
 
+
+
 /******************** uart ********************/
 void uart_init      (void);
 void uartputc_async (int);
@@ -54,19 +56,19 @@ void  init_kmem     (void);
 
 
 /******************** vm ********************/
-void    init_kvm    (void);
-int     kvm_setflag (Pagetable_t *pagetable, uint64 vAddr, int flag);
-int     kvm_clrflag (Pagetable_t *pagetable, uint64 vAddr, int flag);
-uint64  kvm_phyaddr (Pagetable_t *pagetable, uint64 vAddr);
-void    kvm_map     (Pagetable_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag);
-void    uvm_unmap   (Pagetable_t *pagetable, uint64 vAddr, uint64 npages, bool free);
-uint64  uvm_alloc   (Pagetable_t *pagetable, uint64 start_addr, uint64 end_addr, int flag);
-uint64  uvm_free    (Pagetable_t *pagetable, uint64 oldsz, uint64 newsz);
-void    uvm_destroy (Pagetable_t *pagetable);
-int     uvm_copy    (Pagetable_t *destPage, Pagetable_t *srcPage, uint64 sz, bool alloc);
-int     copyout     (Pagetable_t *pagetable, uint64 dstva, char *src, uint64 len);
-int     copyin      (Pagetable_t *pagetable, char *dst, uint64 srcva, uint64 len);
-Pagetable_t *uvm_create (void);
+void     init_kvm    (void);
+int      kvm_setflag (pgtab_t *pagetable, uint64 vAddr, int flag);
+int      kvm_clrflag (pgtab_t *pagetable, uint64 vAddr, int flag);
+uint64   kvm_phyaddr (pgtab_t *pagetable, uint64 vAddr);
+int      kvm_map     (pgtab_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag);
+void     uvm_unmap   (pgtab_t *pagetable, uint64 vAddr, uint64 npages, bool free);
+uint64   uvm_alloc   (pgtab_t *pagetable, uint64 start_addr, uint64 end_addr, int flag);
+uint64   uvm_free    (pgtab_t *pagetable, uint64 oldsz, uint64 newsz);
+void     uvm_destroy (pgtab_t *pagetable);
+int      uvm_copy    (pgtab_t *destPage, pgtab_t *srcPage, uint64 sz, bool alloc);
+int      uvm_copyout (pgtab_t *pagetable, uint64 dstva, char *src, uint64 len);
+int      uvm_copyin  (pgtab_t *pagetable, char *dst, uint64 srcva, uint64 len);
+pgtab_t *uvm_create  (void);
 
 /******************** trap ********************/
 void init_trap      (void);
@@ -80,26 +82,34 @@ void selfInspection (void);
 
 
 /******************** proc ********************/
-#define getCpuID()  r_tp()
-CpuCB  *getCpuCB  (void);
-ProcCB *getProcCB (void);
-void    wakeProcCB  (ProcCB *pcb);
-void    dumpProcCB  (void);
-void    scheduler   (void);
-void    defuncter   (void);
-void    init_proc   (void);
-void    do_yield    (void);
-void    do_suspend  (void *obj);
-void    do_resume   (void *obj);
-int     do_fork     (void);
-int     do_wait     (int *code);
-void    do_exit     (int state);
-int     do_kill     (int pid);
-int     do_sleep    (int ms);
-int     KillState   (ProcCB *pcb);
-void    wakeProcCB  (ProcCB *pcb);
-Pagetable_t *proc_allocpagetable (ProcCB *pcb);
-int proc_freepagetable (Pagetable_t *pgtabl, uint64 pg_size);
+#define getCpuID()      r_tp()
+CpuCB  *getCpuCB        (void);
+int     proc_applypid   (void);
+void    proc_wakeup     (ProcCB *pcb);
+int     proc_killstate  (ProcCB *pcb);
+void    do_scheduler (void);
+void    do_defuncter (void);
+void    do_yield     (void);
+void    do_suspend   (void *obj);
+void    do_resume    (void *obj);
+int     do_fork      (void);
+int     do_wait      (int *code);
+void    do_exit      (int state);
+int     do_kill      (int pid);
+int     do_sleep     (int ms);
+void    init_proc    (void);
+
+
+
+/******************** pcb ********************/
+ProcCB  *getProcCB  (void);
+void     pcb_dump   (void);
+ProcCB  *pcb_alloc  (void);
+int      pcb_free   (ProcCB *pcb);
+ProcCB  *pcb_lookup (int pid);
+int      proc_free_pgtab  (pgtab_t *pgtab);
+pgtab_t *proc_alloc_pgtab (ProcCB *pcb);
+
 
 
 /******************** plic ********************/

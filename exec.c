@@ -9,7 +9,7 @@
 #include "cli.h"
 
 /* 加载 elf 文件中的段到页表虚拟地址中的指定位置 */
-int elf_load_segment (Pagetable_t *pagetable, uint64 vAddr,  
+int elf_load_segment (pgtab_t *pagetable, uint64 vAddr,  
     uint segsize, int fd, uint fd_off)
 {
     uint i, len;
@@ -42,7 +42,7 @@ int elf_load_segment (Pagetable_t *pagetable, uint64 vAddr,
  * 
  * 返回值：返回当前页表中的栈顶地址
  */
-uint64 elf_stack_create (Pagetable_t *pagetable, uint64 vAddr)
+uint64 elf_stack_create (pgtab_t *pagetable, uint64 vAddr)
 {
     uint64 tmp;
 
@@ -67,7 +67,7 @@ uint64 elf_stack_create (Pagetable_t *pagetable, uint64 vAddr)
  * 
  * 返回值：当前写入栈内的数组成员个数
  */
-int elf_para_create (Pagetable_t *pagetable, uint64 *sptop, char *argv[])
+int elf_para_create (pgtab_t *pagetable, uint64 *sptop, char *argv[])
 {
     int argc;
     uint64 len, sp = *sptop;
@@ -82,7 +82,7 @@ int elf_para_create (Pagetable_t *pagetable, uint64 *sptop, char *argv[])
         sp -= sp % 16;
         array[argc] = sp;
 
-        if (0 > copyout(pagetable, sp, argv[argc], len))
+        if (0 > uvm_copyout(pagetable, sp, argv[argc], len))
             return -1;
     }
     array[argc] = 0;
@@ -92,7 +92,7 @@ int elf_para_create (Pagetable_t *pagetable, uint64 *sptop, char *argv[])
     sp -= len;
     /* 按照 riscv 的格式执行 16 位对齐 */
     sp -= sp % 16;
-    if (0 > copyout(pagetable, sp, (char *)array, len))
+    if (0 > uvm_copyout(pagetable, sp, (char *)array, len))
         return -1;
 
     *sptop = sp;
@@ -113,7 +113,7 @@ int do_exec(char *path, char *argv[])
     struct elf_ehdr elf;
     struct elf_phdr phdr;
     ProcCB *pcb = getProcCB();
-    Pagetable_t *pgtab = NULL;
+    pgtab_t *pgtab = NULL;
 
     fd = vfs_open(path, O_RDWR, S_IRWXU);
 
@@ -126,7 +126,7 @@ int do_exec(char *path, char *argv[])
         goto _err_exec_open;
 
     /* 创建新的虚拟内存页 */
-    pgtab = proc_allocpagetable(pcb);
+    pgtab = proc_alloc_pgtab(pcb);
     if (pgtab == NULL)
         goto _err_exec_open;
 
@@ -166,7 +166,7 @@ int do_exec(char *path, char *argv[])
         goto _err_exec_uvm; 
 
     /* 释放进程原先的虚拟内存页资源 */
-    proc_freepagetable(pcb->pageTab, pcb->memSize);
+    proc_free_pgtab(pcb->pageTab);
 
     /* 将虚拟页表的信息写入进程中 */
     pcb->pageTab = pgtab;
@@ -179,7 +179,7 @@ int do_exec(char *path, char *argv[])
     return argc;
 
 _err_exec_uvm:
-    proc_freepagetable(pgtab, phdr.p_memsz);
+    proc_free_pgtab(pgtab);
 
 _err_exec_open:
     vfs_close(fd);

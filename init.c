@@ -24,8 +24,8 @@ void idle_main (void)
 
     while(1)
     {
-        scheduler();
-        defuncter();
+        do_scheduler();
+        do_defuncter();
     }
 }
 

@@ -12,12 +12,11 @@
 void tc_virtualmemory (void)
 {
     char *buf;
-    Pagetable_t *pgtab, *Spgatab;
+    pgtab_t *pgtab, *Spgatab;
 
     pgtab = uvm_create();
     buf = kallocPhyPage();
 
-    extern void kvm_map (Pagetable_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag);
     kvm_map(pgtab, (uint64)0, (uint64)buf, PGSIZE, PTE_R | PTE_W | PTE_U);
 
     kstrcpy(buf, "hello World!\n");
@@ -26,7 +25,7 @@ void tc_virtualmemory (void)
 
     uvm_copy(Spgatab, pgtab, 20, TRUE);
 
-    extern uint64  kvm_phyaddr (Pagetable_t *pagetable, uint64 va);
+    extern uint64  kvm_phyaddr (pgtab_t *pagetable, uint64 va);
     buf = (char *)kvm_phyaddr(Spgatab, 0);
 
     kprintf ("%s", buf);
@@ -180,8 +179,8 @@ void tc_timer (void)
     timer_t *tmr[10] = {0};
     // ProcCB *pcb;
 
-    // ProcCB *allocProcCB (void);
-    // pcb = allocProcCB();
+    // ProcCB *pcb_alloc (void);
+    // pcb = pcb_alloc();
 
  #if 0
     for(i=0; i<10; i++)

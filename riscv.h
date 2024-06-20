@@ -330,7 +330,7 @@ sfence_vma()
 }
 
 typedef uint64 pte_t;
-typedef uint64 Pagetable_t; // 512 PTEs
+typedef uint64 pgtab_t; // 512 PTEs
 
 #endif // __ASSEMBLER__
 

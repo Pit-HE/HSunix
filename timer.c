@@ -101,7 +101,7 @@ void timer_run (void)
             pList = pList->next;
             pcb = pTimer->pcb;
 
-            wakeProcCB(pcb);
+            proc_wakeup(pcb);
             if (pTimer->expires != 0)
             {
                 if (pTimer->list.next != &kSleepList)

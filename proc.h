@@ -103,7 +103,7 @@ typedef struct processControlBlock
   uint64        stackAddr;        // Virtual address of kernel stack
   uint64        stackSize;        // Virtual address of kernel stack size
   uint64        memSize;          // Size of process memory (bytes)
-  Pagetable_t  *pageTab;          // User page table
+  pgtab_t  *pageTab;          // User page table
   Trapframe    *trapFrame;        // data page for trampoline.S
   Context       context;          // switch_to() here to run process
   char          name[20];         // Process name (debugging)
@@ -112,7 +112,7 @@ typedef struct processControlBlock
 typedef struct cpuControlBlock
 {
   ProcCB   *proc;                 // The process running on this cpu, or null.
-  Context   context;              // switch_to() here to enter scheduler().
+  Context   context;              // switch_to() here to enter do_scheduler().
   int       intrOffNest;          // Depth of push_off() nesting.
   int       intrOldState;         // Were interrupts enabled before push_off()?
 }CpuCB;

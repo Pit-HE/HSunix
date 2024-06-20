@@ -96,7 +96,7 @@ void trap_userfunc(void)
     /***** 系统调用 *****/
     if (r_scause() == 8)
     {
-        if (KillState(pcb))
+        if (proc_killstate(pcb))
           do_exit(-1);
 
         pcb->trapFrame->epc += 4;
@@ -113,7 +113,7 @@ void trap_userfunc(void)
     }
 
     /* 中断发生后的处理 */
-    if (KillState(pcb))
+    if (proc_killstate(pcb))
         do_exit(-1);
     if (devnum == 2)
         do_yield();
