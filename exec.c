@@ -39,7 +39,7 @@ int elf_load_segment (pgtab_t *pagetable, uint64 vAddr,
  *
  * pagetable：要设置的页表
  * vAddr：可以用于栈空间的虚拟地址
- * 
+ *
  * 返回值：返回当前页表中的栈顶地址
  */
 uint64 elf_stack_create (pgtab_t *pagetable, uint64 vAddr)
@@ -59,12 +59,12 @@ uint64 elf_stack_create (pgtab_t *pagetable, uint64 vAddr)
     return (tmp += PGSIZE);
 }
 
-/* 将要传递的参数数组写到进程的栈空间内 
+/* 将要传递的参数数组写到进程的栈空间内
  *
  * pagetable：要设置的页表
  * top: 当前的页表内的栈顶地址
  * argv: 要写入栈内的数组内容
- * 
+ *
  * 返回值：当前写入栈内的数组成员个数
  */
 int elf_para_create (pgtab_t *pagetable, uint64 *sptop, char *argv[])
@@ -100,30 +100,32 @@ int elf_para_create (pgtab_t *pagetable, uint64 *sptop, char *argv[])
 }
 
 /* 解析 elf 文件的内容，并将其加载到
- * 
+ *
  * path: 记录 elf 内容的文件路径
  * argv：要传递给新进程的参数数组
  *
  * 返回值：argv 中记录的参数数量
  */
-int do_exec(char *path, char *argv[])
+int do_exec(ProcCB *obj, char *path, char *argv[])
 {
     int fd, i;
     uint64 argc, off, sptop;
     struct elf_ehdr elf;
     struct elf_phdr phdr;
-    ProcCB *pcb = getProcCB();
+    ProcCB *pcb = NULL;
     pgtab_t *pgtab = NULL;
+
 
     fd = vfs_open(path, O_RDWR, S_IRWXU);
 
     /* 获取 elf 的文件头信息 */
     if (-1 == vfs_read(fd, &elf, sizeof(elf)))
         goto _err_exec_open;
-
-    /* 判断文件类型 */
     if (elf.e_magic != ELF_MAGIC)
         goto _err_exec_open;
+
+    /* 判断要操作的进程对象 */
+    pcb = (obj == NULL) ? getProcCB():obj;
 
     /* 创建新的虚拟内存页 */
     pgtab = proc_alloc_pgtab(pcb);
@@ -147,7 +149,7 @@ int do_exec(char *path, char *argv[])
             goto _err_exec_uvm;
 
         /* 在虚拟地址中为当前段映射相应的物理内存 */
-        if (0 >= uvm_alloc(pgtab, phdr.p_vaddr, 
+        if (0 >= uvm_alloc(pgtab, phdr.p_vaddr,
                 phdr.p_vaddr + phdr.p_memsz, PTE_X | PTE_W))
             goto _err_exec_uvm;
 
@@ -156,14 +158,14 @@ int do_exec(char *path, char *argv[])
                 phdr.p_memsz, fd, off))
             goto _err_exec_uvm;
     }
-    
+
     /* 设置页表中关于栈的内容，代码空间设置完后就设置栈 */
     sptop = elf_stack_create(pgtab, phdr.p_vaddr + phdr.p_memsz);
 
     /* 将要传递的参数数组写入栈空间 */
     argc = elf_para_create(pgtab, &sptop, argv);
     if (argc < 0)
-        goto _err_exec_uvm; 
+        goto _err_exec_uvm;
 
     /* 释放进程原先的虚拟内存页资源 */
     proc_free_pgtab(pcb->pageTab);
@@ -172,8 +174,8 @@ int do_exec(char *path, char *argv[])
     pcb->pageTab = pgtab;
     pcb->memSize = phdr.p_memsz;
     pcb->stackSize = PGSIZE;
+    pcb->trapFrame->sp = sptop;
     pcb->trapFrame->epc = elf.e_entry;
-    pcb->trapFrame->sp  = sptop;
 
     vfs_close(fd);
     return argc;

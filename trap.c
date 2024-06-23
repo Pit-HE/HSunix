@@ -91,6 +91,8 @@ void trap_userfunc(void)
      * 在特权模式下的中断应由内核处理
      */
     w_stvec((uint64)kernelvec);
+
+    /* 保存进程进入特权模式前在用户空间执行的代码地址 */
     pcb->trapFrame->epc = r_sepc();
 
     /***** 系统调用 *****/
@@ -130,7 +132,9 @@ void trap_userret(void)
 
     intr_off();
 
-    /* 设置用户模式 trap 入口函数 */
+    /* 设置用户模式 trap 入口函数
+     * (uservec - trampoline 是为了获取在代码对齐时的偏移值)
+     */
     w_stvec((uint64)(TRAMPOLINE + (uservec - trampoline)));
 
     /* 页表寄存器 */
@@ -180,9 +184,7 @@ void kerneltrap(void)
     /* 处理外设中断与软件中断 */
     devnum = dev_interrupt();
     if (devnum == 0)
-    {
         kError(eSVC_Trap, E_INTERRUPT);
-    }
     pcb = getProcCB();
 
     /* 是否为定时器中断 */
@@ -190,7 +192,7 @@ void kerneltrap(void)
         (pcb->state == RUNNING))
         do_yield();
 
-    // 恢复存储的寄存器
+    /* 恢复存储的寄存器 */
     w_sepc(sepc);
     w_sstatus(sstatus);
 }

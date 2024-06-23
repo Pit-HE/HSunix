@@ -230,7 +230,7 @@ int vfs_lseek (int fd, uint off, int whence)
     return file_lseek(file, off, whence);
 }
 
-/* 初始化进程的文件相关项*/
+/* 初始化进程文件系统相关的内容 */
 int vfs_pcbInit (ProcCB *pcb, char *path)
 {
     if (pcb == NULL)

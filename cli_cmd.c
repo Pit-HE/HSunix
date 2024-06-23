@@ -70,8 +70,8 @@ int cmd_ls (int argc, char *argv[])
         }
     }while(dirent != NULL);
     closedir(dir);
-    kprintf("\r\n");
 
+    kprintf("\r\n");
     return 0;
 }
 
@@ -89,7 +89,7 @@ int cmd_pwd (int argc, char *argv[])
 {
     if (argc != 1)
         return -1;
-    
+
     kprintf("%s\r\n", getProcCB()->cwd);
     return 0;
 }
@@ -99,8 +99,8 @@ int cmd_echo (int argc, char *argv[])
 {
     if ((argc != 2) || (argv[1] == NULL))
         return -1;
-    kprintf("%s\r\n", argv[1]);
 
+    kprintf("%s\r\n", argv[1]);
     return 0;
 }
 
@@ -112,7 +112,7 @@ int cmd_cat (int argc, char *argv[])
 
     if ((1 >= argc) || (argc > 3))
         return -1;
-    
+
     /* 打开指定路径下的文件对象 */
     fd = vfs_open(argv[1], O_RDWR, S_IRWXU);
     if (fd < 0)
@@ -148,7 +148,6 @@ int cmd_cat (int argc, char *argv[])
 
     /* 关闭已打开的文件 */
     vfs_close(fd);
-
     return 0;
 }
 
@@ -291,7 +290,6 @@ int cmd_clear(int argc, char *argv[])
         return -1;
 
     cli_clear();
-
     return 0;
 }
 
@@ -300,9 +298,8 @@ int cmd_exec (int argc, char *argv[])
     if (argc < 2)
         return -1;
 
-    int do_exec(char *path, char *argv[]);
-    do_exec("/fs/cat", argv);
-
+    // do_exec(NULL, "/fs/cat", argv);
+    proc_wakeup(do_kthread("user", user_main));
     return 0;
 }
 
@@ -422,6 +419,7 @@ struct cli_cmd func_list[] =
 };
 #define CMD_LIST_LEN sizeof(func_list)/sizeof(func_list[0])
 
+
 /* 打印列表内所有可用的命令 */
 int cmd_help (int argc, char *argv[])
 {
@@ -436,6 +434,7 @@ int cmd_help (int argc, char *argv[])
     }
     return 0;
 }
+
 /* 从命令列表中查找指定的命令 */
 cmd_function cli_cmd_get (char *name)
 {

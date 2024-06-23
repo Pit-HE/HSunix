@@ -7,7 +7,7 @@
 
 /* 进程在用户空间(模式)中执行的函数 */ 
 uint64 userCnt = 0;
-void user_processEntry (void)
+void user_first (void)
 {
     while(1)
     {

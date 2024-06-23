@@ -36,36 +36,36 @@ uservec:
         li a0, TRAPFRAME
         
         # save the user registers in TRAPFRAME
-        sd ra, 40(a0)
-        sd sp, 48(a0)
-        sd gp, 56(a0)
-        sd tp, 64(a0)
-        sd t0, 72(a0)
-        sd t1, 80(a0)
-        sd t2, 88(a0)
-        sd s0, 96(a0)
-        sd s1, 104(a0)
-        sd a1, 120(a0)
-        sd a2, 128(a0)
-        sd a3, 136(a0)
-        sd a4, 144(a0)
-        sd a5, 152(a0)
-        sd a6, 160(a0)
-        sd a7, 168(a0)
-        sd s2, 176(a0)
-        sd s3, 184(a0)
-        sd s4, 192(a0)
-        sd s5, 200(a0)
-        sd s6, 208(a0)
-        sd s7, 216(a0)
-        sd s8, 224(a0)
-        sd s9, 232(a0)
+        sd ra,  40(a0)
+        sd sp,  48(a0)
+        sd gp,  56(a0)
+        sd tp,  64(a0)
+        sd t0,  72(a0)
+        sd t1,  80(a0)
+        sd t2,  88(a0)
+        sd s0,  96(a0)
+        sd s1,  104(a0)
+        sd a1,  120(a0)
+        sd a2,  128(a0)
+        sd a3,  136(a0)
+        sd a4,  144(a0)
+        sd a5,  152(a0)
+        sd a6,  160(a0)
+        sd a7,  168(a0)
+        sd s2,  176(a0)
+        sd s3,  184(a0)
+        sd s4,  192(a0)
+        sd s5,  200(a0)
+        sd s6,  208(a0)
+        sd s7,  216(a0)
+        sd s8,  224(a0)
+        sd s9,  232(a0)
         sd s10, 240(a0)
         sd s11, 248(a0)
-        sd t3, 256(a0)
-        sd t4, 264(a0)
-        sd t5, 272(a0)
-        sd t6, 280(a0)
+        sd t3,  256(a0)
+        sd t4,  264(a0)
+        sd t5,  272(a0)
+        sd t6,  280(a0)
 
 	# save the user a0 in p->trapframe->a0
         csrr t0, sscratch
@@ -86,12 +86,15 @@ uservec:
 
         # wait for any previous memory operations to complete, so that
         # they use the user page table.
+        # 内存屏障
         sfence.vma zero, zero
 
         # install the kernel page table.
+        # 使用内核的页表
         csrw satp, t1
 
         # flush now-stale user entries from the TLB.
+        # 内存屏障
         sfence.vma zero, zero
 
         # jump to usertrap(), which does not return
@@ -105,43 +108,47 @@ userret:
         # a0: user page table, for satp.
 
         # switch to the user page table.
+        # 内存屏障
         sfence.vma zero, zero
+        # 将传入的页表写入 satp 寄存器
         csrw satp, a0
+        #内存屏障
         sfence.vma zero, zero
 
+        # 获取虚拟内存页中存放 trap 信息的首地址
         li a0, TRAPFRAME
 
         # restore all but a0 from TRAPFRAME
-        ld ra, 40(a0)
-        ld sp, 48(a0)
-        ld gp, 56(a0)
-        ld tp, 64(a0)
-        ld t0, 72(a0)
-        ld t1, 80(a0)
-        ld t2, 88(a0)
-        ld s0, 96(a0)
-        ld s1, 104(a0)
-        ld a1, 120(a0)
-        ld a2, 128(a0)
-        ld a3, 136(a0)
-        ld a4, 144(a0)
-        ld a5, 152(a0)
-        ld a6, 160(a0)
-        ld a7, 168(a0)
-        ld s2, 176(a0)
-        ld s3, 184(a0)
-        ld s4, 192(a0)
-        ld s5, 200(a0)
-        ld s6, 208(a0)
-        ld s7, 216(a0)
-        ld s8, 224(a0)
-        ld s9, 232(a0)
+        ld ra,  40(a0)
+        ld sp,  48(a0)
+        ld gp,  56(a0)
+        ld tp,  64(a0)
+        ld t0,  72(a0)
+        ld t1,  80(a0)
+        ld t2,  88(a0)
+        ld s0,  96(a0)
+        ld s1,  104(a0)
+        ld a1,  120(a0)
+        ld a2,  128(a0)
+        ld a3,  136(a0)
+        ld a4,  144(a0)
+        ld a5,  152(a0)
+        ld a6,  160(a0)
+        ld a7,  168(a0)
+        ld s2,  176(a0)
+        ld s3,  184(a0)
+        ld s4,  192(a0)
+        ld s5,  200(a0)
+        ld s6,  208(a0)
+        ld s7,  216(a0)
+        ld s8,  224(a0)
+        ld s9,  232(a0)
         ld s10, 240(a0)
         ld s11, 248(a0)
-        ld t3, 256(a0)
-        ld t4, 264(a0)
-        ld t5, 272(a0)
-        ld t6, 280(a0)
+        ld t3,  256(a0)
+        ld t4,  264(a0)
+        ld t5,  272(a0)
+        ld t6,  280(a0)
 
 	# restore user a0
         ld a0, 112(a0)

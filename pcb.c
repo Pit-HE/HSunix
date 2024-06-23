@@ -80,7 +80,8 @@ ProcCB *pcb_alloc (void)
     pcb->trapFrame = kallocPhyPage();
     if (pcb->trapFrame == NULL)
     {
-        goto _err_allocProcCB;
+        kfree (pcb);
+        return NULL;
     }
 
     /* 申请进程的虚拟页表并初始化 */
@@ -88,22 +89,25 @@ ProcCB *pcb_alloc (void)
     if (pcb->pageTab == NULL)
     {
         kfreePhyPage(pcb->trapFrame);
-        goto _err_allocProcCB;
+        kfree (pcb);
+        return NULL;
     }
 
+    /* 清空进程切换时的内核上下文 */
     kmemset(&pcb->context, 0, sizeof(Context));
 
+    /* 设置进程的信息 */
     pcb->pid = proc_applypid();
     pcb->state = USED;
 
+    /* 初始化进程的链表信息 */
     list_init(&pcb->list);
     list_init(&pcb->regist);
-    list_add(&kRegistList, &pcb->regist);
+
+    /* 将进程添加到内核的注册链表中 */
+    list_add (&kRegistList, &pcb->regist);
 
     return pcb;
- _err_allocProcCB:
-    kfree (pcb);
-    return NULL;
 }
 
 /* 释放已经存在的进程控制块 */
@@ -141,6 +145,7 @@ ProcCB *pcb_lookup (int pid)
     if ((kPidToken < pid) && (pid < 0))
         goto exit_findProcCB;
 
+    /* 遍历链表，查找之地内的 ID */
     list_for_each(ptr, &kRegistList)
     {
         pcb = list_container_of(ptr, ProcCB, regist);

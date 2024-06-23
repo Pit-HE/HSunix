@@ -214,7 +214,7 @@ int do_fork (void)
     ProcCB *newPcb;
     ProcCB *curPcb = getProcCB();
 
-    stack = (char *)kalloc(curPcb->stackSize);
+    stack = (char *)kallocPhyPage;
     if (stack == NULL)
         goto _exit_fork;
 
@@ -235,8 +235,11 @@ int do_fork (void)
         goto _exit_fork;
     }
 
+    /* 设置新进程文件系统相关的内容 */
+    vfs_pcbInit(newPcb, curPcb->cwd);
+
     kDISABLE_INTERRUPT();
-    newPcb->stackSize = curPcb->stackSize;
+    newPcb->stackSize = PGSIZE;
     newPcb->memSize = curPcb->memSize;
     newPcb->stackAddr = (uint64)stack;
     newPcb->trapFrame->a0 = 0;
@@ -354,62 +357,48 @@ int do_sleep (int ms)
     return 0;
 }
 
+/* 创建内核线程 */
+ProcCB *do_kthread (char *name, void(*thread)(void))
+{
+    char *stack = NULL;
+    ProcCB *pcb = NULL;
+
+    pcb = pcb_alloc();
+    stack = (char *)kallocPhyPage();
+
+    /* 添加信息到进程的控制块 */
+    kstrcpy(pcb->name, name);
+    pcb->context.ra = (uint64)thread;
+    pcb->stackAddr  = (uint64)stack;
+    pcb->stackSize  = (uint64)PGSIZE;
+    pcb->context.sp = (uint64)(stack + PGSIZE);
+
+    vfs_pcbInit(pcb, "/");
+
+    return pcb;
+}
+
 /* 初始化当前用于测试的指定进程 */
 void init_proc (void)
 {
-    char *stack;
-    ProcCB *pcb;
-
     list_init(&kRegistList);
     list_init(&kReadyList);
     list_init(&kPendList);
     list_init(&kUnregistList);
 
     /* Init processs */
-    kInitProcCB = pcb_alloc();
-    stack = (char *)kallocPhyPage();
-    kstrcpy(kInitProcCB->name, "init");
-    kInitProcCB->context.ra = (uint64)init_main;
-    kInitProcCB->stackAddr  = (uint64)stack;
-    kInitProcCB->stackSize  = (uint64)4096;
-    kInitProcCB->context.sp = (uint64)(stack + 4096);
+    kInitProcCB = do_kthread("init", init_main);
     proc_wakeup(kInitProcCB);
 
     /* Idle processs */
-    kIdleProcCB = pcb_alloc();
-    stack = (char *)kallocPhyPage();
-    kstrcpy(kIdleProcCB->name, "idle");
-    kIdleProcCB->context.ra = (uint64)idle_main;
-    kIdleProcCB->stackAddr  = (uint64)stack;
-    kIdleProcCB->stackSize  = (uint64)4096;
-    kIdleProcCB->context.sp = (uint64)(stack + 4096);
+    kIdleProcCB = do_kthread("idle", idle_main);
     proc_wakeup(kIdleProcCB);
 
-    /* test process */
-    pcb = pcb_alloc();
-    stack = (char *)kallocPhyPage();
-    kstrcpy(pcb->name, "test");
-    pcb->context.ra = (uint64)test_main;
-    pcb->stackAddr  = (uint64)stack;
-    pcb->stackSize  = (uint64)4096;
-    pcb->context.sp = (uint64)(stack + 4096);
-    proc_wakeup(pcb);
 
     /* 只要注释以下的进程创建，
-     * 便能关闭用户模式切换的测试功能,之后系统正常工作
+     * 便能关闭用户模式切换的测试功能, 之后系统正常工作
      */
-    // pcb = pcb_alloc();
-    // stack = (char *)kallocPhyPage();
-    // kstrcpy(pcb->name, "user");
-    // void user_ret (void);
-    // pcb->context.ra = (uint64)user_ret;
-    // pcb->stackAddr  = (uint64)stack;
-    // pcb->stackSize  = (uint64)4096;
-    // pcb->context.sp = (uint64)(stack + 4096);
-    // /* 设置进程在用户模式下执行的函数 */
-    // void user_processEntry (void);
-    // pcb->trapFrame->epc = (uint64)user_processEntry;
-    // proc_wakeup(pcb);
+    // proc_wakeup(do_kthread("user", user_main));
 
 
     /* 设置当前 CPU 的默认进程 */

@@ -73,7 +73,6 @@ void user_ret (void)
     pcb->trapFrame->kernel_satp = r_satp();
     /* 内核工作的栈地址(这是最核心的一步) */
     pcb->trapFrame->kernel_sp = (uint64)r_sp();
-    // pcb->trapFrame->kernel_sp = (uint64)pcb->stackAddr + pcb->stackSize;
     pcb->trapFrame->kernel_trap = (uint64)user_trap;
     pcb->trapFrame->kernel_hartid = r_tp();
 

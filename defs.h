@@ -97,9 +97,8 @@ int     do_wait      (int *code);
 void    do_exit      (int state);
 int     do_kill      (int pid);
 int     do_sleep     (int ms);
+ProcCB *do_kthread   (char *name, void(*thread)(void));
 void    init_proc    (void);
-
-
 
 /******************** pcb ********************/
 ProcCB  *getProcCB  (void);
@@ -160,7 +159,7 @@ void cli_main (void);
 /******************** init **********************/
 void init_main (void);
 void idle_main (void);
-void test_main (void);
+void user_main (void);
 
 
 /******************** timer *********************/
@@ -171,7 +170,7 @@ void     timer_run  (void);
 
 
 /******************** exec **********************/
-int do_exec(char *path, char **argv);
+int do_exec(ProcCB *obj, char *path, char *argv[]);
 
 
 /******************** device ********************/
