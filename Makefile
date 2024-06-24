@@ -29,7 +29,7 @@ CFLAGS += -I.
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 CFLAGS += -fno-pie -no-pie
 
-LDFLAGS = -z max-page-size=4096
+LDFLAGS = -z max-page-size=4096 -Map HSunix.map
 
 QEMUOPTS := -machine virt -bios none -kernel kernel -m 128M -smp $(CPUS) -nographic
 QEMUOPTS += -global virtio-mmio.force-legacy=false

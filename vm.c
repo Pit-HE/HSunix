@@ -209,7 +209,7 @@ void uvm_destroy (pgtab_t *pagetable)
 /* 为指定范围的虚拟地址映射可用的物理地址 */
 uint64 uvm_alloc (pgtab_t *pagetable, uint64 start_addr, uint64 end_addr, int flag)
 {
-    void    *mem;
+    char *mem = NULL;
     uint64  addr;
 
     if (start_addr > end_addr)
@@ -218,13 +218,13 @@ uint64 uvm_alloc (pgtab_t *pagetable, uint64 start_addr, uint64 end_addr, int fl
 
     for (addr=start_addr; addr < end_addr; addr += PGSIZE)
     {
-        mem = kallocPhyPage();
+        mem = (char *)kallocPhyPage();
         if (mem == NULL)
             goto error_map;
         kmemset(mem, 0, PGSIZE);
 
         /* 建立映射关系 */
-        if (mappages(pagetable, start_addr, (uint64)mem, 4096, PTE_R|PTE_U|flag) != 0)
+        if (mappages(pagetable, addr, (uint64)mem, PGSIZE, flag) != 0)
         {
             /* 释放已申请的内存页 */
             kfreePhyPage(mem);
@@ -375,8 +375,7 @@ int uvm_copyin (pgtab_t *pagetable, char *dst, uint64 srcva, uint64 len)
 /* 初始化虚拟内存管理模块 */
 void init_kvm (void)
 {
-    kernel_pgtab = kallocPhyPage();
-    kmemset(kernel_pgtab, 0, PGSIZE);
+    kernel_pgtab = uvm_create();
 
     // uart registers
     mappages(kernel_pgtab, UART0, UART0, PGSIZE, PTE_R | PTE_W);

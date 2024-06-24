@@ -54,7 +54,7 @@ uint64 elf_stack_create (pgtab_t *pagetable, uint64 vAddr)
 
     /* 设置进程的栈空间 (大小为一页 4096) */
     tmp += PGSIZE;
-    uvm_alloc(pagetable, tmp, tmp + PGSIZE, PTE_W);
+    uvm_alloc(pagetable, tmp, tmp + PGSIZE, PTE_W | PTE_R);
 
     return (tmp += PGSIZE);
 }
@@ -150,7 +150,7 @@ int do_exec(ProcCB *obj, char *path, char *argv[])
 
         /* 在虚拟地址中为当前段映射相应的物理内存 */
         if (0 >= uvm_alloc(pgtab, phdr.p_vaddr,
-                phdr.p_vaddr + phdr.p_memsz, PTE_X | PTE_W))
+                phdr.p_vaddr + phdr.p_memsz, PTE_X | PTE_W | PTE_R))
             goto _err_exec_uvm;
 
         /* 将数据段写入页表所对应的虚拟内存中 */
@@ -160,7 +160,7 @@ int do_exec(ProcCB *obj, char *path, char *argv[])
     }
 
     /* 设置页表中关于栈的内容，代码空间设置完后就设置栈 */
-    sptop = elf_stack_create(pgtab, phdr.p_vaddr + phdr.p_memsz);
+    sptop = elf_stack_create(pgtab, phdr.p_vaddr + phdr.p_memsz + PGSIZE);
 
     /* 将要传递的参数数组写入栈空间 */
     argc = elf_para_create(pgtab, &sptop, argv);

@@ -341,11 +341,14 @@ typedef uint64 pgtab_t; // 512 PTEs
 #define PGROUNDUP(sz)  (((sz)+PGSIZE-1) & ~(PGSIZE-1))
 #define PGROUNDDOWN(a) (((a)) & ~(PGSIZE-1))
 
-#define PTE_V (1L << 0) // valid
+#define PTE_V (1L << 0) // 页表项是否有效
 #define PTE_R (1L << 1) // 可读
 #define PTE_W (1L << 2) // 可写
 #define PTE_X (1L << 3) // 可执行
-#define PTE_U (1L << 4) // user can access
+#define PTE_U (1L << 4) // 只有用户模式可以操作
+#define PTE_G (1L << 5) // 该页是否属于全局访问的页
+#define PTE_A (1L << 6) // 该页是否被访问过
+#define PTE_D (1L << 7) // 该页是否被修改过
 
 // shift a physical address to the right place for a PTE.
 #define PA2PTE(pa) ((((uint64)pa) >> 12) << 10)

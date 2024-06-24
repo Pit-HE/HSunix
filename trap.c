@@ -12,9 +12,7 @@ uint64 Systicks;
 
 /****************************************/
 extern void kernelvec ();
-extern void uservec (void);
-extern void userret (void);
-extern void trampoline (void);
+extern char uservec[], userret[], trampoline[];
 extern void virtio_disk_isr(void);
 
 /****************************************/
