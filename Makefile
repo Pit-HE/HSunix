@@ -1,96 +1,70 @@
 
-CPUS = 1
+# 编译工具的信息
 QEMU = qemu-system-riscv64
 TOOLPREFIX := riscv64-linux-gnu-
-
-
-
 CC = $(TOOLPREFIX)gcc 
 AS = $(TOOLPREFIX)gas
 LD = $(TOOLPREFIX)ld
 OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
 
+# 向下传递的宏
+CPUS = 1
+ROOT_DIR = $(shell pwd)
 
 
-s_src = entry.S trampoline.S kernelvec.S switch.S temp_retuser.S
-c_src = $(wildcard *.c)
-obj :=
-obj +=$(patsubst %.S,%.o, ${s_src})
-obj +=$(patsubst %.c,%.o, ${c_src})
-
-
-
+# 编译时的参数
 CFLAGS := -Wall -Werror -O0 -fno-omit-frame-pointer -ggdb -gdwarf-2
 CFLAGS += -MD
 CFLAGS += -mcmodel=medany
 CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
-CFLAGS += -I.
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 CFLAGS += -fno-pie -no-pie
+CFLAGS += -I.
 
-LDFLAGS = -z max-page-size=4096 -Map HSunix.map
+# 链接时的参数
+LDFLAGS = -z max-page-size=4096
 
-QEMUOPTS := -machine virt -bios none -kernel kernel -m 128M -smp $(CPUS) -nographic
-QEMUOPTS += -global virtio-mmio.force-legacy=false
-QEMUOPTS += -drive file=fs.img,if=none,format=raw,id=x0
-QEMUOPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
-
-
-%.o:%.c
-	$(CC)${CFLAGS} $^ -c -o $@
-%.o:%.S
-	$(CC)${CFLAGS} $^ -c -o $@ 
+# 提供给子目录 makefile 的宏
+export CC LD OBJCOPY OBJDUMP QEMU
+export CFLAGS LDFLAGS 
+export CPUS ROOT_DIR
 
 
-all:kernel
-	make flush
+all: qemu
+
+build:
+	make -C kernel
+
+mkfs:
+	make -C mkfs
+
+app:
+	make -C user
 
 # mkfs/mkfs: mkfs/mkfs.c
 # 	gcc -Werror -Wall -o mkfs/mkfs mkfs/mkfs.c
 mkfs/mkfs: mkfs/mkfs.c
 	gcc mkfs/mkfs.c -o mkfs/mkfs
 
-U = user
-UPROGS=\
-	$U/_cat\
-	$U/_echo\
-	$U/_forktest\
-	$U/_grep\
-	$U/_init\
-	$U/_kill\
-	$U/_ln\
-	$U/_ls\
-	$U/_mkdir\
-	$U/_rm\
-	$U/_sh\
-	$U/_stressfs\
-	$U/_usertests\
-	$U/_grind\
-	$U/_wc\
-	$U/_zombie\
-
-fs.img: mkfs/mkfs $(UPROGS)
-	mkfs/mkfs fs.img $(UPROGS)
-
-flush:
-	rm -rf *.d *.o *.asm *.out *.sym initcode
-
-kernel: $(obj) kernel.ld
-	$(LD) $(LDFLAGS) -T kernel.ld -o kernel $(obj) 
-	$(OBJDUMP) -S kernel > kernel.asm
-	$(OBJDUMP) -t kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > kernel.sym
+fs.img:
+	cd user && make fs_img
 
 qemu:
-	$(QEMU) $(QEMUOPTS)
+	cd kernel && make qemu
 
 debug:
-	make all flush
-	$(QEMU) $(QEMUOPTS) -S -gdb tcp::25000
+	cd kernel && make debug
 
 clean:
-	make flush
-	rm -rf kernel
+	cd kernel && make clean
+	cd mkfs && make clean
+	cd user && make clean
 
-.PHONY: all clean debug qemu
+remove: clean
+	rm -rf kernel/HSunix kernel/HSunix.map
+
+
+
+.PHONY: all clean debug qemu build remove fs.img app mkfs
 

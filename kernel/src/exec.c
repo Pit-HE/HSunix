@@ -2,13 +2,12 @@
  * 当前模块用于解析 elf 文件，
  * 并将其加载到进程的虚拟内存页中
  */
-#include "fcntl.h"
 #include "defs.h"
 #include "fs.h"
 #include "elf.h"
 #include "cli.h"
 #include "proc.h"
-
+#include "fcntl.h"
 
 int elf_flag_perm (int flag)
 {

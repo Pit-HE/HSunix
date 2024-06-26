@@ -17,7 +17,7 @@ void    putc    (int ch);
 void    pgdir   (void);
 int     gettime (void);
 void    sleep   (int ms);
-// void    open    (void);
+void    open    (void);
 void    close   (void);
 void    read    (void);
 void    write   (void);

@@ -4,8 +4,7 @@
 
 #include <stdarg.h>
 #include "types.h"
-#include "defs.h"
-#include "user_lib.h"
+#include "clib.h"
 
 
 static char u_digits[] = "0123456789abcdef";
@@ -53,7 +52,7 @@ void uprintf (char *fmt, ...)
   char *s;
 
   if (fmt == 0)
-    kError(eSVC_Printf, E_PARAM);
+    return;
 
   va_start(ap, fmt);
   for(i = 0; (c = fmt[i] & 0xff) != 0; i++)

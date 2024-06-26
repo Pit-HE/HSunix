@@ -68,7 +68,7 @@ void user_main (void)
     /* 设置进入用户空间后要执行的函数 */
     // void user_first (void);
     // pcb->trapFrame->epc = (uint64)user_first;
-    do_exec(pcb, "/fs/my_test", argv);
+    do_exec(pcb, "/fs/test", argv);
 
     trap_userret();
 }

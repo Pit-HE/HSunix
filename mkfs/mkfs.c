@@ -5,10 +5,10 @@
 #include <fcntl.h>
 #include <assert.h>
 
-#include "../dfs_priv.h"
-#include "../dfs_virtio.h"
-#include "../param.h"
-#include "../types.h"
+#include "dfs_priv.h"
+#include "dfs_virtio.h"
+#include "param.h"
+#include "types.h"
 
 
 
