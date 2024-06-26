@@ -40,12 +40,38 @@ QEMUOPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 %.o:%.c
 	$(CC)${CFLAGS} $^ -c -o $@
 %.o:%.S
-	$(CC)${CFLAGS} -c -o $@ $^
-
+	$(CC)${CFLAGS} $^ -c -o $@ 
 
 
 all:kernel
 	make flush
+
+# mkfs/mkfs: mkfs/mkfs.c
+# 	gcc -Werror -Wall -o mkfs/mkfs mkfs/mkfs.c
+mkfs/mkfs: mkfs/mkfs.c
+	gcc mkfs/mkfs.c -o mkfs/mkfs
+
+U = user
+UPROGS=\
+	$U/_cat\
+	$U/_echo\
+	$U/_forktest\
+	$U/_grep\
+	$U/_init\
+	$U/_kill\
+	$U/_ln\
+	$U/_ls\
+	$U/_mkdir\
+	$U/_rm\
+	$U/_sh\
+	$U/_stressfs\
+	$U/_usertests\
+	$U/_grind\
+	$U/_wc\
+	$U/_zombie\
+
+fs.img: mkfs/mkfs $(UPROGS)
+	mkfs/mkfs fs.img $(UPROGS)
 
 flush:
 	rm -rf *.d *.o *.asm *.out *.sym initcode

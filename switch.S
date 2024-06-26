@@ -1,13 +1,13 @@
 
-# Context switch
+# struct Context switch
 #
-#   void switch_to(Context *old, Context *new);
+#   void kswitch_to(struct Context *old, struct Context *new);
 #
 # Save current registers in old. Load from new.
 
 
-.globl switch_to
-switch_to:
+.globl kswitch_to
+kswitch_to:
         sd ra, 0(a0)
         sd sp, 8(a0)
         sd s0, 16(a0)

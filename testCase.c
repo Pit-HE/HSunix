@@ -176,10 +176,10 @@ void tc_ringbuff (void)
 void tc_timer (void)
 {
     // int i;
-    timer_t *tmr[10] = {0};
-    // ProcCB *pcb;
+    struct Timer *tmr[10] = {0};
+    // struct ProcCB *pcb;
 
-    // ProcCB *pcb_alloc (void);
+    // struct ProcCB *pcb_alloc (void);
     // pcb = pcb_alloc();
 
  #if 0

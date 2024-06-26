@@ -41,8 +41,8 @@ struct stat
 #define VFS_FILE    2
 
 
-int  vfs_pcbInit   (ProcCB *pcb, char *path);
-int  vfs_pcbdeinit (ProcCB *pcb);
+int  vfs_pcbInit   (struct ProcCB *pcb, char *path);
+int  vfs_pcbdeinit (struct ProcCB *pcb);
 
 void init_vfs   (void);
 int  vfs_open   (char *path, uint flags, uint mode);

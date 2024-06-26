@@ -3,16 +3,19 @@
 #define __TIEMR_H___
 
 
-#include "defs.h"
+#include "types.h"
+#include "list.h"
+#include "proc.h"
 
 
-typedef struct kernelTimer
+struct Timer
 {
     int             code;
     uint64          expires;
-    ListEntry_t    list;
-    ProcCB        *pcb;
-}timer_t;
+    ListEntry_t     list;
+    struct ProcCB  *pcb;
+};
+
 
 
 #endif

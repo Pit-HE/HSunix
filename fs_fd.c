@@ -3,13 +3,14 @@
  */
 #include "fcntl.h"
 #include "defs.h"
+#include "proc.h"
 
 
 /* 用于进程申请默认的文件描述符表
  *
  * 返回值：-1为失败，非负值为正常
  */
-int fdTab_alloc (ProcCB *pcb)
+int fdTab_alloc (struct ProcCB *pcb)
 {
     struct File *file = NULL;
 
@@ -36,7 +37,7 @@ int fdTab_alloc (ProcCB *pcb)
     return 0;
 }
 /* 释放进程占用的文件描述符表 */
-void fdTab_free (ProcCB *pcb)
+void fdTab_free (struct ProcCB *pcb)
 {
     int i;
 
@@ -62,7 +63,7 @@ int fd_alloc (void)
 {
     int i, fd = -1;
     struct File **tab = NULL;
-    ProcCB *pcb = getProcCB();
+    struct ProcCB *pcb = getProcCB();
 
     /* 遍历文件描述符指针数组，寻找空闲的数组元素 */
     for(i=0; i<pcb->fdCnt; i++)
@@ -105,7 +106,7 @@ int fd_alloc (void)
 /* 释放申请的文件描述符数组的成员 */
 void fd_free (int fd)
 {
-    ProcCB *pcb = getProcCB();
+    struct ProcCB *pcb = getProcCB();
 
     if ((fd < 0) || (fd > pcb->fdCnt))
         return;
@@ -120,7 +121,7 @@ void fd_free (int fd)
  */
 struct File *fd_get (int fd)
 {
-    ProcCB *pcb = getProcCB();
+    struct ProcCB *pcb = getProcCB();
 
     if ((fd < 0) || (fd > pcb->fdCnt))
         return NULL;
@@ -135,7 +136,7 @@ struct File *fd_get (int fd)
 int fd_copy (int fd)
 {
     int newfd;
-    ProcCB *pcb = NULL;
+    struct ProcCB *pcb = NULL;
     struct File *f = NULL;
 
     f = fd_get(fd);

@@ -3,6 +3,7 @@
  * 用于实现指定进程休眠的时长
  */
 #include "defs.h"
+#include "time.h"
 
 
 #define TIMER_CODE  0x5AA5
@@ -15,16 +16,16 @@ void init_timer (void)
 }
 
 /* 添加软件定时器模块 */
-timer_t *timer_add (ProcCB *pcb, int expires)
+struct Timer *timer_add (struct ProcCB *pcb, int expires)
 {
-    timer_t *pTimer = NULL, *timer = NULL;
+    struct Timer *pTimer = NULL, *timer = NULL;
     ListEntry_t *plist = NULL;
 
     if ((pcb == NULL) || (expires == 0))
         kError(eSVC_Timer, E_PARAM);
 
     kDISABLE_INTERRUPT();
-    timer = (timer_t *)kalloc(sizeof(timer_t));
+    timer = (struct Timer *)kalloc(sizeof(struct Timer));
     if (timer != NULL)
     {
         timer->code = TIMER_CODE;
@@ -37,7 +38,7 @@ timer_t *timer_add (ProcCB *pcb, int expires)
 
         list_for_each(plist, &kSleepList)
         {
-            pTimer = list_container_of(plist, timer_t, list);
+            pTimer = list_container_of(plist, struct Timer, list);
 
             if (timer->expires < pTimer->expires)
             {
@@ -53,9 +54,9 @@ timer_t *timer_add (ProcCB *pcb, int expires)
 }
 
 /* 删除软件定时器对象 */
-void timer_del (timer_t *timer)
+void timer_del (struct Timer *timer)
 {
-    timer_t *pTimer = NULL;
+    struct Timer *pTimer = NULL;
 
     if (timer == NULL)
         return;
@@ -70,7 +71,7 @@ void timer_del (timer_t *timer)
             if (timer->list.next != &kSleepList)
             {
                 pTimer = list_container_of(timer->list.next, 
-                            timer_t, list);
+                            struct Timer, list);
                 pTimer->expires += timer->expires;
             }
         }
@@ -84,14 +85,14 @@ void timer_del (timer_t *timer)
 void timer_run (void)
 {
     ListEntry_t *pList = NULL;
-    timer_t *pTimer = NULL;
-    ProcCB *pcb = NULL;
+    struct Timer *pTimer = NULL;
+    struct ProcCB *pcb = NULL;
 
     pList = kSleepList.next;
 
     if (pList != &kSleepList)
     {
-        pTimer = list_container_of(pList, timer_t, list);
+        pTimer = list_container_of(pList, struct Timer, list);
 
         if (pTimer->expires > 0)
             pTimer->expires -= 1;
@@ -107,7 +108,7 @@ void timer_run (void)
                 if (pTimer->list.next != &kSleepList)
                 {
                     pTimer = list_container_of(pTimer->list.next, 
-                                timer_t, list);
+                                struct Timer, list);
                     pTimer->expires += pTimer->expires;
                 }
             }
@@ -118,7 +119,7 @@ void timer_run (void)
             if (pList == &kSleepList)
                 break;
 
-            pTimer = list_container_of(pList, timer_t, list);
+            pTimer = list_container_of(pList, struct Timer, list);
         }
     }
 }

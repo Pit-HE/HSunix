@@ -4,7 +4,7 @@
 #include "defs.h"
 #include "file.h"
 #include "fcntl.h"
-
+#include "proc.h"
 
 
 /* 解析路径中第一个节点的名字, 并返回剩下的路径内容
@@ -235,7 +235,7 @@ char *path_parser (char *directory, const char *filepath)
  */
 int path_setcwd (const char *path)
 {
-    ProcCB *pcb = NULL;
+    struct ProcCB *pcb = NULL;
     char *ap_path = NULL;
     char *old_cwd = NULL;
     char *new_cwd = NULL;

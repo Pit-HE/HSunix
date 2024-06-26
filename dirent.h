@@ -41,7 +41,7 @@ long telldir(DIR *dir);
 struct dirent *readdir(DIR *dir);
 int mkdir  (char *path, uint mode);
 int mkfile (char *path, uint flag, uint mode);
-int chdir(char *path);
-int rmdir (char *path);
+int k_chdir (char *path);
+int k_rmdir (char *path);
 
 #endif

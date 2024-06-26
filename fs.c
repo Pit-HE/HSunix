@@ -7,6 +7,7 @@
 #include "fcntl.h"
 #include "dirent.h"
 #include "dfs_fs.h"
+#include "proc.h"
 
 
 /* 初始化虚拟文件系统 */
@@ -231,7 +232,7 @@ int vfs_lseek (int fd, uint off, int whence)
 }
 
 /* 初始化进程文件系统相关的内容 */
-int vfs_pcbInit (ProcCB *pcb, char *path)
+int vfs_pcbInit (struct ProcCB *pcb, char *path)
 {
     if (pcb == NULL)
         return -1;
@@ -257,7 +258,7 @@ int vfs_pcbInit (ProcCB *pcb, char *path)
 }
 
 /* 反初始化进程的文件相关项 */
-int vfs_pcbdeinit (ProcCB *pcb)
+int vfs_pcbdeinit (struct ProcCB *pcb)
 {
     if (pcb == NULL)
         return -1;

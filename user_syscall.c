@@ -60,10 +60,10 @@ void sleep (int ms)
     syscall(SYS_sleep, ms);
 }
 
-void open (void)
-{
-    syscall(SYS_open);
-}
+// void open (void)
+// {
+//     syscall(SYS_open);
+// }
 
 void close (void)
 {

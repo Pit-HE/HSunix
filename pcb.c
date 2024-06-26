@@ -2,25 +2,24 @@
  * 存放处理进程控制块相关功能的接口
  */
 #include "defs.h"
-#include "proc.h"
 #include "param.h"
 #include "memlayout.h"
-
+#include "proc.h"
 
 /* 作为指针，指向 trampoline.S 里的代码 */
 extern char trampoline[];
 
 extern uint64       kPidToken;
-extern CpuCB        kCpusList[NCPU];
+extern struct CpuCB        kCpusList[NCPU];
 extern ListEntry_t  kUnregistList;
 extern ListEntry_t  kRegistList;
 extern ListEntry_t  kReadyList;
 extern ListEntry_t  kPendList;
-extern ProcCB      *kInitProcCB;
-extern ProcCB      *kIdleProcCB;
+extern struct ProcCB      *kInitProcCB;
+extern struct ProcCB      *kIdleProcCB;
 
 
-ProcCB *getProcCB (void)
+struct ProcCB *getProcCB (void)
 {
     return getCpuCB()->proc;
 }
@@ -39,7 +38,7 @@ void pcb_dump (void)
         [EXITING]   "exit"
     };
     ListEntry_t *ptr;
-    ProcCB *pcb;
+    struct ProcCB *pcb;
     char *state;
 
     kprintf("\n");
@@ -47,7 +46,7 @@ void pcb_dump (void)
     /* 遍历进程控制块数组 */
     list_for_each(ptr, &kRegistList)
     {
-        pcb = list_container_of(ptr, ProcCB, regist);
+        pcb = list_container_of(ptr, struct ProcCB, regist);
 
         /* 寻找非空闲的进程 */
         if (pcb->state == IDLE)
@@ -67,12 +66,12 @@ void pcb_dump (void)
 
 
 /* 申请并初始化一个进程控制块的内存空间 */
-ProcCB *pcb_alloc (void)
+struct ProcCB *pcb_alloc (void)
 {
-    ProcCB *pcb = NULL;
+    struct ProcCB *pcb = NULL;
 
     /* 申请任务控制块的内存空间 */
-    pcb = (ProcCB *)kalloc(sizeof(ProcCB));
+    pcb = (struct ProcCB *)kalloc(sizeof(struct ProcCB));
     if (pcb == NULL)
         return NULL;
     
@@ -94,7 +93,7 @@ ProcCB *pcb_alloc (void)
     }
 
     /* 清空进程切换时的内核上下文 */
-    kmemset(&pcb->context, 0, sizeof(Context));
+    kmemset(&pcb->context, 0, sizeof(struct Context));
 
     /* 设置进程的信息 */
     pcb->pid = proc_applypid();
@@ -111,7 +110,7 @@ ProcCB *pcb_alloc (void)
 }
 
 /* 释放已经存在的进程控制块 */
-int pcb_free (ProcCB *pcb)
+int pcb_free (struct ProcCB *pcb)
 {
     if (pcb == NULL)
         return -1;
@@ -137,9 +136,9 @@ int pcb_free (ProcCB *pcb)
 }
 
 /* 寻找指定 id 的进程控制块 */
-ProcCB *pcb_lookup (int pid)
+struct ProcCB *pcb_lookup (int pid)
 {
-    ProcCB *pcb = NULL;
+    struct ProcCB *pcb = NULL;
     ListEntry_t *ptr = NULL;
 
     if ((kPidToken < pid) && (pid < 0))
@@ -148,7 +147,7 @@ ProcCB *pcb_lookup (int pid)
     /* 遍历链表，查找之地内的 ID */
     list_for_each(ptr, &kRegistList)
     {
-        pcb = list_container_of(ptr, ProcCB, regist);
+        pcb = list_container_of(ptr, struct ProcCB, regist);
         if (pcb->pid == pid)
             goto exit_findProcCB;
     }
@@ -160,7 +159,7 @@ ProcCB *pcb_lookup (int pid)
 /* 为进程申请虚拟页表并初始化默认的虚拟地址空间 
  * ( 与 proc_free_pgtab 成对使用 ) 
  */
-pgtab_t *proc_alloc_pgtab (ProcCB *pcb)
+pgtab_t *proc_alloc_pgtab (struct ProcCB *pcb)
 {
     pgtab_t *pgtab = NULL;
 

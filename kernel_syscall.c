@@ -1,7 +1,7 @@
 
 #include "syscall.h"
 #include "defs.h"
-
+#include "proc.h"
 
 
 static uint64 sys_exit (int arg[])
@@ -115,7 +115,7 @@ void do_syscall (void)
 {
     int code;
     int args[7];
-    ProcCB *pcb = getProcCB();
+    struct ProcCB *pcb = getProcCB();
 
     code = pcb->trapFrame->a7;
 

@@ -18,8 +18,9 @@ enum Procstate
   EXITING   /* 等待退出 */
 };
 
+
 // Saved registers for kernel context switches.
-typedef struct processSwitchContext
+struct Context  //processSwitchContext
 {
   uint64 ra;
   uint64 sp;
@@ -37,9 +38,10 @@ typedef struct processSwitchContext
   uint64 s9;
   uint64 s10;
   uint64 s11;
-}Context;
+};
 
-typedef struct trapStackFrame
+
+struct Trapframe  //trapStackFrame
 {
   /*   0 */ uint64 epc;           // saved user program counter
   /*   8 */ uint64 kernel_satp;   // kernel page table
@@ -77,16 +79,15 @@ typedef struct trapStackFrame
   /* 264 */ uint64 t4;
   /* 272 */ uint64 t5;
   /* 280 */ uint64 t6;
-}Trapframe;
-
+};
 
 
 // Per-process state
 /* 进程控制块 */
-typedef struct processControlBlock
+struct ProcCB // processControlBlock
 {
   enum Procstate state;                 // Process state
-  struct processControlBlock *parent;   // Parent process
+  struct ProcCB *parent;          // Parent process
 
   void         *pendObj;          // If non-zero, sleeping on special object
   uint          killState;        // If non-zero, have been killed
@@ -103,19 +104,21 @@ typedef struct processControlBlock
   uint64        stackAddr;        // Virtual address of kernel stack
   uint64        stackSize;        // Virtual address of kernel stack size
   uint64        memSize;          // Size of process memory (bytes)
-  pgtab_t  *pageTab;          // User page table
-  Trapframe    *trapFrame;        // data page for trampoline.S
-  Context       context;          // switch_to() here to run process
+  pgtab_t      *pageTab;          // User page table
+  struct Trapframe    *trapFrame;        // data page for trampoline.S
+  struct Context       context;          // kswitch_to() here to run process
   char          name[20];         // Process name (debugging)
-}ProcCB;
+};
 
-typedef struct cpuControlBlock
+
+struct CpuCB  //cpuControlBlock
 {
-  ProcCB   *proc;                 // The process running on this cpu, or null.
-  Context   context;              // switch_to() here to enter do_scheduler().
-  int       intrOffNest;          // Depth of push_off() nesting.
-  int       intrOldState;         // Were interrupts enabled before push_off()?
-}CpuCB;
+  struct ProcCB *proc;                 // The process running on this cpu, or null.
+  struct Context context;              // kswitch_to() here to enter do_scheduler().
+  int intrOffNest;          // Depth of push_off() nesting.
+  int intrOldState;         // Were interrupts enabled before push_off()?
+};
+
 
 
 #endif

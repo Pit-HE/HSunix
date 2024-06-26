@@ -6,7 +6,7 @@
 #define __FILE_H__
 
 
-#include "defs.h"
+// #include "defs.h"
 #include "proc.h"
 #include "dirent.h"
 #include "device.h"
@@ -177,8 +177,8 @@ struct DirItem
 
 
 /**********************************/
-int  fdTab_alloc (ProcCB *pcb);
-void fdTab_free  (ProcCB *pcb);
+int  fdTab_alloc (struct ProcCB *pcb);
+void fdTab_free  (struct ProcCB *pcb);
 int  fd_alloc    (void);
 void fd_free     (int fd);
 struct File *fd_get (int fd);

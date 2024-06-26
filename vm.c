@@ -145,8 +145,8 @@ uint64 kvm_phyaddr (pgtab_t *pagetable, uint64 vAddr)
     /* 页表条目的有效性检查 */
     if (! (*pte & PTE_V))
         return 0;
-    if (! (*pte & PTE_U))
-        return 0;
+    // if (! (*pte & PTE_U))    /* TODO: */
+    //     return 0;
 
     /* 将页表条目内存储的物理地址返回 */
     return PTE2PA(*pte);
@@ -395,6 +395,8 @@ void init_kvm (void)
     // map the trampoline for trap entry/exit to
     // the highest virtual address in the kernel.
     mappages(kernel_pgtab, TRAMPOLINE, (uint64)trampoline, PGSIZE, PTE_R | PTE_X);
+
+    uvm_alloc(kernel_pgtab, TRAPFRAME, TRAPFRAME+PGSIZE, PTE_R|PTE_W);
 
     // Open vritual protect
     sfence_vma();

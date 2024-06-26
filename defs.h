@@ -24,13 +24,13 @@ void uart_intrrupt  (void);
 
 
 /******************** console ********************/
-void init_console       (void);
-void console_isr        (int c);
-int  console_wString    (char *src);
-int  console_wCmd       (char *src, int len);
-void console_wChar      (void *, char  src);
-int  console_rCmd       (char *src, int len);
-int  console_rChar      (void);
+void init_console    (void);
+void console_isr     (int c);
+int  console_wString (char *src);
+int  console_wCmd    (char *src, int len);
+void console_wChar   (void *, char  src);
+int  console_rCmd    (char *src, int len);
+int  console_rChar   (void);
 
 
 /******************** string ********************/
@@ -71,10 +71,10 @@ int      uvm_copyin  (pgtab_t *pagetable, char *dst, uint64 srcva, uint64 len);
 pgtab_t *uvm_create  (void);
 
 /******************** trap ********************/
-void init_trap      (void);
-void trap_userfunc  (void);
-void trap_userret   (void);
-void kerneltrap     (void);
+void init_trap     (void);
+void trap_userfunc (void);
+void trap_userret  (void);
+void kerneltrap    (void);
 
 
 /******************** test ********************/
@@ -82,48 +82,49 @@ void selfInspection (void);
 
 
 /******************** proc ********************/
-#define getCpuID()      r_tp()
-CpuCB  *getCpuCB        (void);
-int     proc_applypid   (void);
-void    proc_wakeup     (ProcCB *pcb);
-int     proc_killstate  (ProcCB *pcb);
-void    do_scheduler (void);
-void    do_defuncter (void);
-void    do_yield     (void);
-void    do_suspend   (void *obj);
-void    do_resume    (void *obj);
-int     do_fork      (void);
-int     do_wait      (int *code);
-void    do_exit      (int state);
-int     do_kill      (int pid);
-int     do_sleep     (int ms);
-ProcCB *do_kthread   (char *name, void(*thread)(void));
-void    init_proc    (void);
+int  proc_applypid  (void);
+void proc_wakeup    (struct ProcCB *pcb);
+int  proc_killstate (struct ProcCB *pcb);
+void do_scheduler (void);
+void do_defuncter (void);
+void do_switch    (void);
+void do_yield     (void);
+void do_suspend   (void *obj);
+void do_resume    (void *obj);
+int  do_fork      (void);
+int  do_wait      (int *code);
+void do_exit      (int state);
+int  do_kill      (int pid);
+int  do_sleep     (int ms);
+void init_proc    (void);
+struct CpuCB  *getCpuCB (void);
+struct ProcCB *do_kthread (char *name, void(*thread)(void));
+#define getCpuID() r_tp()
+
 
 /******************** pcb ********************/
-ProcCB  *getProcCB  (void);
-void     pcb_dump   (void);
-ProcCB  *pcb_alloc  (void);
-int      pcb_free   (ProcCB *pcb);
-ProcCB  *pcb_lookup (int pid);
-int      proc_free_pgtab  (pgtab_t *pgtab);
-pgtab_t *proc_alloc_pgtab (ProcCB *pcb);
-
+void pcb_dump (void);
+int  pcb_free (struct ProcCB *pcb);
+int  proc_free_pgtab (pgtab_t *pgtab);
+pgtab_t *proc_alloc_pgtab (struct ProcCB *pcb);
+struct ProcCB *getProcCB  (void);
+struct ProcCB *pcb_alloc  (void);
+struct ProcCB *pcb_lookup (int pid);
 
 
 /******************** plic ********************/
-void init_plic      (void);
-void init_plichart  (void);
-int  plic_claim     (void);
-void plic_complete  (int irq);
+void init_plic     (void);
+void init_plichart (void);
+int  plic_claim    (void);
+void plic_complete (int irq);
 
 
 /******************** syscall ********************/
-void do_syscall(void);
+void do_syscall (void);
 
 
 /******************** switch ********************/
-void switch_to (Context *old, Context *new);
+void kswitch_to (struct Context *old, struct Context *new);
 
 
 /******************** Port **********************/
@@ -163,23 +164,24 @@ void user_main (void);
 
 
 /******************** timer *********************/
-void     init_timer (void);
-timer_t *timer_add  (ProcCB *pcb, int expires);
-void     timer_del  (timer_t *timer);
-void     timer_run  (void);
+void init_timer (void);
+void timer_del  (struct Timer *timer);
+void timer_run  (void);
+struct Timer *timer_add (struct ProcCB *pcb, int expires);
 
 
 /******************** exec **********************/
-int do_exec(ProcCB *obj, char *path, char *argv[]);
+int do_exec(struct ProcCB *obj, char *path, char *argv[]);
 
 
 /******************** device ********************/
 void init_dev (void);
-struct Device *dev_alloc (const char *name);
 void dev_free (struct Device *dev);
 void dev_register (struct Device *dev);
 void dev_unregister (struct Device *dev);
-struct Device *dev_get (const char *name);
 void dev_put (struct Device *dev);
+struct Device *dev_alloc (const char *name);
+struct Device *dev_get (const char *name);
+
 
 #endif

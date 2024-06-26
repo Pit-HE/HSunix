@@ -7,6 +7,7 @@
  *
  */
 #include "defs.h"
+#include "proc.h"
 
 /*******************************/
 /* S file function extern */
@@ -28,7 +29,7 @@ void user_ret (void);
 void user_trap (void)
 {
     int flag;
-    ProcCB *pcb;
+    struct ProcCB *pcb;
 
     /* 避免进程在特权模式下又重复发生特权模式的中断 */
     w_stvec((uint64)kernelvec);
@@ -59,7 +60,7 @@ void user_trap (void)
 /* 设置进程从特权模式切换到用户模式前的信息 */
 void user_ret (void)
 {
-    ProcCB *pcb;
+    struct ProcCB *pcb;
 
     intr_off();
     /* 恢复用户模式下发生异常的入口 */

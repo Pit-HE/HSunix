@@ -159,7 +159,7 @@ int mkfile (char *path, uint flag, uint mode)
 }
 
 /* 更改当前进程的工作目录 */
-int chdir(char *path)
+int k_chdir(char *path)
 {
     DIR *dir = NULL;
 
@@ -177,7 +177,7 @@ int chdir(char *path)
 }
 
 /* 删除指定的文件目录 */
-int rmdir (char *path)
+int k_rmdir (char *path)
 {
     DIR *dir = NULL;
 

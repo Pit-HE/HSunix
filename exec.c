@@ -7,6 +7,21 @@
 #include "fs.h"
 #include "elf.h"
 #include "cli.h"
+#include "proc.h"
+
+
+int elf_flag_perm (int flag)
+{
+    int ret = 0;
+
+    if (flag & 0x01)
+        ret |= PTE_X;
+    if (flag & 0x02)
+        ret |= PTE_W;
+    ret |= PTE_R;
+
+    return ret;
+}
 
 /* 加载 elf 文件中的段到页表虚拟地址中的指定位置 */
 int elf_load_segment (pgtab_t *pagetable, uint64 vAddr,  
@@ -106,13 +121,13 @@ int elf_para_create (pgtab_t *pagetable, uint64 *sptop, char *argv[])
  *
  * 返回值：argv 中记录的参数数量
  */
-int do_exec(ProcCB *obj, char *path, char *argv[])
+int do_exec(struct ProcCB *obj, char *path, char *argv[])
 {
     int fd, i;
     uint64 argc, off, sptop;
     struct elf_ehdr elf;
     struct elf_phdr phdr;
-    ProcCB *pcb = NULL;
+    struct ProcCB *pcb = NULL;
     pgtab_t *pgtab = NULL;
 
 
@@ -150,7 +165,7 @@ int do_exec(ProcCB *obj, char *path, char *argv[])
 
         /* 在虚拟地址中为当前段映射相应的物理内存 */
         if (0 >= uvm_alloc(pgtab, phdr.p_vaddr,
-                phdr.p_vaddr + phdr.p_memsz, PTE_X | PTE_W | PTE_R))
+                phdr.p_vaddr + phdr.p_memsz, elf_flag_perm(phdr.p_flags)))
             goto _err_exec_uvm;
 
         /* 将数据段写入页表所对应的虚拟内存中 */

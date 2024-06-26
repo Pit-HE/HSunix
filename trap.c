@@ -79,7 +79,7 @@ int dev_interrupt (void)
 void trap_userfunc(void)
 {
     uint devnum = 0;
-    ProcCB *pcb = getProcCB();
+    struct ProcCB *pcb = getProcCB();
 
     /* 判断 trap 是否来自用户模式 */
     if ((r_sstatus() & SSTATUS_SPP) != 0)
@@ -126,7 +126,7 @@ void trap_userfunc(void)
 void trap_userret(void)
 {
     unsigned long x;
-    ProcCB *pcb = getProcCB();
+    struct ProcCB *pcb = getProcCB();
 
     intr_off();
 
@@ -168,7 +168,7 @@ void trap_userret(void)
 void kerneltrap(void)
 {
     int devnum = 0;
-    ProcCB *pcb;
+    struct ProcCB *pcb;
     uint64 sepc = r_sepc();
     uint64 sstatus = r_sstatus();
     // uint64 scause = r_scause();

@@ -6,6 +6,7 @@
 #include "fs.h"
 #include "dirent.h"
 #include "fcntl.h"
+#include "proc.h"
 
 
 
@@ -24,7 +25,7 @@ int cmd_cd (int argc, char *argv[])
     if ((argc != 2) || (argv[1] == NULL))
         return -1;
 
-    return chdir(argv[1]);
+    return k_chdir(argv[1]);
 }
 
 /* 列举当前目录下的所有对象 */
@@ -33,7 +34,7 @@ int cmd_ls (int argc, char *argv[])
     DIR *dir = NULL;
     uint count = 0;
     struct dirent *dirent = NULL;
-    ProcCB *pcb = getProcCB();
+    struct ProcCB *pcb = getProcCB();
 
     if (argc > 2)
         return -1;
@@ -174,7 +175,7 @@ int cmd_rmdir (int argc, char *argv[])
     if ((argc != 2) || (argv[1] == NULL))
         return -1;
     
-    return rmdir(argv[1]);
+    return k_rmdir(argv[1]);
 }
 
 /* 同步文件系统内的缓存到磁盘 */
@@ -364,11 +365,11 @@ struct cli_cmd func_list[] =
         "Deletes the specified file or directory\r\n    \
             example: rm a.a | rm /bin/a.a"
     },
-    {/* rmdir */
+    {/* k_rmdir */
         &cmd_rmdir,
-        "rmdir",
+        "k_rmdir",
         "Deletes the specified directory\r\n    \
-            example: rmdir usr | rmdir /usr/tmp1"
+            example: k_rmdir usr | k_rmdir /usr/tmp1"
     },
     {/* fsync */
         &cmd_fsync,

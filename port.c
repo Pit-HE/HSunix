@@ -3,11 +3,13 @@
  */
 
 #include "defs.h"
+#include "proc.h"
+
 
 /* 嵌套实现关闭中断 */
 void kPortDisableInterrupt (void)
 {
-    CpuCB *cpu = getCpuCB();
+    struct CpuCB *cpu = getCpuCB();
 
     intr_off();
 
@@ -21,7 +23,7 @@ void kPortDisableInterrupt (void)
 /* 嵌套实现开启中断 */
 void kPortEnableInterrupt (void)
 {
-    CpuCB *cpu = getCpuCB();
+    struct CpuCB *cpu = getCpuCB();
 
     if (cpu->intrOffNest > 0)
     {

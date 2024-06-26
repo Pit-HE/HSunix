@@ -61,7 +61,7 @@ void user_main (void)
 {
     char *argv[8] = {0};
     char buf[] = "Hello World";
-    ProcCB *pcb = getProcCB();
+    struct ProcCB *pcb = getProcCB();
 
     argv[0] = buf;
 
