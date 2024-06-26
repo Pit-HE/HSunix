@@ -5,23 +5,12 @@
 #include <fcntl.h>
 #include <assert.h>
 
-#include "dfs_priv.h"
-#include "dfs_virtio.h"
-#include "param.h"
-#include "types.h"
+// #include "dfs_priv.h"
+// #include "dfs_virtio.h"
+// #include "param.h"
+// #include "types.h"
+#include "mkfs.h"
 
-
-
-#define MAXOPBLOCKS     10  // max # of blocks any FS op writes
-#define LOGSIZE         (MAXOPBLOCKS*3)  // max data blocks in on-disk log
-#define NBUF            (MAXOPBLOCKS*3)  // size of disk block cache
-#define FSSIZE          2000  // size of file system in blocks
-#define IPB             (BSIZE / sizeof(struct disk_inode))
-#define ROOTINO         1  // root i-number
-#define DIRSIZ          14
-#define mkIBLOCK(i,sb)  ((i) / IPB + sb.inodestart)
-#define NINDIRECT       (BSIZE / sizeof(uint))
-#define MAXFILE         (NDIRECT + NINDIRECT)
 
 
 #ifndef static_assert
@@ -323,8 +312,8 @@ int main(int argc, char *argv[])
   {
     // get rid of "user/"
     char *shortname;
-    if (strncmp(argv[i], "user/", 5) == 0)
-      shortname = argv[i] + 5;
+    if (strncmp(argv[i], "bin/", 4) == 0)
+      shortname = argv[i] + 4;
     else
       shortname = argv[i];
 

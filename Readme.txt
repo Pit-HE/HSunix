@@ -9,4 +9,4 @@
 
 5、清除所有生成的文件可以使用：make remove
 
-6、进入进入内核 debug 调试时可以使用：make debug
+6、需要进行内核 debug 时可以使用：make debug

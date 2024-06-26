@@ -31,36 +31,46 @@ export CFLAGS LDFLAGS
 export CPUS ROOT_DIR
 
 
-all: qemu
+# 默认清空工程重新编译并运行 HSunix
+all: remove
+	make build
+	make clean
+	make app
+	make mkfs
+	make fs.img
+	make qemu
 
-build:
+# 重新构建整个系统内核
+build: remove
 	make -C kernel
 
+# 生成创建可挂载的磁盘文件 fs.img 的工具
 mkfs:
 	make -C mkfs
 
+# 仅编译 user/app 中写的执行在用户空间的代码
 app:
 	make -C user
 
-# mkfs/mkfs: mkfs/mkfs.c
-# 	gcc -Werror -Wall -o mkfs/mkfs mkfs/mkfs.c
-mkfs/mkfs: mkfs/mkfs.c
-	gcc mkfs/mkfs.c -o mkfs/mkfs
-
+# 生成可以挂载到 qemu 上的磁盘文件
 fs.img:
 	cd user && make fs_img
 
+# 运行 qemu 让操作系统开始模拟运行
 qemu:
 	cd kernel && make qemu
 
+# 运行 qemu 让操作系统进入调试模式
 debug:
 	cd kernel && make debug
 
+# 清除编译过程生成的中间文件
 clean:
 	cd kernel && make clean
 	cd mkfs && make clean
 	cd user && make clean
 
+# 清除所有不属于项目源码的生成文件
 remove: clean
 	rm -rf kernel/HSunix kernel/HSunix.map
 

@@ -17,7 +17,7 @@ S_OBJ	+= $(patsubst %.S, %.o, $(S_FILE))
 BIN_OBJ += $(basename $(notdir $(wildcard app/*.c)))
 LIB_OBJ += $(wildcard $(CURRENT_DIR)/lib/*.o)
 
-U = ubin
+U = bin
 UPROGS=\
 	$U/_cat\
 	$U/_echo\
@@ -57,7 +57,7 @@ $(S_OBJ):%.o:%.S
 	$(CC) $(CFLAGS) $(INCLUDE_DIR) -c -o $@ $^
 # 在 bin 目录生成可执行文件
 $(BIN_OBJ):%: app/%.o
-	$(LD) $(LDFLAGS) -T user.ld -o ubin/_$@ $^ $(LIB_OBJ)
+	$(LD) $(LDFLAGS) -T user.ld -o bin/_$@ $^ $(LIB_OBJ)
 
 
 clean:
