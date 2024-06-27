@@ -12,7 +12,6 @@ OBJDUMP = $(TOOLPREFIX)objdump
 CPUS = 1
 ROOT_DIR = $(shell pwd)
 
-
 # 编译时的参数
 CFLAGS := -Wall -Werror -O0 -fno-omit-frame-pointer -ggdb -gdwarf-2
 CFLAGS += -MD
@@ -31,6 +30,7 @@ export CFLAGS LDFLAGS
 export CPUS ROOT_DIR
 
 
+
 # 默认清空工程重新编译并运行 HSunix
 all: remove
 	make build
@@ -41,7 +41,7 @@ all: remove
 	make qemu
 
 # 重新构建整个系统内核
-build: remove
+build:
 	make -C kernel
 
 # 生成创建可挂载的磁盘文件 fs.img 的工具
@@ -53,15 +53,15 @@ app:
 	make -C user
 
 # 生成可以挂载到 qemu 上的磁盘文件
-fs.img:
+fs.img:mkfs
 	cd user && make fs_img
 
 # 运行 qemu 让操作系统开始模拟运行
-qemu:
+qemu:build
 	cd kernel && make qemu
 
 # 运行 qemu 让操作系统进入调试模式
-debug:
+debug:build
 	cd kernel && make debug
 
 # 清除编译过程生成的中间文件

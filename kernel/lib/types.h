@@ -1,4 +1,8 @@
 
+#ifndef __TYPES_H__
+#define __TYPES_H__
+
+
 
 #ifndef NULL
 #define NULL        (void*)0
@@ -25,3 +29,7 @@ typedef unsigned long  uint64;
 typedef unsigned char  bool;
 typedef unsigned long  pde_t;
 typedef unsigned long  size_t;
+
+
+
+#endif
