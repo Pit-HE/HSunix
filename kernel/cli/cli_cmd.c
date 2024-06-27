@@ -72,7 +72,8 @@ int cmd_ls (int argc, char *argv[])
     }while(dirent != NULL);
     closedir(dir);
 
-    kprintf("\r\n");
+    if (count != 0)
+        kprintf("\r\n");
     return 0;
 }
 

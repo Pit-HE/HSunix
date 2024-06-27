@@ -16,7 +16,6 @@ void init_vfs (void)
     /* 初始化虚拟文件系统的目录项模块 */
     init_ditem();
 
-
     /* 初始化实体文件系统: ramfs */
     void init_ramfs (void);
     init_ramfs();
@@ -24,10 +23,6 @@ void init_vfs (void)
     /* 初始化实体文件系统: dfs */
     void init_dfs (void);
     init_dfs();
-
-
-    /* 设置根文件系统 */
-    vfs_mount("ramfs", "/", O_RDWR | O_CREAT | O_DIRECTORY, NULL);
 }
 
 /* 文件系统对外接口：打开指定路径的文件 */

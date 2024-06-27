@@ -350,14 +350,11 @@ int main(int argc, char *argv[])
 
   /* 创建根目录下的标准文件夹 */
   dir_create(rootino, &obj, "sys");
-  dir_create(rootino, &obj, "home");
-  dir_create(rootino, &obj, "boot");
-  dir_create(rootino, &obj, "root");
-  dir_create(rootino, &obj, "lib");
-  dir_create(rootino, &obj, "mnt");
-  dir_create(rootino, &obj, "dev");
-  dir_create(rootino, &obj, "opt");
   dir_create(rootino, &obj, "usr");
+  dir_create(rootino, &obj, "lib");
+  dir_create(rootino, &obj, "dev");
+  dir_create(rootino, &obj, "home");
+  dir_create(rootino, &obj, "root");
   dir_create(rootino, &obj, "tmp");
   dir_create(rootino, &obj, "bin");
 

@@ -690,5 +690,6 @@ void init_ramfs (void)
 {
     fsobj_register("ramfs", &ramfs_fops, &ramfs_fsops, TRUE);
     fsobj_register("tmpfs", &ramfs_fops, &ramfs_fsops, TRUE);
+    fsobj_register("devfs", &ramfs_fops, &ramfs_fsops, TRUE);
 }
 
