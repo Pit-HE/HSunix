@@ -64,11 +64,10 @@ void user_main (void)
     struct ProcCB *pcb = getProcCB();
 
     argv[0] = buf;
+    argv[1] = NULL;
 
     /* 设置进入用户空间后要执行的函数 */
-    // void user_first (void);
-    // pcb->trapFrame->epc = (uint64)user_first;
-    do_exec(pcb, "/fs/test", argv);
+    do_exec(pcb, "/fs/bin/test", argv);
 
     trap_userret();
 }

@@ -241,11 +241,61 @@ void die(const char *s)
   exit(1);
 }
 
+/* 创建文件夹下的 . 和 .. */
+void dir_stand (uint inum)
+{
+  struct disk_dirent de;
+
+  /* 创建文件夹下的 . */
+  bzero(&de, sizeof(de));
+  de.inum = xshort(inum);
+  strcpy(de.name, ".");
+  iappend(inum, &de, sizeof(de));
+
+  /* 创建文件夹下的 .. */
+  bzero(&de, sizeof(de));
+  de.inum = xshort(inum);
+  strcpy(de.name, "..");
+  iappend(inum, &de, sizeof(de));
+}
+
+/* 在指定的节点(inum) 下创建文件夹 */
+void dir_create (uint inum, struct disk_dirent *obj, char *name)
+{
+  uint tmp_inm;
+
+  tmp_inm = ialloc(DISK_DIR);
+
+  /* 创建目标文件夹 */
+  bzero(obj, sizeof(struct disk_dirent));
+  obj->inum = xshort(tmp_inm);
+  strncpy(obj->name, name, DIRSIZ);
+  iappend(inum, obj, sizeof(struct disk_dirent));
+
+  /* 创建文件夹下的 . 和 .. */
+  dir_stand(tmp_inm);
+}
+
+uint file_create (uint inum, char *name)
+{
+  uint tmp;
+  struct disk_dirent de;
+
+  tmp = ialloc(DISK_FILE);
+
+  bzero(&de, sizeof(de));
+  de.inum = xshort(tmp);
+  strncpy(de.name, name, DIRSIZ);
+  iappend(inum, &de, sizeof(de));
+
+  return tmp;
+}
+
 int main(int argc, char *argv[])
 {
   int i, cc, fd;
   uint rootino, inum, off;
-  struct disk_dirent de;
+  struct disk_dirent obj;
   char buf[BSIZE];
   struct disk_inode din;
 
@@ -295,17 +345,21 @@ int main(int argc, char *argv[])
   rootino = ialloc(DISK_DIR);
   assert(rootino == ROOTINO);
 
-  /* 创建文件夹下的 . */
-  bzero(&de, sizeof(de));
-  de.inum = xshort(rootino);
-  strcpy(de.name, ".");
-  iappend(rootino, &de, sizeof(de));
+  /* 创建文件夹下的 . 和 .. */
+  dir_stand(rootino);
 
-  /* 创建文件夹下的 .. */
-  bzero(&de, sizeof(de));
-  de.inum = xshort(rootino);
-  strcpy(de.name, "..");
-  iappend(rootino, &de, sizeof(de));
+  /* 创建根目录下的标准文件夹 */
+  dir_create(rootino, &obj, "sys");
+  dir_create(rootino, &obj, "home");
+  dir_create(rootino, &obj, "boot");
+  dir_create(rootino, &obj, "root");
+  dir_create(rootino, &obj, "lib");
+  dir_create(rootino, &obj, "mnt");
+  dir_create(rootino, &obj, "dev");
+  dir_create(rootino, &obj, "opt");
+  dir_create(rootino, &obj, "usr");
+  dir_create(rootino, &obj, "tmp");
+  dir_create(rootino, &obj, "bin");
 
   /* 解析要烧录到磁盘的 elf 文件 */
   for (i = 2; i < argc; i++)
@@ -329,14 +383,10 @@ int main(int argc, char *argv[])
     if (shortname[0] == '_')
       shortname += 1;
 
-    /* 申请一个空闲的磁盘 inode */
-    inum = ialloc(DISK_FILE);
+    /* 在指定的节点下创建文件 */
+    inum = file_create(obj.inum, shortname);
 
-    bzero(&de, sizeof(de));
-    de.inum = xshort(inum);
-    strncpy(de.name, shortname, DIRSIZ);
-    iappend(rootino, &de, sizeof(de));
-
+    /* 将数据写入到节点中 */
     while ((cc = read(fd, buf, sizeof(buf))) > 0)
       iappend(inum, buf, cc);
 
