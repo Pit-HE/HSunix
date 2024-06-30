@@ -71,3 +71,7 @@
 //   TRAPFRAME (p->trapframe, used by the trampoline)
 //   TRAMPOLINE (the same page as in the kernel)
 #define TRAPFRAME (TRAMPOLINE - PGSIZE)
+
+
+#define USR_TRAMPOLINE (TRAPFRAME - 4*PGSIZE)
+#define USR_TRAPFRAME (USR_TRAMPOLINE - PGSIZE)

@@ -191,8 +191,11 @@ pgtab_t *proc_alloc_pgtab (struct ProcCB *pcb)
  */
 int proc_free_pgtab (pgtab_t *pgtab)
 {
-    uvm_unmap(pgtab, TRAPFRAME , 1, TRUE);
-    uvm_unmap(pgtab, TRAMPOLINE, 1, TRUE);
+    /* 处理特殊页已经映射的物理内存 (不做释放) */
+    uvm_unmap(pgtab, TRAPFRAME , 1, FALSE);
+    uvm_unmap(pgtab, TRAMPOLINE, 1, FALSE);
+
+    /* TODO: 还未完善处理普通内存页映射与页表的释放 (参考xv6) */
     uvm_destroy(pgtab);
 
     return 0;

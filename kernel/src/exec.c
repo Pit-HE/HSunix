@@ -8,7 +8,14 @@
 #include "cli.h"
 #include "proc.h"
 #include "fcntl.h"
+#include "memlayout.h"
 
+
+extern char     etext[];
+extern char     trampoline[];
+
+
+/* 解析应用代码中携带的关于段的权限 */
 int elf_flag_perm (int flag)
 {
     int ret = 0;
@@ -23,7 +30,7 @@ int elf_flag_perm (int flag)
 }
 
 /* 加载 elf 文件中的段到页表虚拟地址中的指定位置 */
-int elf_load_segment (pgtab_t *pagetable, uint64 vAddr,  
+int elf_load_segment (pgtab_t *pgtab, uint64 vAddr,  
     uint segsize, int fd, uint fd_off)
 {
     uint i, len;
@@ -32,7 +39,7 @@ int elf_load_segment (pgtab_t *pagetable, uint64 vAddr,
     for (i=0; i < segsize; i += PGSIZE)
     {
         /* 获取页表虚拟地址所对应的物理地址 */
-        pAddr = kvm_phyaddr(pagetable, vAddr + i);
+        pAddr = kvm_phyaddr(pgtab, vAddr + i);
         if (pAddr == 0)
             return -1;
 
@@ -56,19 +63,19 @@ int elf_load_segment (pgtab_t *pagetable, uint64 vAddr,
  *
  * 返回值：返回当前页表中的栈顶地址
  */
-uint64 elf_stack_create (pgtab_t *pagetable, uint64 vAddr)
+uint64 elf_stack_create (pgtab_t *pgtab, uint64 vAddr)
 {
     uint64 tmp;
 
     /* 设置进程的栈监测页 (大小为一页 4096) */
     tmp = PGROUNDUP(vAddr);
-    uvm_alloc(pagetable, tmp, tmp + PGSIZE, 0);
+    uvm_alloc(pgtab, tmp, tmp + PGSIZE, 0);
     /* 限制访问该栈监测页，否则触发页故障 */
-    kvm_clrflag(pagetable, tmp, PTE_U);
+    kvm_clrflag(pgtab, tmp, PTE_U);
 
     /* 设置进程的栈空间 (大小为一页 4096) */
     tmp += PGSIZE;
-    uvm_alloc(pagetable, tmp, tmp + PGSIZE, PTE_W | PTE_R);
+    uvm_alloc(pgtab, tmp, tmp + PGSIZE, PTE_W | PTE_R);
 
     return (tmp += PGSIZE);
 }
@@ -81,7 +88,7 @@ uint64 elf_stack_create (pgtab_t *pagetable, uint64 vAddr)
  *
  * 返回值：当前写入栈内的数组成员个数
  */
-int elf_para_create (pgtab_t *pagetable, uint64 *sptop, char *argv[])
+int elf_para_create (pgtab_t *pgtab, uint64 *sptop, char *argv[])
 {
     int argc;
     uint64 len, sp = *sptop;
@@ -96,7 +103,7 @@ int elf_para_create (pgtab_t *pagetable, uint64 *sptop, char *argv[])
         sp -= sp % 16;
         array[argc] = sp;
 
-        if (0 > uvm_copyout(pagetable, sp, argv[argc], len))
+        if (0 > uvm_copyout(pgtab, sp, argv[argc], len))
             return -1;
     }
     array[argc] = 0;
@@ -106,7 +113,7 @@ int elf_para_create (pgtab_t *pagetable, uint64 *sptop, char *argv[])
     sp -= len;
     /* 按照 riscv 的格式执行 16 位对齐 */
     sp -= sp % 16;
-    if (0 > uvm_copyout(pagetable, sp, (char *)array, len))
+    if (0 > uvm_copyout(pgtab, sp, (char *)array, len))
         return -1;
 
     *sptop = sp;
@@ -142,9 +149,15 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
     pcb = (obj == NULL) ? getProcCB():obj;
 
     /* 创建新的虚拟内存页 */
-    pgtab = proc_alloc_pgtab(pcb);
-    if (pgtab == NULL)
-        goto _err_exec_open;
+    // pgtab = proc_alloc_pgtab(pcb);
+    // if (pgtab == NULL)
+    //     goto _err_exec_open;
+    /* 让进程携带内核的内容，方便进行 mmu 的调试 */
+    pgtab = uvm_create();
+    kvm_map(pgtab, TRAMPOLINE, (uint64)trampoline, PGSIZE, PTE_R | PTE_X);
+    kvm_map(pgtab, TRAPFRAME, (uint64)pcb->trapFrame, PGSIZE, PTE_R|PTE_W);
+    kvm_map(pgtab, KERNBASE, KERNBASE, (uint64)etext-KERNBASE, PTE_R | PTE_X);
+    kvm_map(pgtab, (uint64)etext, (uint64)etext, PHYSTOP-(uint64)etext, PTE_R | PTE_W);
 
     /* 遍历所有的段内容，并为虚拟内存页申请段内容所需的地址 */
     off = elf.e_phoff;
@@ -182,7 +195,7 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
         goto _err_exec_uvm;
 
     /* 释放进程原先的虚拟内存页资源 */
-    proc_free_pgtab(pcb->pageTab);
+    // proc_free_pgtab(pcb->pageTab);
 
     /* 将虚拟页表的信息写入进程中 */
     pcb->pageTab = pgtab;
@@ -195,7 +208,7 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
     return argc;
 
 _err_exec_uvm:
-    proc_free_pgtab(pgtab);
+    // proc_free_pgtab(pgtab);
 
 _err_exec_open:
     vfs_close(fd);

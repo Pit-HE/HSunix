@@ -133,7 +133,8 @@ void trap_userret(void)
     /* 设置用户模式 trap 入口函数
      * (uservec - trampoline 是为了获取在代码对齐时的偏移值)
      */
-    w_stvec((uint64)(TRAMPOLINE + (uservec - trampoline)));
+    // w_stvec((uint64)(TRAMPOLINE + (uservec - trampoline)));
+    w_stvec((uint64)(uservec));
 
     /* 页表寄存器 */
     pcb->trapFrame->kernel_satp = r_satp();
@@ -157,8 +158,9 @@ void trap_userret(void)
     uint64 satp = MAKE_SATP(pcb->pageTab);
 
     /* 跳转到汇编的用户空间返回代码 */
-    uint64 trampoline_userret = TRAMPOLINE + (userret - trampoline);
-    ((void (*)(uint64))trampoline_userret)(satp);
+    // uint64 trampoline_userret = TRAMPOLINE + (userret - trampoline);
+    // ((void (*)(uint64))trampoline_userret)(satp);
+    ((void (*)(uint64))userret)(satp);
 }
 
 /******************************************************
@@ -171,7 +173,6 @@ void kerneltrap(void)
     struct ProcCB *pcb;
     uint64 sepc = r_sepc();
     uint64 sstatus = r_sstatus();
-    // uint64 scause = r_scause();
 
     /* 有效性检查 */
     if ((sstatus & SSTATUS_SPP)==0)

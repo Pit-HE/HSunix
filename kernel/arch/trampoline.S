@@ -108,12 +108,9 @@ userret:
         # a0: user page table, for satp.
 
         # switch to the user page table.
-        # 内存屏障
-        sfence.vma zero, zero
-        # 将传入的页表写入 satp 寄存器
-        csrw satp, a0
-        #内存屏障
-        sfence.vma zero, zero
+        sfence.vma zero, zero   # 内存屏障
+        csrw satp, a0   # 将传入的页表写入 satp 寄存器
+        sfence.vma zero, zero   # 内存屏障
 
         # 获取虚拟内存页中存放 trap 信息的首地址
         li a0, TRAPFRAME

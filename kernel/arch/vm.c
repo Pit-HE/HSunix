@@ -200,9 +200,12 @@ pgtab_t *uvm_create (void)
     return pgtab;
 }
 
-/* 销毁已申请的页表 (与 uvm_create 成对使用) */
+/* 销毁已申请的页表所占用的内存页 (与 uvm_create 成对使用) */
 void uvm_destroy (pgtab_t *pagetable)
 {
+    //TODO: 需要释放每一个终端'页表项'所占用的物理内存页
+
+    /* 释放页表本身所占用的内存页 */
     freepages(pagetable);
 }
 
