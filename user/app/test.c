@@ -9,10 +9,6 @@ void user_first (void)
 {
     while(1)
     {
-        /* 通过系统接口打印用户空间的内容 */ 
-        uprintf ("userspace: pid = %d\r\n",getpid());
-        uprintf ("userspace: time = %d\r\n", gettime());
-
         sleep(1000);
     }
 }

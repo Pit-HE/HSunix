@@ -6,3 +6,6 @@ all:
 
 clean:
 	rm -rf mkfs
+
+remove:
+	

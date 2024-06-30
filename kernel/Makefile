@@ -83,7 +83,8 @@ clean:
 	rm -rf ./fs/virtual_fs/*.o ./fs/virtual_fs/*.d
 	rm -rf HSunix.asm HSunix.sym
 
-
+remove:
+	rm -rf HSunix HSunix.map
 
 
 

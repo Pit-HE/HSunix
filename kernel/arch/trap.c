@@ -76,8 +76,16 @@ int dev_interrupt (void)
  *             用户模式的 trap 处理代码
 ******************************************************/
 /* 处理用户模式下发生的 trap 事件 */
+uint8 break_userfunc = 0;
 void trap_userfunc(void)
 {
+    while (1)
+    {
+        /* TODO: 通过 GDB 改值，使得代码可以继续往下执行 */
+        if (break_userfunc == 1)
+            break;
+    }
+
     uint devnum = 0;
     struct ProcCB *pcb = getProcCB();
 
@@ -122,6 +130,19 @@ void trap_userfunc(void)
     trap_userret();
 }
 
+/* TODO：用于测试用户空间进入内核空间的入口 */
+uint8 break_userspace = 0;
+void get_userspace (void)
+{
+    while (1)
+    {
+        /* TODO: 通过 GDB 改值，使得代码可以继续往下执行 */
+        if (break_userspace == 1)
+            break;
+    }
+    ((void (*)(void))uservec)();
+}
+
 /* 处理从 trap 中返回用户模式 */
 void trap_userret(void)
 {
@@ -134,7 +155,7 @@ void trap_userret(void)
      * (uservec - trampoline 是为了获取在代码对齐时的偏移值)
      */
     // w_stvec((uint64)(TRAMPOLINE + (uservec - trampoline)));
-    w_stvec((uint64)(uservec));
+    w_stvec((uint64)(get_userspace));
 
     /* 页表寄存器 */
     pcb->trapFrame->kernel_satp = r_satp();

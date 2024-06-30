@@ -34,11 +34,10 @@ export CPUS ROOT_DIR
 # 默认清空工程重新编译并运行 HSunix
 all: remove
 	make build
-	make clean
 	make app
 	make mkfs
 	make fs.img
-	make qemu
+	make clean
 
 # 重新构建整个系统内核
 build:
@@ -57,11 +56,11 @@ fs.img:mkfs
 	cd user && make fs_img
 
 # 运行 qemu 让操作系统开始模拟运行
-qemu:build
+qemu:all
 	cd kernel && make qemu
 
 # 运行 qemu 让操作系统进入调试模式
-debug:build
+debug:all
 	cd kernel && make debug
 
 # 清除编译过程生成的中间文件
@@ -72,7 +71,10 @@ clean:
 
 # 清除所有不属于项目源码的生成文件
 remove: clean
-	rm -rf kernel/HSunix kernel/HSunix.map
+	rm -rf fs.img
+	cd kernel && make remove
+	cd mkfs && make remove
+	cd user && make remove
 
 
 

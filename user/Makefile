@@ -77,3 +77,6 @@ $(BIN_OBJ):%: app/%.o
 clean:
 	rm -rf app/*.o app/*.d
 	rm -rf lib/*.o lib/*.d
+
+remove:
+	rm -rf bin/_test
