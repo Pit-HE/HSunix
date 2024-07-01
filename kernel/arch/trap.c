@@ -153,7 +153,7 @@ void trap_userret(void)
      * (uservec - trampoline 是为了获取在代码对齐时的偏移值)
      */
     // w_stvec((uint64)(TRAMPOLINE + (uservec - trampoline)));
-    w_stvec((uint64)(get_userspace));
+    w_stvec((uint64)(uservec));
 
     /* 页表寄存器 */
     pcb->trapFrame->kernel_satp = r_satp();

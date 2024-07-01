@@ -24,7 +24,7 @@ int elf_flag_perm (int flag)
         ret |= PTE_X;
     if (flag & 0x02)
         ret |= PTE_W;
-    ret |= PTE_R;
+    ret |= PTE_R | PTE_U;
 
     return ret;
 }
@@ -71,11 +71,11 @@ uint64 elf_stack_create (pgtab_t *pgtab, uint64 vAddr)
     /* 设置进程的栈监测页 (大小为一页 4096) */
     uvm_alloc(pgtab, tmp, tmp + PGSIZE, 0);
     /* 限制访问该栈监测页，否则触发页故障 */
-    kvm_clrflag(pgtab, tmp, PTE_U);
+    kvm_clrflag(pgtab, tmp, PTE_V);
 
     /* 因为栈是由大到小递减的，所以将页的最大地址设置为栈顶 */
     tmp += PGSIZE; /* 设置进程栈空间 (大小为 4096)  */
-    uvm_alloc(pgtab, tmp, tmp + PGSIZE, PTE_W | PTE_R);
+    uvm_alloc(pgtab, tmp, tmp + PGSIZE, PTE_W | PTE_R | PTE_U);
 
     return (tmp += PGSIZE);
 }
