@@ -2,7 +2,7 @@
 # 编译工具的信息
 QEMU = qemu-system-riscv64
 TOOLPREFIX := riscv64-linux-gnu-
-CC = $(TOOLPREFIX)gcc 
+CC = $(TOOLPREFIX)gcc
 AS = $(TOOLPREFIX)gas
 LD = $(TOOLPREFIX)ld
 OBJCOPY = $(TOOLPREFIX)objcopy
@@ -56,11 +56,11 @@ fs.img:mkfs
 	cd user && make fs_img
 
 # 运行 qemu 让操作系统开始模拟运行
-qemu:all
+qemu:build
 	cd kernel && make qemu
 
 # 运行 qemu 让操作系统进入调试模式
-debug:all
+debug:build
 	cd kernel && make debug
 
 # 清除编译过程生成的中间文件

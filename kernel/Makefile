@@ -85,11 +85,3 @@ clean:
 
 remove:
 	rm -rf HSunix HSunix.map
-
-
-
-
-
-
-
-

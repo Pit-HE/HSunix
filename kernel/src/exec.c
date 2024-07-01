@@ -67,14 +67,14 @@ uint64 elf_stack_create (pgtab_t *pgtab, uint64 vAddr)
 {
     uint64 tmp;
 
-    /* 设置进程的栈监测页 (大小为一页 4096) */
     tmp = PGROUNDUP(vAddr);
+    /* 设置进程的栈监测页 (大小为一页 4096) */
     uvm_alloc(pgtab, tmp, tmp + PGSIZE, 0);
     /* 限制访问该栈监测页，否则触发页故障 */
     kvm_clrflag(pgtab, tmp, PTE_U);
 
-    /* 设置进程的栈空间 (大小为一页 4096) */
-    tmp += PGSIZE;
+    /* 因为栈是由大到小递减的，所以将页的最大地址设置为栈顶 */
+    tmp += PGSIZE; /* 设置进程栈空间 (大小为 4096)  */
     uvm_alloc(pgtab, tmp, tmp + PGSIZE, PTE_W | PTE_R);
 
     return (tmp += PGSIZE);
@@ -91,32 +91,30 @@ uint64 elf_stack_create (pgtab_t *pgtab, uint64 vAddr)
 int elf_para_create (pgtab_t *pgtab, uint64 *sptop, char *argv[])
 {
     int argc;
-    uint64 len, sp = *sptop;
-    uint64 array[CLI_ARG_MAX];
+    uint64 len, array[CLI_ARG_MAX];
 
     /* 将参数数组写入栈空间内，记录每一个数组成员存放的地址 */
-    for (argc = 0; argv[argc]; argc++)
+    for (argc = 0; argv[argc] != NULL; argc++)
     {
         len = kstrlen(argv[argc]) + 1;
-        sp -= len;
+        *sptop -= len;
         /* 按照 riscv 的格式执行 16 位对齐 */
-        sp -= sp % 16;
-        array[argc] = sp;
+        *sptop -= *sptop % 16;
+        array[argc] = *sptop;
 
-        if (0 > uvm_copyout(pgtab, sp, argv[argc], len))
+        if (0 > uvm_copyout(pgtab, *sptop, argv[argc], len))
             return -1;
     }
     array[argc] = 0;
-    
+
     /* 将记录参数数组存放地址的数据写入栈空间内 */
     len = (argc + 1) * sizeof(uint64);
-    sp -= len;
+    *sptop -= len;
     /* 按照 riscv 的格式执行 16 位对齐 */
-    sp -= sp % 16;
-    if (0 > uvm_copyout(pgtab, sp, (char *)array, len))
+    *sptop -= *sptop % 16;
+    if (0 > uvm_copyout(pgtab, *sptop, (char *)array, len))
         return -1;
 
-    *sptop = sp;
     return argc;
 }
 
@@ -130,6 +128,7 @@ int elf_para_create (pgtab_t *pgtab, uint64 *sptop, char *argv[])
 int do_exec(struct ProcCB *obj, char *path, char *argv[])
 {
     int fd, i;
+    uint64 size, tmp;
     uint64 argc, off, sptop;
     struct elf_ehdr elf;
     struct elf_phdr phdr;
@@ -176,9 +175,11 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
             goto _err_exec_uvm;
 
         /* 在虚拟地址中为当前段映射相应的物理内存 */
-        if (0 >= uvm_alloc(pgtab, phdr.p_vaddr,
-                phdr.p_vaddr + phdr.p_memsz, elf_flag_perm(phdr.p_flags)))
+        tmp = uvm_alloc(pgtab, phdr.p_vaddr, phdr.p_vaddr + phdr.p_memsz, 
+                elf_flag_perm(phdr.p_flags));
+        if (0 >= tmp)
             goto _err_exec_uvm;
+        size = tmp;
 
         /* 将数据段写入页表所对应的虚拟内存中 */
         if (-1 == elf_load_segment(pgtab, phdr.p_vaddr,
@@ -187,7 +188,8 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
     }
 
     /* 设置页表中关于栈的内容，代码空间设置完后就设置栈 */
-    sptop = elf_stack_create(pgtab, phdr.p_vaddr + phdr.p_memsz + PGSIZE);
+    sptop = elf_stack_create(pgtab, size);
+    size = sptop;
 
     /* 将要传递的参数数组写入栈空间 */
     argc = elf_para_create(pgtab, &sptop, argv);
@@ -199,7 +201,7 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
 
     /* 将虚拟页表的信息写入进程中 */
     pcb->pageTab = pgtab;
-    pcb->memSize = phdr.p_memsz;
+    pcb->memSize = size;
     pcb->stackSize = PGSIZE;
     pcb->trapFrame->sp = sptop;
     pcb->trapFrame->epc = elf.e_entry;
