@@ -128,6 +128,7 @@ void kswitch_to (struct Context *old, struct Context *new);
 
 
 /******************** Port **********************/
+void k_enable_all_interrupt (void);
 void kPortDisableInterrupt (void);
 void kPortEnableInterrupt (void);
 #define kDISABLE_INTERRUPT()    kPortDisableInterrupt()

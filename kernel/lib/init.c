@@ -7,6 +7,8 @@
 
 void init_main (void)
 {
+    kENABLE_INTERRUPT();
+
     /* 设置根文件系统 */
     vfs_mount("diskfs", "/", O_RDWR | O_CREAT | O_DIRECTORY, NULL);
 
@@ -28,6 +30,8 @@ void init_main (void)
 
 void idle_main (void)
 {
+    k_enable_all_interrupt();
+
     while(1)
     {
         do_scheduler();
@@ -41,6 +45,8 @@ void user_main (void)
     char *argv[8] = {0};
     char buf[] = "Hello World";
     struct ProcCB *pcb = getProcCB();
+
+    kENABLE_INTERRUPT();
 
     argv[0] = buf;
     argv[1] = NULL;

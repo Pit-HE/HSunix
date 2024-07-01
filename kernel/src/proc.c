@@ -106,11 +106,11 @@ void do_scheduler (void)
             kDISABLE_INTERRUPT();
             pcb->state = RUNNING;
             cpu->proc = pcb;
-            kENABLE_INTERRUPT();
 
             kswitch_to(&cpu->context, &pcb->context);
 
             cpu->proc = kIdleProcCB;
+            kENABLE_INTERRUPT();
             break;
         }
     }
@@ -144,21 +144,23 @@ void do_defuncter (void)
 /* 执行进程切换的接口 */
 void do_switch (void)
 {
-    int state;
+    // int state;
     struct CpuCB  *cpu = getCpuCB();
     struct ProcCB *pcb = getProcCB();
 
-    if (cpu->intrOffNest != 0)
-        kError(eSVC_Process, E_INTERRUPT);
+    // if (cpu->intrOffNest != 0)
+    //     kErrPrintf("fail: do_switch isr nest!\r\n");
     if (pcb->state == RUNNING)
-        kError(eSVC_Process, E_PROCESS);
-    if (intr_get())
-        kError(eSVC_Process, E_INTERRUPT);
+        kErrPrintf("fail: do_switch process is running!\r\n");
+    // if (intr_get())
+    //     kErrPrintf("fail: do_switch isr no close!\r\n");
 
     /* 记录进程切换前的中断状态，并执行切换 */
-    state = cpu->intrOldState;
+    kDISABLE_INTERRUPT();
+    // state = cpu->intrOldState;
     kswitch_to(&pcb->context, &cpu->context);
-    cpu->intrOldState = state;
+    // cpu->intrOldState = state;
+    kENABLE_INTERRUPT();
 }
 
 /* 外部接口，释放当前进程的 cpu 使用权 */
@@ -358,11 +360,15 @@ int do_sleep (int ms)
     if (ms != 0)
     {
         pcb = getProcCB();
+        kDISABLE_INTERRUPT();
         timer = timer_add(pcb, ms);
+        kENABLE_INTERRUPT();
 
         do_switch();
 
+        kDISABLE_INTERRUPT();
         timer_del(timer);
+        kENABLE_INTERRUPT();
     }
 
     return 0;

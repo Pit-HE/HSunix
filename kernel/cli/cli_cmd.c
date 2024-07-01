@@ -300,7 +300,6 @@ int cmd_exec (int argc, char *argv[])
     if (argc < 2)
         return -1;
 
-    // do_exec(NULL, "/fs/cat", argv);
     proc_wakeup(do_kthread("user", user_main));
     return 0;
 }

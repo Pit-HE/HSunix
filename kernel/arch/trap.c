@@ -22,6 +22,17 @@ void init_trap(void)
     w_stvec((uint64)kernelvec);
 }
 
+/* TODO：用于测试用户空间进入内核空间的入口 */
+uint8 break_userspace = 0;
+void get_userspace (void)
+{
+    while (break_userspace == 0)
+    {
+        /* TODO: 通过 GDB 改值，使得代码可以继续往下执行 */
+    }
+    ((void (*)(void))uservec)();
+}
+
 /******************************************************
  *             外设中断与软件中断的处理函数
 ******************************************************/
@@ -128,19 +139,6 @@ void trap_userfunc(void)
 
     /* 返回用户空间 */
     trap_userret();
-}
-
-/* TODO：用于测试用户空间进入内核空间的入口 */
-uint8 break_userspace = 0;
-void get_userspace (void)
-{
-    while (1)
-    {
-        /* TODO: 通过 GDB 改值，使得代码可以继续往下执行 */
-        if (break_userspace == 1)
-            break;
-    }
-    ((void (*)(void))uservec)();
 }
 
 /* 处理从 trap 中返回用户模式 */

@@ -26,342 +26,343 @@ Linker script and memory map
  .text          0x0000000080000264      0x2b2 arch/temp_trapuser.o
                 0x000000008000039c                user_trap
                 0x0000000080000442                user_ret
- .text          0x0000000080000516      0x5d2 arch/trap.o
+ .text          0x0000000080000516      0x5ca arch/trap.o
                 0x0000000080000698                init_trap
-                0x00000000800006bc                dev_interrupt
-                0x00000000800007d6                trap_userfunc
-                0x0000000080000902                get_userspace
-                0x0000000080000936                trap_userret
-                0x0000000080000a1c                kerneltrap
- .text          0x0000000080000ae8      0x1f0 arch/uart.o
-                0x0000000080000ae8                uart_init
-                0x0000000080000bd0                uartputc_async
-                0x0000000080000c2a                uartputc_sync
-                0x0000000080000c7c                uart_intrrupt
- .text          0x0000000080000cd8      0xb1a arch/vm.o
-                0x0000000080000f6c                kvm_setflag
-                0x0000000080000fc4                kvm_clrflag
-                0x0000000080001022                kvm_phyaddr
-                0x000000008000107a                kvm_map
-                0x00000000800010c2                uvm_unmap
-                0x0000000080001188                uvm_create
-                0x00000000800011c4                uvm_destroy
-                0x00000000800011e6                uvm_alloc
-                0x00000000800012ce                uvm_free
-                0x000000008000135e                uvm_copy
-                0x00000000800014e0                uvm_copyout
-                0x00000000800015b4                uvm_copyin
-                0x0000000080001682                init_kvm
- .text          0x00000000800017f2      0x356 boot/start.o
-                0x0000000080001990                start
-                0x0000000080001a6a                timerinit
- .text          0x0000000080001b48      0x462 cli/cli.o
-                0x0000000080001b48                cli_clear
-                0x0000000080001b6a                cli_logo
-                0x0000000080001c34                cli_directionkey
-                0x0000000080001d16                cli_main
-                0x0000000080001f4e                init_cli
- .text          0x0000000080001faa      0xaa8 cli/cli_cmd.o
-                0x0000000080001faa                cmd_mkdir
-                0x0000000080001ffa                cmd_cd
-                0x0000000080002046                cmd_ls
-                0x000000008000217a                cmd_mkfile
-                0x00000000800021ce                cmd_pwd
-                0x000000008000221c                cmd_echo
-                0x0000000080002270                cmd_cat
-                0x00000000800023d2                cmd_rm
-                0x0000000080002458                cmd_rmdir
-                0x00000000800024a4                cmd_fsync
-                0x000000008000252e                cmd_fstatfs
-                0x0000000080002632                cmd_stat
-                0x000000008000273e                cmd_rename
-                0x00000000800027a2                cmd_mount
-                0x0000000080002810                cmd_unmount
-                0x000000008000285c                cmd_clear
-                0x0000000080002894                cmd_exec
-                0x00000000800028e8                cmd_help
-                0x000000008000297c                cli_cmd_get
- .text          0x0000000080002a52      0x114 cli/cli_exec.o
-                0x0000000080002a52                cli_exec
- .text          0x0000000080002b66      0x2c2 cli/cli_parse.o
-                0x0000000080002b66                cli_parse_cmd
-                0x0000000080002c24                cli_parse_parameter
- .text          0x0000000080002e28      0x340 lib/device.o
-                0x0000000080002e28                init_dev
-                0x0000000080002e5a                dev_alloc
-                0x0000000080002ed8                dev_free
-                0x0000000080002f24                dev_register
-                0x0000000080002fb0                dev_unregister
-                0x000000008000304a                dev_get
-                0x00000000800030fe                dev_put
- .text          0x0000000080003168       0xd6 lib/init.o
-                0x0000000080003168                init_main
+                0x00000000800006bc                get_userspace
+                0x00000000800006e8                dev_interrupt
+                0x0000000080000802                trap_userfunc
+                0x000000008000092e                trap_userret
+                0x0000000080000a14                kerneltrap
+ .text          0x0000000080000ae0      0x1f0 arch/uart.o
+                0x0000000080000ae0                uart_init
+                0x0000000080000bc8                uartputc_async
+                0x0000000080000c22                uartputc_sync
+                0x0000000080000c74                uart_intrrupt
+ .text          0x0000000080000cd0      0xb1a arch/vm.o
+                0x0000000080000f64                kvm_setflag
+                0x0000000080000fbc                kvm_clrflag
+                0x000000008000101a                kvm_phyaddr
+                0x0000000080001072                kvm_map
+                0x00000000800010ba                uvm_unmap
+                0x0000000080001180                uvm_create
+                0x00000000800011bc                uvm_destroy
+                0x00000000800011de                uvm_alloc
+                0x00000000800012c6                uvm_free
+                0x0000000080001356                uvm_copy
+                0x00000000800014d8                uvm_copyout
+                0x00000000800015ac                uvm_copyin
+                0x000000008000167a                init_kvm
+ .text          0x00000000800017ea      0x356 boot/start.o
+                0x0000000080001988                start
+                0x0000000080001a62                timerinit
+ .text          0x0000000080001b40      0x462 cli/cli.o
+                0x0000000080001b40                cli_clear
+                0x0000000080001b62                cli_logo
+                0x0000000080001c2c                cli_directionkey
+                0x0000000080001d0e                cli_main
+                0x0000000080001f46                init_cli
+ .text          0x0000000080001fa2      0xaa8 cli/cli_cmd.o
+                0x0000000080001fa2                cmd_mkdir
+                0x0000000080001ff2                cmd_cd
+                0x000000008000203e                cmd_ls
+                0x0000000080002172                cmd_mkfile
+                0x00000000800021c6                cmd_pwd
+                0x0000000080002214                cmd_echo
+                0x0000000080002268                cmd_cat
+                0x00000000800023ca                cmd_rm
+                0x0000000080002450                cmd_rmdir
+                0x000000008000249c                cmd_fsync
+                0x0000000080002526                cmd_fstatfs
+                0x000000008000262a                cmd_stat
+                0x0000000080002736                cmd_rename
+                0x000000008000279a                cmd_mount
+                0x0000000080002808                cmd_unmount
+                0x0000000080002854                cmd_clear
+                0x000000008000288c                cmd_exec
+                0x00000000800028e0                cmd_help
+                0x0000000080002974                cli_cmd_get
+ .text          0x0000000080002a4a      0x114 cli/cli_exec.o
+                0x0000000080002a4a                cli_exec
+ .text          0x0000000080002b5e      0x2c2 cli/cli_parse.o
+                0x0000000080002b5e                cli_parse_cmd
+                0x0000000080002c1c                cli_parse_parameter
+ .text          0x0000000080002e20      0x340 lib/device.o
+                0x0000000080002e20                init_dev
+                0x0000000080002e52                dev_alloc
+                0x0000000080002ed0                dev_free
+                0x0000000080002f1c                dev_register
+                0x0000000080002fa8                dev_unregister
+                0x0000000080003042                dev_get
+                0x00000000800030f6                dev_put
+ .text          0x0000000080003160      0x154 lib/init.o
+                0x0000000080003160                init_main
                 0x000000008000320a                idle_main
-                0x0000000080003224                user_main
- .text          0x000000008000323e      0x732 lib/kalloc.o
-                0x000000008000323e                kallocPhyPage
-                0x00000000800032ba                kfreePhyPage
-                0x00000000800033c0                kfree
-                0x00000000800036dc                kalloc
-                0x000000008000390a                init_kmem
- .text          0x0000000080003970       0x84 lib/kerror.o
-                0x0000000080003970                kError
-                0x00000000800039a4                kErrPrintf
- .text          0x00000000800039f4      0x5d4 lib/ringbuff.o
-                0x00000000800039f4                kRingbuf_init
-                0x0000000080003a6a                kRingbuf_clean
-                0x0000000080003aca                kRingbuf_put
-                0x0000000080003c14                kRingbuf_get
-                0x0000000080003d7e                kRingbuf_putChar
-                0x0000000080003e0c                kRingbuf_getChar
-                0x0000000080003ea4                kRingbuf_delChar
-                0x0000000080003f42                kRingbuf_putState
-                0x0000000080003f62                kRingbuf_getState
-                0x0000000080003f8a                kRingbuf_getLength
- .text          0x0000000080003fc8      0x558 lib/string.o
-                0x0000000080003fc8                kmemset
-                0x000000008000401c                kmemmove
-                0x00000000800040ea                kmemcpy
-                0x00000000800041b6                kstrlen
-                0x00000000800041ec                kstrcpy
-                0x000000008000424a                kstrcmp
-                0x00000000800042e2                kstrncmp
-                0x000000008000436c                kstrdup
-                0x00000000800043ce                kstrcat
-                0x0000000080004442                kstrchr
-                0x00000000800044a4                kstrrchr
- .text          0x0000000080004520      0x1c4 lib/testCase.o
-                0x0000000080004520                tc_virtualmemory
-                0x00000000800045f6                tc_kalloc
-                0x0000000080004604                tc_ringbuff
-                0x000000008000468e                tc_timer
-                0x00000000800046d6                selfInspection
- .text          0x00000000800046e4      0xfc2 lib/tinyprintf.o
-                0x0000000080004e9c                tfp_format
-                0x00000000800053cc                init_printf
-                0x00000000800053fe                tfp_printf
-                0x00000000800054b8                tfp_vsnprintf
-                0x0000000080005548                tfp_snprintf
-                0x00000000800055ec                tfp_vsprintf
-                0x0000000080005648                tfp_sprintf
- .text          0x00000000800056a6      0x306 src/console.o
-                0x00000000800056a6                console_wString
-                0x00000000800056f0                console_wCmd
-                0x0000000080005758                console_wChar
-                0x0000000080005784                console_rCmd
-                0x0000000080005820                console_rChar
-                0x00000000800058d8                console_isr
-                0x000000008000591a                init_console
- .text          0x00000000800059ac      0x5fe src/exec.o
-                0x00000000800059ac                elf_flag_perm
-                0x0000000080005a00                elf_load_segment
-                0x0000000080005ae8                elf_stack_create
-                0x0000000080005b8c                elf_para_create
-                0x0000000080005cbc                do_exec
- .text          0x0000000080005faa      0x310 src/kernel_syscall.o
-                0x00000000800061be                do_syscall
- .text          0x00000000800062ba       0x7a src/main.o
-                0x00000000800062ba                main
- .text          0x0000000080006334      0x558 src/pcb.o
-                0x0000000080006334                getProcCB
-                0x0000000080006352                pcb_dump
-                0x0000000080006440                pcb_alloc
-                0x00000000800065c6                pcb_free
-                0x00000000800066ec                pcb_lookup
-                0x0000000080006774                proc_alloc_pgtab
-                0x0000000080006834                proc_free_pgtab
- .text          0x000000008000688c       0xf2 src/plic.o
-                0x00000000800068a4                init_plic
-                0x00000000800068c8                init_plichart
-                0x000000008000691c                plic_claim
-                0x0000000080006948                plic_complete
- .text          0x000000008000697e      0x158 src/port.o
-                0x0000000080006a32                kPortDisableInterrupt
-                0x0000000080006a84                kPortEnableInterrupt
- .text          0x0000000080006ad6      0xeaa src/proc.o
-                0x0000000080006b7a                setCpuCB
-                0x0000000080006bac                getCpuCB
-                0x0000000080006bd6                proc_applypid
-                0x0000000080006bfe                proc_wakeup
-                0x0000000080006d30                proc_freechild
-                0x0000000080006ddc                proc_killstate
-                0x0000000080006df6                do_scheduler
-                0x0000000080006ee2                do_defuncter
-                0x0000000080006f88                do_switch
-                0x0000000080007026                do_yield
-                0x000000008000705e                do_suspend
-                0x0000000080007190                do_resume
-                0x00000000800072fe                do_fork
-                0x00000000800074a2                do_wait
-                0x0000000080007596                do_exit
-                0x0000000080007624                do_kill
-                0x0000000080007766                do_sleep
-                0x00000000800077c6                do_kthread
-                0x000000008000785a                init_proc
- .text          0x0000000080007980      0x470 src/timer.o
-                0x0000000080007980                init_timer
-                0x00000000800079b2                timer_add
-                0x0000000080007b94                timer_del
-                0x0000000080007ca4                timer_run
- .text          0x0000000080007df0      0x4f2 ./fs/disk_fs/dfs_dirent.o
-                0x0000000080007df0                ddir_read
-                0x0000000080007ec0                ddir_create
-                0x0000000080007fb0                ddir_get
-                0x000000008000808c                ddir_put
-                0x0000000080008128                ddir_flush
-                0x0000000080008194                ddir_rename
-                0x000000008000821e                ddir_check
- .text          0x00000000800082e2      0xcb2 ./fs/disk_fs/dfs_fs.o
-                0x00000000800082e2                dfs_open
-                0x00000000800083d6                dfs_close
-                0x000000008000841e                dfs_ioctl
-                0x000000008000843c                dfs_read
-                0x0000000080008502                dfs_write
-                0x000000008000859a                dfs_flush
-                0x00000000800085e2                dfs_lseek
-                0x00000000800086e8                dfs_getdents
-                0x000000008000892c                dfs_mount
-                0x0000000080008970                dfs_unmount
-                0x00000000800089a2                dfs_statfs
-                0x0000000080008a48                dfs_unlink
-                0x0000000080008b22                dfs_stat
-                0x0000000080008be4                dfs_rename
-                0x0000000080008cc8                dfs_lookup
-                0x0000000080008dde                dfs_create
-                0x0000000080008ef4                dfs_free
-                0x0000000080008f50                init_dfs
- .text          0x0000000080008f94      0xba6 ./fs/disk_fs/dfs_inode.o
-                0x00000000800090b4                dinode_parent
-                0x00000000800091f4                dinode_path
-                0x0000000080009334                dinode_get
-                0x0000000080009438                dinode_put
-                0x00000000800094da                dinode_alloc
-                0x00000000800095a8                dinode_free
-                0x00000000800095e8                dinode_flush
-                0x000000008000966c                dinode_read
-                0x00000000800097fe                dinode_write
-                0x00000000800099b0                dinode_getroot
-                0x0000000080009a6a                dinode_release
- .text          0x0000000080009b3a      0x482 ./fs/disk_fs/dfs_iobuf.o
-                0x0000000080009b3a                init_diskbuf
-                0x0000000080009c6c                dbuf_flush
-                0x0000000080009ca6                dbuf_alloc
-                0x0000000080009e60                dbuf_free
-                0x0000000080009f6c                dbuf_get
-                0x0000000080009f94                dbuf_put
- .text          0x0000000080009fbc      0x692 ./fs/disk_fs/dfs_priv.o
-                0x0000000080009fbc                bmap
-                0x000000008000a110                disk_path_getfirst
-                0x000000008000a20c                disk_path_getlast
-                0x000000008000a23a                dsb_get
-                0x000000008000a2de                dsb_put
-                0x000000008000a34a                dbmap_alloc
-                0x000000008000a4e6                dbmap_free
-                0x000000008000a5ec                dblk_zero
- .text          0x000000008000a64e      0x98e ./fs/disk_fs/dfs_virtio.o
-                0x000000008000a64e                virtio_disk_init
-                0x000000008000ac16                virtio_disk_io
-                0x000000008000aefe                virtio_disk_isr
- .text          0x000000008000afdc     0x11d8 ./fs/ram_fs/fs_ramfs.o
-                0x000000008000afdc                _alloc_ramfs_node
-                0x000000008000b054                _free_ramfs_node
-                0x000000008000b14a                _free_sublist
-                0x000000008000b26a                _path_getnode
-                0x000000008000b39e                ramfs_open
-                0x000000008000b460                ramfs_close
-                0x000000008000b474                ramfs_ioctl
-                0x000000008000b492                ramfs_read
-                0x000000008000b568                ramfs_write
-                0x000000008000b6d0                ramfs_flush
-                0x000000008000b6e4                ramfs_lseek
-                0x000000008000b7ea                ramfs_getdents
-                0x000000008000b9ec                ramfs_mount
-                0x000000008000bae0                ramfs_unmount
-                0x000000008000bb60                ramfs_statfs
-                0x000000008000bc04                ramfs_unlink
-                0x000000008000bcd4                ramfs_stat
-                0x000000008000bd88                ramfs_rename
-                0x000000008000be3c                ramfs_lookup
-                0x000000008000bf0c                ramfs_create
-                0x000000008000c0e2                ramfs_free
-                0x000000008000c13c                init_ramfs
- .text          0x000000008000c1b4      0x624 ./fs/virtual_fs/fs.o
-                0x000000008000c1b4                init_vfs
-                0x000000008000c1de                vfs_open
-                0x000000008000c2a6                vfs_close
-                0x000000008000c316                vfs_write
-                0x000000008000c368                vfs_read
-                0x000000008000c3ba                vfs_creat
-                0x000000008000c484                vfs_unlink
-                0x000000008000c4c2                vfs_fsync
-                0x000000008000c518                vfs_fstatfs
-                0x000000008000c576                vfs_stat
-                0x000000008000c5d4                vfs_rename
-                0x000000008000c610                vfs_lseek
-                0x000000008000c668                vfs_pcbInit
-                0x000000008000c714                vfs_pcbdeinit
-                0x000000008000c752                vfs_mount
-                0x000000008000c7aa                vfs_unmount
- .text          0x000000008000c7d8      0x830 ./fs/virtual_fs/fs_dev.o
-                0x000000008000cbcc                fsobj_register
-                0x000000008000cd06                fsdev_mount
-                0x000000008000ce98                fsdev_unmount
-                0x000000008000cf94                fsdev_get
-                0x000000008000cfd0                fsdev_put
- .text          0x000000008000d008      0x7fc ./fs/virtual_fs/fs_dir.o
-                0x000000008000d1d0                ditem_alloc
-                0x000000008000d2d4                ditem_free
-                0x000000008000d490                ditem_create
-                0x000000008000d4fe                ditem_destroy
-                0x000000008000d576                ditem_get
-                0x000000008000d670                ditem_put
-                0x000000008000d6c2                ditem_path
-                0x000000008000d7a8                init_ditem
- .text          0x000000008000d804      0x3fe ./fs/virtual_fs/fs_fd.o
-                0x000000008000d804                fdTab_alloc
-                0x000000008000d8e2                fdTab_free
-                0x000000008000d95a                fd_alloc
-                0x000000008000da98                fd_free
-                0x000000008000db02                fd_get
-                0x000000008000db52                fd_copy
- .text          0x000000008000dc02      0xc74 ./fs/virtual_fs/fs_file.o
-                0x000000008000dc02                file_alloc
-                0x000000008000dc44                file_free
-                0x000000008000dc94                file_defaultdir
-                0x000000008000de18                file_open
-                0x000000008000e11a                file_close
-                0x000000008000e1fc                file_read
-                0x000000008000e298                file_write
-                0x000000008000e33a                file_unlink
-                0x000000008000e4ee                file_flush
-                0x000000008000e552                file_getdents
-                0x000000008000e5da                file_lseek
-                0x000000008000e65a                file_fstatfs
-                0x000000008000e6d4                file_stat
-                0x000000008000e740                file_rename
- .text          0x000000008000e876      0x232 ./fs/virtual_fs/fs_inode.o
-                0x000000008000e8ec                inode_getfs
-                0x000000008000e9a0                inode_getdev
-                0x000000008000ea38                inode_put
- .text          0x000000008000eaa8      0x6f6 ./fs/virtual_fs/fs_path.o
-                0x000000008000eaa8                path_getfirst
-                0x000000008000eb64                path_getlast
-                0x000000008000ec64                path_formater
-                0x000000008000eeea                path_parser
-                0x000000008000f000                path_setcwd
-                0x000000008000f0ee                path_fsdev
- .text          0x000000008000f19e      0x416 ./fs/virtual_fs/fs_posix.o
-                0x000000008000f19e                opendir
-                0x000000008000f286                closedir
-                0x000000008000f2fc                readdir
-                0x000000008000f354                seekdir
-                0x000000008000f3bc                telldir
-                0x000000008000f416                mkdir
-                0x000000008000f49a                mkfile
-                0x000000008000f504                k_chdir
-                0x000000008000f55c                k_rmdir
+                0x000000008000322c                user_main
+ .text          0x00000000800032b4      0x732 lib/kalloc.o
+                0x00000000800032b4                kallocPhyPage
+                0x0000000080003330                kfreePhyPage
+                0x0000000080003436                kfree
+                0x0000000080003752                kalloc
+                0x0000000080003980                init_kmem
+ .text          0x00000000800039e6       0x84 lib/kerror.o
+                0x00000000800039e6                kError
+                0x0000000080003a1a                kErrPrintf
+ .text          0x0000000080003a6a      0x5d4 lib/ringbuff.o
+                0x0000000080003a6a                kRingbuf_init
+                0x0000000080003ae0                kRingbuf_clean
+                0x0000000080003b40                kRingbuf_put
+                0x0000000080003c8a                kRingbuf_get
+                0x0000000080003df4                kRingbuf_putChar
+                0x0000000080003e82                kRingbuf_getChar
+                0x0000000080003f1a                kRingbuf_delChar
+                0x0000000080003fb8                kRingbuf_putState
+                0x0000000080003fd8                kRingbuf_getState
+                0x0000000080004000                kRingbuf_getLength
+ .text          0x000000008000403e      0x558 lib/string.o
+                0x000000008000403e                kmemset
+                0x0000000080004092                kmemmove
+                0x0000000080004160                kmemcpy
+                0x000000008000422c                kstrlen
+                0x0000000080004262                kstrcpy
+                0x00000000800042c0                kstrcmp
+                0x0000000080004358                kstrncmp
+                0x00000000800043e2                kstrdup
+                0x0000000080004444                kstrcat
+                0x00000000800044b8                kstrchr
+                0x000000008000451a                kstrrchr
+ .text          0x0000000080004596      0x1c4 lib/testCase.o
+                0x0000000080004596                tc_virtualmemory
+                0x000000008000466c                tc_kalloc
+                0x000000008000467a                tc_ringbuff
+                0x0000000080004704                tc_timer
+                0x000000008000474c                selfInspection
+ .text          0x000000008000475a      0xfc2 lib/tinyprintf.o
+                0x0000000080004f12                tfp_format
+                0x0000000080005442                init_printf
+                0x0000000080005474                tfp_printf
+                0x000000008000552e                tfp_vsnprintf
+                0x00000000800055be                tfp_snprintf
+                0x0000000080005662                tfp_vsprintf
+                0x00000000800056be                tfp_sprintf
+ .text          0x000000008000571c      0x306 src/console.o
+                0x000000008000571c                console_wString
+                0x0000000080005766                console_wCmd
+                0x00000000800057ce                console_wChar
+                0x00000000800057fa                console_rCmd
+                0x0000000080005896                console_rChar
+                0x000000008000594e                console_isr
+                0x0000000080005990                init_console
+ .text          0x0000000080005a22      0x5ec src/exec.o
+                0x0000000080005a22                elf_flag_perm
+                0x0000000080005a76                elf_load_segment
+                0x0000000080005b5e                elf_stack_create
+                0x0000000080005bf0                elf_para_create
+                0x0000000080005d20                do_exec
+ .text          0x000000008000600e      0x310 src/kernel_syscall.o
+                0x0000000080006222                do_syscall
+ .text          0x000000008000631e       0x7a src/main.o
+                0x000000008000631e                main
+ .text          0x0000000080006398      0x558 src/pcb.o
+                0x0000000080006398                getProcCB
+                0x00000000800063b6                pcb_dump
+                0x00000000800064a4                pcb_alloc
+                0x000000008000662a                pcb_free
+                0x0000000080006750                pcb_lookup
+                0x00000000800067d8                proc_alloc_pgtab
+                0x0000000080006898                proc_free_pgtab
+ .text          0x00000000800068f0       0xf2 src/plic.o
+                0x0000000080006908                init_plic
+                0x000000008000692c                init_plichart
+                0x0000000080006980                plic_claim
+                0x00000000800069ac                plic_complete
+ .text          0x00000000800069e2      0x102 src/port.o
+                0x0000000080006a68                k_enable_all_interrupt
+                0x0000000080006a90                kPortDisableInterrupt
+                0x0000000080006aba                kPortEnableInterrupt
+ .text          0x0000000080006ae4      0xe70 src/proc.o
+                0x0000000080006b5a                setCpuCB
+                0x0000000080006b8c                getCpuCB
+                0x0000000080006bb6                proc_applypid
+                0x0000000080006bde                proc_wakeup
+                0x0000000080006d10                proc_freechild
+                0x0000000080006dbc                proc_killstate
+                0x0000000080006dd6                do_scheduler
+                0x0000000080006ec2                do_defuncter
+                0x0000000080006f68                do_switch
+                0x0000000080006fda                do_yield
+                0x0000000080007012                do_suspend
+                0x0000000080007144                do_resume
+                0x00000000800072b2                do_fork
+                0x0000000080007456                do_wait
+                0x000000008000754a                do_exit
+                0x00000000800075d8                do_kill
+                0x000000008000771a                do_sleep
+                0x000000008000779a                do_kthread
+                0x000000008000782e                init_proc
+ .text          0x0000000080007954      0x470 src/timer.o
+                0x0000000080007954                init_timer
+                0x0000000080007986                timer_add
+                0x0000000080007b68                timer_del
+                0x0000000080007c78                timer_run
+ .text          0x0000000080007dc4      0x4f2 ./fs/disk_fs/dfs_dirent.o
+                0x0000000080007dc4                ddir_read
+                0x0000000080007e94                ddir_create
+                0x0000000080007f84                ddir_get
+                0x0000000080008060                ddir_put
+                0x00000000800080fc                ddir_flush
+                0x0000000080008168                ddir_rename
+                0x00000000800081f2                ddir_check
+ .text          0x00000000800082b6      0xcb2 ./fs/disk_fs/dfs_fs.o
+                0x00000000800082b6                dfs_open
+                0x00000000800083aa                dfs_close
+                0x00000000800083f2                dfs_ioctl
+                0x0000000080008410                dfs_read
+                0x00000000800084d6                dfs_write
+                0x000000008000856e                dfs_flush
+                0x00000000800085b6                dfs_lseek
+                0x00000000800086bc                dfs_getdents
+                0x0000000080008900                dfs_mount
+                0x0000000080008944                dfs_unmount
+                0x0000000080008976                dfs_statfs
+                0x0000000080008a1c                dfs_unlink
+                0x0000000080008af6                dfs_stat
+                0x0000000080008bb8                dfs_rename
+                0x0000000080008c9c                dfs_lookup
+                0x0000000080008db2                dfs_create
+                0x0000000080008ec8                dfs_free
+                0x0000000080008f24                init_dfs
+ .text          0x0000000080008f68      0xba6 ./fs/disk_fs/dfs_inode.o
+                0x0000000080009088                dinode_parent
+                0x00000000800091c8                dinode_path
+                0x0000000080009308                dinode_get
+                0x000000008000940c                dinode_put
+                0x00000000800094ae                dinode_alloc
+                0x000000008000957c                dinode_free
+                0x00000000800095bc                dinode_flush
+                0x0000000080009640                dinode_read
+                0x00000000800097d2                dinode_write
+                0x0000000080009984                dinode_getroot
+                0x0000000080009a3e                dinode_release
+ .text          0x0000000080009b0e      0x482 ./fs/disk_fs/dfs_iobuf.o
+                0x0000000080009b0e                init_diskbuf
+                0x0000000080009c40                dbuf_flush
+                0x0000000080009c7a                dbuf_alloc
+                0x0000000080009e34                dbuf_free
+                0x0000000080009f40                dbuf_get
+                0x0000000080009f68                dbuf_put
+ .text          0x0000000080009f90      0x692 ./fs/disk_fs/dfs_priv.o
+                0x0000000080009f90                bmap
+                0x000000008000a0e4                disk_path_getfirst
+                0x000000008000a1e0                disk_path_getlast
+                0x000000008000a20e                dsb_get
+                0x000000008000a2b2                dsb_put
+                0x000000008000a31e                dbmap_alloc
+                0x000000008000a4ba                dbmap_free
+                0x000000008000a5c0                dblk_zero
+ .text          0x000000008000a622      0x98e ./fs/disk_fs/dfs_virtio.o
+                0x000000008000a622                virtio_disk_init
+                0x000000008000abea                virtio_disk_io
+                0x000000008000aed2                virtio_disk_isr
+ .text          0x000000008000afb0     0x11d8 ./fs/ram_fs/fs_ramfs.o
+                0x000000008000afb0                _alloc_ramfs_node
+                0x000000008000b028                _free_ramfs_node
+                0x000000008000b11e                _free_sublist
+                0x000000008000b23e                _path_getnode
+                0x000000008000b372                ramfs_open
+                0x000000008000b434                ramfs_close
+                0x000000008000b448                ramfs_ioctl
+                0x000000008000b466                ramfs_read
+                0x000000008000b53c                ramfs_write
+                0x000000008000b6a4                ramfs_flush
+                0x000000008000b6b8                ramfs_lseek
+                0x000000008000b7be                ramfs_getdents
+                0x000000008000b9c0                ramfs_mount
+                0x000000008000bab4                ramfs_unmount
+                0x000000008000bb34                ramfs_statfs
+                0x000000008000bbd8                ramfs_unlink
+                0x000000008000bca8                ramfs_stat
+                0x000000008000bd5c                ramfs_rename
+                0x000000008000be10                ramfs_lookup
+                0x000000008000bee0                ramfs_create
+                0x000000008000c0b6                ramfs_free
+                0x000000008000c110                init_ramfs
+ .text          0x000000008000c188      0x624 ./fs/virtual_fs/fs.o
+                0x000000008000c188                init_vfs
+                0x000000008000c1b2                vfs_open
+                0x000000008000c27a                vfs_close
+                0x000000008000c2ea                vfs_write
+                0x000000008000c33c                vfs_read
+                0x000000008000c38e                vfs_creat
+                0x000000008000c458                vfs_unlink
+                0x000000008000c496                vfs_fsync
+                0x000000008000c4ec                vfs_fstatfs
+                0x000000008000c54a                vfs_stat
+                0x000000008000c5a8                vfs_rename
+                0x000000008000c5e4                vfs_lseek
+                0x000000008000c63c                vfs_pcbInit
+                0x000000008000c6e8                vfs_pcbdeinit
+                0x000000008000c726                vfs_mount
+                0x000000008000c77e                vfs_unmount
+ .text          0x000000008000c7ac      0x830 ./fs/virtual_fs/fs_dev.o
+                0x000000008000cba0                fsobj_register
+                0x000000008000ccda                fsdev_mount
+                0x000000008000ce6c                fsdev_unmount
+                0x000000008000cf68                fsdev_get
+                0x000000008000cfa4                fsdev_put
+ .text          0x000000008000cfdc      0x7fc ./fs/virtual_fs/fs_dir.o
+                0x000000008000d1a4                ditem_alloc
+                0x000000008000d2a8                ditem_free
+                0x000000008000d464                ditem_create
+                0x000000008000d4d2                ditem_destroy
+                0x000000008000d54a                ditem_get
+                0x000000008000d644                ditem_put
+                0x000000008000d696                ditem_path
+                0x000000008000d77c                init_ditem
+ .text          0x000000008000d7d8      0x3fe ./fs/virtual_fs/fs_fd.o
+                0x000000008000d7d8                fdTab_alloc
+                0x000000008000d8b6                fdTab_free
+                0x000000008000d92e                fd_alloc
+                0x000000008000da6c                fd_free
+                0x000000008000dad6                fd_get
+                0x000000008000db26                fd_copy
+ .text          0x000000008000dbd6      0xc74 ./fs/virtual_fs/fs_file.o
+                0x000000008000dbd6                file_alloc
+                0x000000008000dc18                file_free
+                0x000000008000dc68                file_defaultdir
+                0x000000008000ddec                file_open
+                0x000000008000e0ee                file_close
+                0x000000008000e1d0                file_read
+                0x000000008000e26c                file_write
+                0x000000008000e30e                file_unlink
+                0x000000008000e4c2                file_flush
+                0x000000008000e526                file_getdents
+                0x000000008000e5ae                file_lseek
+                0x000000008000e62e                file_fstatfs
+                0x000000008000e6a8                file_stat
+                0x000000008000e714                file_rename
+ .text          0x000000008000e84a      0x232 ./fs/virtual_fs/fs_inode.o
+                0x000000008000e8c0                inode_getfs
+                0x000000008000e974                inode_getdev
+                0x000000008000ea0c                inode_put
+ .text          0x000000008000ea7c      0x6f6 ./fs/virtual_fs/fs_path.o
+                0x000000008000ea7c                path_getfirst
+                0x000000008000eb38                path_getlast
+                0x000000008000ec38                path_formater
+                0x000000008000eebe                path_parser
+                0x000000008000efd4                path_setcwd
+                0x000000008000f0c2                path_fsdev
+ .text          0x000000008000f172      0x416 ./fs/virtual_fs/fs_posix.o
+                0x000000008000f172                opendir
+                0x000000008000f25a                closedir
+                0x000000008000f2d0                readdir
+                0x000000008000f328                seekdir
+                0x000000008000f390                telldir
+                0x000000008000f3ea                mkdir
+                0x000000008000f46e                mkfile
+                0x000000008000f4d8                k_chdir
+                0x000000008000f530                k_rmdir
                 0x0000000080010000                . = ALIGN (0x1000)
- *fill*         0x000000008000f5b4      0xa4c 
+ *fill*         0x000000008000f588      0xa78 
                 0x0000000080010000                _trampoline = .
  *(trampsec)
  trampsec       0x0000000080010000      0x120 arch/trampoline.o
@@ -373,7 +374,7 @@ Linker script and memory map
                 0x0000000000000001                ASSERT (((. - _trampoline) == 0x1000), error: trampoline larger than one page)
                 0x0000000080011000                PROVIDE (etext = .)
 
-.rodata         0x0000000080011000      0xd2a
+.rodata         0x0000000080011000      0xd72
                 0x0000000080011000                . = ALIGN (0x10)
  *(.srodata .srodata.*)
                 0x0000000080011000                . = ALIGN (0x10)
@@ -384,190 +385,193 @@ Linker script and memory map
  *fill*         0x0000000080011965        0x3 
  .rodata        0x0000000080011968       0x64 cli/cli_exec.o
  *fill*         0x00000000800119cc        0x4 
- .rodata        0x00000000800119d0       0x4a lib/init.o
- *fill*         0x0000000080011a1a        0x6 
- .rodata        0x0000000080011a20       0x1b lib/kerror.o
- *fill*         0x0000000080011a3b        0x5 
- .rodata        0x0000000080011a40       0x13 lib/testCase.o
- *fill*         0x0000000080011a53        0x1 
- .rodata        0x0000000080011a54       0x84 lib/tinyprintf.o
- .rodata        0x0000000080011ad8        0x8 src/console.o
- .rodata        0x0000000080011ae0       0x14 src/kernel_syscall.o
- *fill*         0x0000000080011af4        0x4 
- .rodata        0x0000000080011af8       0x55 src/pcb.o
- *fill*         0x0000000080011b4d        0x3 
- .rodata        0x0000000080011b50       0x15 src/proc.o
- *fill*         0x0000000080011b65        0x3 
- .rodata        0x0000000080011b68       0x1f ./fs/disk_fs/dfs_fs.o
- *fill*         0x0000000080011b87        0x1 
- .rodata        0x0000000080011b88       0x13 ./fs/disk_fs/dfs_inode.o
- *fill*         0x0000000080011b9b        0x5 
- .rodata        0x0000000080011ba0       0x2f ./fs/disk_fs/dfs_priv.o
+ .rodata        0x00000000800119d0       0x6c lib/init.o
+ *fill*         0x0000000080011a3c        0x4 
+ .rodata        0x0000000080011a40       0x1b lib/kerror.o
+ *fill*         0x0000000080011a5b        0x5 
+ .rodata        0x0000000080011a60       0x13 lib/testCase.o
+ *fill*         0x0000000080011a73        0x1 
+ .rodata        0x0000000080011a74       0x84 lib/tinyprintf.o
+ .rodata        0x0000000080011af8        0x8 src/console.o
+ .rodata        0x0000000080011b00       0x14 src/kernel_syscall.o
+ *fill*         0x0000000080011b14        0x4 
+ .rodata        0x0000000080011b18       0x55 src/pcb.o
+ *fill*         0x0000000080011b6d        0x3 
+ .rodata        0x0000000080011b70       0x3d src/proc.o
+ *fill*         0x0000000080011bad        0x3 
+ .rodata        0x0000000080011bb0       0x1f ./fs/disk_fs/dfs_fs.o
  *fill*         0x0000000080011bcf        0x1 
- .rodata        0x0000000080011bd0       0x2e ./fs/ram_fs/fs_ramfs.o
- *fill*         0x0000000080011bfe        0x2 
- .rodata        0x0000000080011c00       0xfa ./fs/virtual_fs/fs.o
- *fill*         0x0000000080011cfa        0x6 
- .rodata        0x0000000080011d00        0x2 ./fs/virtual_fs/fs_dir.o
- *fill*         0x0000000080011d02        0x6 
- .rodata        0x0000000080011d08        0x9 ./fs/virtual_fs/fs_fd.o
- *fill*         0x0000000080011d11        0x7 
- .rodata        0x0000000080011d18        0xa ./fs/virtual_fs/fs_file.o
- *fill*         0x0000000080011d22        0x6 
- .rodata        0x0000000080011d28        0x2 ./fs/virtual_fs/fs_path.o
+ .rodata        0x0000000080011bd0       0x13 ./fs/disk_fs/dfs_inode.o
+ *fill*         0x0000000080011be3        0x5 
+ .rodata        0x0000000080011be8       0x2f ./fs/disk_fs/dfs_priv.o
+ *fill*         0x0000000080011c17        0x1 
+ .rodata        0x0000000080011c18       0x2e ./fs/ram_fs/fs_ramfs.o
+ *fill*         0x0000000080011c46        0x2 
+ .rodata        0x0000000080011c48       0xfa ./fs/virtual_fs/fs.o
+ *fill*         0x0000000080011d42        0x6 
+ .rodata        0x0000000080011d48        0x2 ./fs/virtual_fs/fs_dir.o
+ *fill*         0x0000000080011d4a        0x6 
+ .rodata        0x0000000080011d50        0x9 ./fs/virtual_fs/fs_fd.o
+ *fill*         0x0000000080011d59        0x7 
+ .rodata        0x0000000080011d60        0xa ./fs/virtual_fs/fs_file.o
+ *fill*         0x0000000080011d6a        0x6 
+ .rodata        0x0000000080011d70        0x2 ./fs/virtual_fs/fs_path.o
 
-.rela.dyn       0x0000000080011d30        0x0
- .rela.text     0x0000000080011d30        0x0 boot/entry.o
+.rela.dyn       0x0000000080011d78        0x0
+ .rela.text     0x0000000080011d78        0x0 boot/entry.o
 
-.data           0x0000000080011d30      0x4c8
-                0x0000000080011d30                . = ALIGN (0x10)
+.data           0x0000000080011d78      0x4d0
+                0x0000000080011d80                . = ALIGN (0x10)
+ *fill*         0x0000000080011d78        0x8 
  *(.sdata .sdata.*)
- .sdata         0x0000000080011d30        0x8 src/proc.o
-                0x0000000080011d30                kPidToken
-                0x0000000080011d40                . = ALIGN (0x10)
- *fill*         0x0000000080011d38        0x8 
+ .sdata         0x0000000080011d80        0x8 src/proc.o
+                0x0000000080011d80                kPidToken
+                0x0000000080011d90                . = ALIGN (0x10)
+ *fill*         0x0000000080011d88        0x8 
  *(.data .data.*)
- .data          0x0000000080011d40        0x0 boot/entry.o
- .data          0x0000000080011d40        0x0 arch/kernelvec.o
- .data          0x0000000080011d40        0x0 arch/switch.o
- .data          0x0000000080011d40        0x0 arch/temp_retuser.o
- .data          0x0000000080011d40        0x0 arch/trampoline.o
- .data          0x0000000080011d40        0x0 arch/temp_trapuser.o
- .data          0x0000000080011d40        0x0 arch/trap.o
- .data          0x0000000080011d40        0x0 arch/uart.o
- .data          0x0000000080011d40        0x0 arch/vm.o
- .data          0x0000000080011d40        0x0 boot/start.o
- .data          0x0000000080011d40        0x0 cli/cli.o
- .data          0x0000000080011d40      0x240 cli/cli_cmd.o
-                0x0000000080011d40                func_list
- .data          0x0000000080011f80        0x0 cli/cli_exec.o
- .data          0x0000000080011f80        0x0 cli/cli_parse.o
- .data          0x0000000080011f80        0x0 lib/device.o
- .data          0x0000000080011f80        0x0 lib/init.o
- .data          0x0000000080011f80        0x0 lib/kalloc.o
- .data          0x0000000080011f80        0x0 lib/kerror.o
- .data          0x0000000080011f80        0x0 lib/ringbuff.o
- .data          0x0000000080011f80        0x0 lib/string.o
- .data          0x0000000080011f80        0x0 lib/testCase.o
- .data          0x0000000080011f80        0x0 lib/tinyprintf.o
- .data          0x0000000080011f80       0x50 src/console.o
- .data          0x0000000080011fd0        0x0 src/exec.o
- .data          0x0000000080011fd0       0xc0 src/kernel_syscall.o
- .data          0x0000000080012090        0x0 src/main.o
- .data          0x0000000080012090       0x38 src/pcb.o
- .data          0x00000000800120c8        0x0 src/plic.o
- .data          0x00000000800120c8        0x0 src/port.o
- .data          0x00000000800120c8        0x0 src/proc.o
- .data          0x00000000800120c8        0x0 src/timer.o
- .data          0x00000000800120c8        0x0 ./fs/disk_fs/dfs_dirent.o
- .data          0x00000000800120c8       0x90 ./fs/disk_fs/dfs_fs.o
-                0x00000000800120c8                dfs_fops
-                0x0000000080012118                dfs_fsops
- .data          0x0000000080012158        0x0 ./fs/disk_fs/dfs_inode.o
- .data          0x0000000080012158        0x0 ./fs/disk_fs/dfs_iobuf.o
- .data          0x0000000080012158        0x0 ./fs/disk_fs/dfs_priv.o
- .data          0x0000000080012158        0x0 ./fs/disk_fs/dfs_virtio.o
- .data          0x0000000080012158       0x90 ./fs/ram_fs/fs_ramfs.o
-                0x0000000080012158                ramfs_fops
-                0x00000000800121a8                ramfs_fsops
- .data          0x00000000800121e8        0x0 ./fs/virtual_fs/fs.o
- .data          0x00000000800121e8       0x10 ./fs/virtual_fs/fs_dev.o
-                0x00000000800121e8                gFsObjectList
- .data          0x00000000800121f8        0x0 ./fs/virtual_fs/fs_dir.o
- .data          0x00000000800121f8        0x0 ./fs/virtual_fs/fs_fd.o
- .data          0x00000000800121f8        0x0 ./fs/virtual_fs/fs_file.o
- .data          0x00000000800121f8        0x0 ./fs/virtual_fs/fs_inode.o
- .data          0x00000000800121f8        0x0 ./fs/virtual_fs/fs_path.o
- .data          0x00000000800121f8        0x0 ./fs/virtual_fs/fs_posix.o
+ .data          0x0000000080011d90        0x0 boot/entry.o
+ .data          0x0000000080011d90        0x0 arch/kernelvec.o
+ .data          0x0000000080011d90        0x0 arch/switch.o
+ .data          0x0000000080011d90        0x0 arch/temp_retuser.o
+ .data          0x0000000080011d90        0x0 arch/trampoline.o
+ .data          0x0000000080011d90        0x0 arch/temp_trapuser.o
+ .data          0x0000000080011d90        0x0 arch/trap.o
+ .data          0x0000000080011d90        0x0 arch/uart.o
+ .data          0x0000000080011d90        0x0 arch/vm.o
+ .data          0x0000000080011d90        0x0 boot/start.o
+ .data          0x0000000080011d90        0x0 cli/cli.o
+ .data          0x0000000080011d90      0x240 cli/cli_cmd.o
+                0x0000000080011d90                func_list
+ .data          0x0000000080011fd0        0x0 cli/cli_exec.o
+ .data          0x0000000080011fd0        0x0 cli/cli_parse.o
+ .data          0x0000000080011fd0        0x0 lib/device.o
+ .data          0x0000000080011fd0        0x0 lib/init.o
+ .data          0x0000000080011fd0        0x0 lib/kalloc.o
+ .data          0x0000000080011fd0        0x0 lib/kerror.o
+ .data          0x0000000080011fd0        0x0 lib/ringbuff.o
+ .data          0x0000000080011fd0        0x0 lib/string.o
+ .data          0x0000000080011fd0        0x0 lib/testCase.o
+ .data          0x0000000080011fd0        0x0 lib/tinyprintf.o
+ .data          0x0000000080011fd0       0x50 src/console.o
+ .data          0x0000000080012020        0x0 src/exec.o
+ .data          0x0000000080012020       0xc0 src/kernel_syscall.o
+ .data          0x00000000800120e0        0x0 src/main.o
+ .data          0x00000000800120e0       0x38 src/pcb.o
+ .data          0x0000000080012118        0x0 src/plic.o
+ .data          0x0000000080012118        0x0 src/port.o
+ .data          0x0000000080012118        0x0 src/proc.o
+ .data          0x0000000080012118        0x0 src/timer.o
+ .data          0x0000000080012118        0x0 ./fs/disk_fs/dfs_dirent.o
+ .data          0x0000000080012118       0x90 ./fs/disk_fs/dfs_fs.o
+                0x0000000080012118                dfs_fops
+                0x0000000080012168                dfs_fsops
+ .data          0x00000000800121a8        0x0 ./fs/disk_fs/dfs_inode.o
+ .data          0x00000000800121a8        0x0 ./fs/disk_fs/dfs_iobuf.o
+ .data          0x00000000800121a8        0x0 ./fs/disk_fs/dfs_priv.o
+ .data          0x00000000800121a8        0x0 ./fs/disk_fs/dfs_virtio.o
+ .data          0x00000000800121a8       0x90 ./fs/ram_fs/fs_ramfs.o
+                0x00000000800121a8                ramfs_fops
+                0x00000000800121f8                ramfs_fsops
+ .data          0x0000000080012238        0x0 ./fs/virtual_fs/fs.o
+ .data          0x0000000080012238       0x10 ./fs/virtual_fs/fs_dev.o
+                0x0000000080012238                gFsObjectList
+ .data          0x0000000080012248        0x0 ./fs/virtual_fs/fs_dir.o
+ .data          0x0000000080012248        0x0 ./fs/virtual_fs/fs_fd.o
+ .data          0x0000000080012248        0x0 ./fs/virtual_fs/fs_file.o
+ .data          0x0000000080012248        0x0 ./fs/virtual_fs/fs_inode.o
+ .data          0x0000000080012248        0x0 ./fs/virtual_fs/fs_path.o
+ .data          0x0000000080012248        0x0 ./fs/virtual_fs/fs_posix.o
 
-.bss            0x0000000080012200     0x15c8
-                0x0000000080012200                . = ALIGN (0x10)
+.bss            0x0000000080012250     0x15c8
+                0x0000000080012250                . = ALIGN (0x10)
  *(.sbss .sbss.*)
- .sbss          0x0000000080012200        0xa arch/trap.o
-                0x0000000080012200                Systicks
-                0x0000000080012208                break_userfunc
-                0x0000000080012209                break_userspace
- *fill*         0x000000008001220a        0x6 
- .sbss          0x0000000080012210       0x10 arch/uart.o
-                0x0000000080012210                uart_tx_w
-                0x0000000080012218                uart_tx_r
- .sbss          0x0000000080012220        0x8 arch/vm.o
-                0x0000000080012220                kernel_pgtab
- .sbss          0x0000000080012228       0x10 src/proc.o
-                0x0000000080012228                kInitProcCB
-                0x0000000080012230                kIdleProcCB
- .sbss          0x0000000080012238       0x10 ./fs/disk_fs/dfs_priv.o
-                0x0000000080012238                superblock
-                0x0000000080012240                root_node
- .sbss          0x0000000080012248        0x4 ./fs/disk_fs/dfs_virtio.o
-                0x0000000080012248                sleeplock
- *fill*         0x000000008001224c        0x4 
- .sbss          0x0000000080012250        0x8 ./fs/virtual_fs/fs_dev.o
-                0x0000000080012250                root_fsdev
-                0x0000000080012260                . = ALIGN (0x10)
- *fill*         0x0000000080012258        0x8 
+ .sbss          0x0000000080012250        0xa arch/trap.o
+                0x0000000080012250                Systicks
+                0x0000000080012258                break_userspace
+                0x0000000080012259                break_userfunc
+ *fill*         0x000000008001225a        0x6 
+ .sbss          0x0000000080012260       0x10 arch/uart.o
+                0x0000000080012260                uart_tx_w
+                0x0000000080012268                uart_tx_r
+ .sbss          0x0000000080012270        0x8 arch/vm.o
+                0x0000000080012270                kernel_pgtab
+ .sbss          0x0000000080012278        0x1 src/port.o
+                0x0000000080012278                Os_interrupt
+ *fill*         0x0000000080012279        0x7 
+ .sbss          0x0000000080012280       0x10 src/proc.o
+                0x0000000080012280                kInitProcCB
+                0x0000000080012288                kIdleProcCB
+ .sbss          0x0000000080012290       0x10 ./fs/disk_fs/dfs_priv.o
+                0x0000000080012290                superblock
+                0x0000000080012298                root_node
+ .sbss          0x00000000800122a0        0x4 ./fs/disk_fs/dfs_virtio.o
+                0x00000000800122a0                sleeplock
+ *fill*         0x00000000800122a4        0x4 
+ .sbss          0x00000000800122a8        0x8 ./fs/virtual_fs/fs_dev.o
+                0x00000000800122a8                root_fsdev
+                0x00000000800122b0                . = ALIGN (0x10)
  *(.bss .bss.*)
- .bss           0x0000000080012260        0x0 boot/entry.o
- .bss           0x0000000080012260        0x0 arch/kernelvec.o
- .bss           0x0000000080012260        0x0 arch/switch.o
- .bss           0x0000000080012260        0x0 arch/temp_retuser.o
- .bss           0x0000000080012260        0x0 arch/trampoline.o
- .bss           0x0000000080012260        0x0 arch/temp_trapuser.o
- .bss           0x0000000080012260        0x0 arch/trap.o
- .bss           0x0000000080012260       0x20 arch/uart.o
-                0x0000000080012260                uart_tx_buf
- .bss           0x0000000080012280        0x0 arch/vm.o
- .bss           0x0000000080012280     0x1028 boot/start.o
-                0x0000000080012280                stack0
-                0x0000000080013280                timer_scratch
- .bss           0x00000000800132a8       0x99 cli/cli.o
-                0x00000000800132a8                shell
- .bss           0x0000000080013341        0x0 cli/cli_cmd.o
- .bss           0x0000000080013341        0x0 cli/cli_exec.o
- .bss           0x0000000080013341        0x0 cli/cli_parse.o
- *fill*         0x0000000080013341        0x7 
- .bss           0x0000000080013348       0x10 lib/device.o
-                0x0000000080013348                gDevList
- .bss           0x0000000080013358        0x0 lib/init.o
- .bss           0x0000000080013358       0x28 lib/kalloc.o
- .bss           0x0000000080013380        0x0 lib/kerror.o
- .bss           0x0000000080013380        0x0 lib/ringbuff.o
- .bss           0x0000000080013380        0x0 lib/string.o
- .bss           0x0000000080013380        0x0 lib/testCase.o
- .bss           0x0000000080013380       0x10 lib/tinyprintf.o
- .bss           0x0000000080013390       0x98 src/console.o
- .bss           0x0000000080013428        0x0 src/exec.o
- .bss           0x0000000080013428        0x0 src/kernel_syscall.o
- .bss           0x0000000080013428        0x0 src/main.o
- .bss           0x0000000080013428        0x0 src/pcb.o
- .bss           0x0000000080013428        0x0 src/plic.o
- .bss           0x0000000080013428        0x0 src/port.o
- .bss           0x0000000080013428       0xc0 src/proc.o
-                0x0000000080013428                kCpusList
-                0x00000000800134a8                kUnregistList
-                0x00000000800134b8                kRegistList
-                0x00000000800134c8                kReadyList
-                0x00000000800134d8                kPendList
- .bss           0x00000000800134e8       0x10 src/timer.o
- .bss           0x00000000800134f8        0x0 ./fs/disk_fs/dfs_dirent.o
- .bss           0x00000000800134f8        0x0 ./fs/disk_fs/dfs_fs.o
- .bss           0x00000000800134f8        0x0 ./fs/disk_fs/dfs_inode.o
- .bss           0x00000000800134f8       0x20 ./fs/disk_fs/dfs_iobuf.o
-                0x00000000800134f8                gBufIdleList
-                0x0000000080013508                gBufDataList
- .bss           0x0000000080013518        0x0 ./fs/disk_fs/dfs_priv.o
- .bss           0x0000000080013518       0xb0 ./fs/disk_fs/dfs_virtio.o
- .bss           0x00000000800135c8        0x0 ./fs/ram_fs/fs_ramfs.o
- .bss           0x00000000800135c8        0x0 ./fs/virtual_fs/fs.o
- .bss           0x00000000800135c8        0x0 ./fs/virtual_fs/fs_dev.o
- .bss           0x00000000800135c8      0x200 ./fs/virtual_fs/fs_dir.o
-                0x00000000800135c8                ditem_hashlist
- .bss           0x00000000800137c8        0x0 ./fs/virtual_fs/fs_fd.o
- .bss           0x00000000800137c8        0x0 ./fs/virtual_fs/fs_file.o
- .bss           0x00000000800137c8        0x0 ./fs/virtual_fs/fs_inode.o
- .bss           0x00000000800137c8        0x0 ./fs/virtual_fs/fs_path.o
- .bss           0x00000000800137c8        0x0 ./fs/virtual_fs/fs_posix.o
-                0x00000000800137c8                PROVIDE (end = .)
+ .bss           0x00000000800122b0        0x0 boot/entry.o
+ .bss           0x00000000800122b0        0x0 arch/kernelvec.o
+ .bss           0x00000000800122b0        0x0 arch/switch.o
+ .bss           0x00000000800122b0        0x0 arch/temp_retuser.o
+ .bss           0x00000000800122b0        0x0 arch/trampoline.o
+ .bss           0x00000000800122b0        0x0 arch/temp_trapuser.o
+ .bss           0x00000000800122b0        0x0 arch/trap.o
+ .bss           0x00000000800122b0       0x20 arch/uart.o
+                0x00000000800122b0                uart_tx_buf
+ .bss           0x00000000800122d0        0x0 arch/vm.o
+ .bss           0x00000000800122d0     0x1028 boot/start.o
+                0x00000000800122d0                stack0
+                0x00000000800132d0                timer_scratch
+ .bss           0x00000000800132f8       0x99 cli/cli.o
+                0x00000000800132f8                shell
+ .bss           0x0000000080013391        0x0 cli/cli_cmd.o
+ .bss           0x0000000080013391        0x0 cli/cli_exec.o
+ .bss           0x0000000080013391        0x0 cli/cli_parse.o
+ *fill*         0x0000000080013391        0x7 
+ .bss           0x0000000080013398       0x10 lib/device.o
+                0x0000000080013398                gDevList
+ .bss           0x00000000800133a8        0x0 lib/init.o
+ .bss           0x00000000800133a8       0x28 lib/kalloc.o
+ .bss           0x00000000800133d0        0x0 lib/kerror.o
+ .bss           0x00000000800133d0        0x0 lib/ringbuff.o
+ .bss           0x00000000800133d0        0x0 lib/string.o
+ .bss           0x00000000800133d0        0x0 lib/testCase.o
+ .bss           0x00000000800133d0       0x10 lib/tinyprintf.o
+ .bss           0x00000000800133e0       0x98 src/console.o
+ .bss           0x0000000080013478        0x0 src/exec.o
+ .bss           0x0000000080013478        0x0 src/kernel_syscall.o
+ .bss           0x0000000080013478        0x0 src/main.o
+ .bss           0x0000000080013478        0x0 src/pcb.o
+ .bss           0x0000000080013478        0x0 src/plic.o
+ .bss           0x0000000080013478        0x0 src/port.o
+ .bss           0x0000000080013478       0xc0 src/proc.o
+                0x0000000080013478                kCpusList
+                0x00000000800134f8                kUnregistList
+                0x0000000080013508                kRegistList
+                0x0000000080013518                kReadyList
+                0x0000000080013528                kPendList
+ .bss           0x0000000080013538       0x10 src/timer.o
+ .bss           0x0000000080013548        0x0 ./fs/disk_fs/dfs_dirent.o
+ .bss           0x0000000080013548        0x0 ./fs/disk_fs/dfs_fs.o
+ .bss           0x0000000080013548        0x0 ./fs/disk_fs/dfs_inode.o
+ .bss           0x0000000080013548       0x20 ./fs/disk_fs/dfs_iobuf.o
+                0x0000000080013548                gBufIdleList
+                0x0000000080013558                gBufDataList
+ .bss           0x0000000080013568        0x0 ./fs/disk_fs/dfs_priv.o
+ .bss           0x0000000080013568       0xb0 ./fs/disk_fs/dfs_virtio.o
+ .bss           0x0000000080013618        0x0 ./fs/ram_fs/fs_ramfs.o
+ .bss           0x0000000080013618        0x0 ./fs/virtual_fs/fs.o
+ .bss           0x0000000080013618        0x0 ./fs/virtual_fs/fs_dev.o
+ .bss           0x0000000080013618      0x200 ./fs/virtual_fs/fs_dir.o
+                0x0000000080013618                ditem_hashlist
+ .bss           0x0000000080013818        0x0 ./fs/virtual_fs/fs_fd.o
+ .bss           0x0000000080013818        0x0 ./fs/virtual_fs/fs_file.o
+ .bss           0x0000000080013818        0x0 ./fs/virtual_fs/fs_inode.o
+ .bss           0x0000000080013818        0x0 ./fs/virtual_fs/fs_path.o
+ .bss           0x0000000080013818        0x0 ./fs/virtual_fs/fs_posix.o
+                0x0000000080013818                PROVIDE (end = .)
 LOAD boot/entry.o
 LOAD arch/kernelvec.o
 LOAD arch/switch.o
@@ -840,54 +844,54 @@ OUTPUT(HSunix elf64-littleriscv)
  .note.GNU-stack
                 0x0000000000000000        0x0 ./fs/virtual_fs/fs_posix.o
 
-.debug_line     0x0000000000000000    0x10632
+.debug_line     0x0000000000000000    0x105a5
  .debug_line    0x0000000000000000       0x6b boot/entry.o
  .debug_line    0x000000000000006b      0x225 arch/kernelvec.o
  .debug_line    0x0000000000000290       0xea arch/switch.o
  .debug_line    0x000000000000037a      0x240 arch/temp_retuser.o
  .debug_line    0x00000000000005ba      0x3e2 arch/temp_trapuser.o
- .debug_line    0x000000000000099c      0x67e arch/trap.o
- .debug_line    0x000000000000101a      0x1f9 arch/uart.o
- .debug_line    0x0000000000001213      0x95b arch/vm.o
- .debug_line    0x0000000000001b6e      0x348 boot/start.o
- .debug_line    0x0000000000001eb6      0x409 cli/cli.o
- .debug_line    0x00000000000022bf      0x988 cli/cli_cmd.o
- .debug_line    0x0000000000002c47      0x155 cli/cli_exec.o
- .debug_line    0x0000000000002d9c      0x2d4 cli/cli_parse.o
- .debug_line    0x0000000000003070      0x427 lib/device.o
- .debug_line    0x0000000000003497      0x121 lib/init.o
- .debug_line    0x00000000000035b8      0x6ff lib/kalloc.o
- .debug_line    0x0000000000003cb7       0xd9 lib/kerror.o
- .debug_line    0x0000000000003d90      0x5e4 lib/ringbuff.o
- .debug_line    0x0000000000004374      0x5ca lib/string.o
- .debug_line    0x000000000000493e      0x24b lib/testCase.o
- .debug_line    0x0000000000004b89      0xd09 lib/tinyprintf.o
- .debug_line    0x0000000000005892      0x344 src/console.o
- .debug_line    0x0000000000005bd6      0x645 src/exec.o
- .debug_line    0x000000000000621b      0x475 src/kernel_syscall.o
- .debug_line    0x0000000000006690      0x124 src/main.o
- .debug_line    0x00000000000067b4      0x5fc src/pcb.o
- .debug_line    0x0000000000006db0      0x170 src/plic.o
- .debug_line    0x0000000000006f20      0x29b src/port.o
- .debug_line    0x00000000000071bb      0xdea src/proc.o
- .debug_line    0x0000000000007fa5      0x5dd src/timer.o
- .debug_line    0x0000000000008582      0x537 ./fs/disk_fs/dfs_dirent.o
- .debug_line    0x0000000000008ab9      0xdd4 ./fs/disk_fs/dfs_fs.o
- .debug_line    0x000000000000988d      0xb14 ./fs/disk_fs/dfs_inode.o
- .debug_line    0x000000000000a3a1      0x4dc ./fs/disk_fs/dfs_iobuf.o
- .debug_line    0x000000000000a87d      0x5f1 ./fs/disk_fs/dfs_priv.o
- .debug_line    0x000000000000ae6e      0xa15 ./fs/disk_fs/dfs_virtio.o
- .debug_line    0x000000000000b883     0x1309 ./fs/ram_fs/fs_ramfs.o
- .debug_line    0x000000000000cb8c      0x5ad ./fs/virtual_fs/fs.o
- .debug_line    0x000000000000d139      0x8e9 ./fs/virtual_fs/fs_dev.o
- .debug_line    0x000000000000da22      0x8cf ./fs/virtual_fs/fs_dir.o
- .debug_line    0x000000000000e2f1      0x56c ./fs/virtual_fs/fs_fd.o
- .debug_line    0x000000000000e85d      0xdfe ./fs/virtual_fs/fs_file.o
- .debug_line    0x000000000000f65b      0x32f ./fs/virtual_fs/fs_inode.o
- .debug_line    0x000000000000f98a      0x7f7 ./fs/virtual_fs/fs_path.o
- .debug_line    0x0000000000010181      0x4b1 ./fs/virtual_fs/fs_posix.o
+ .debug_line    0x000000000000099c      0x67a arch/trap.o
+ .debug_line    0x0000000000001016      0x1f9 arch/uart.o
+ .debug_line    0x000000000000120f      0x95b arch/vm.o
+ .debug_line    0x0000000000001b6a      0x348 boot/start.o
+ .debug_line    0x0000000000001eb2      0x409 cli/cli.o
+ .debug_line    0x00000000000022bb      0x988 cli/cli_cmd.o
+ .debug_line    0x0000000000002c43      0x155 cli/cli_exec.o
+ .debug_line    0x0000000000002d98      0x2d4 cli/cli_parse.o
+ .debug_line    0x000000000000306c      0x427 lib/device.o
+ .debug_line    0x0000000000003493      0x1ff lib/init.o
+ .debug_line    0x0000000000003692      0x6ff lib/kalloc.o
+ .debug_line    0x0000000000003d91       0xd9 lib/kerror.o
+ .debug_line    0x0000000000003e6a      0x5e4 lib/ringbuff.o
+ .debug_line    0x000000000000444e      0x5ca lib/string.o
+ .debug_line    0x0000000000004a18      0x24b lib/testCase.o
+ .debug_line    0x0000000000004c63      0xd09 lib/tinyprintf.o
+ .debug_line    0x000000000000596c      0x344 src/console.o
+ .debug_line    0x0000000000005cb0      0x633 src/exec.o
+ .debug_line    0x00000000000062e3      0x475 src/kernel_syscall.o
+ .debug_line    0x0000000000006758      0x124 src/main.o
+ .debug_line    0x000000000000687c      0x5fc src/pcb.o
+ .debug_line    0x0000000000006e78      0x170 src/plic.o
+ .debug_line    0x0000000000006fe8      0x184 src/port.o
+ .debug_line    0x000000000000716c      0xdac src/proc.o
+ .debug_line    0x0000000000007f18      0x5dd src/timer.o
+ .debug_line    0x00000000000084f5      0x537 ./fs/disk_fs/dfs_dirent.o
+ .debug_line    0x0000000000008a2c      0xdd4 ./fs/disk_fs/dfs_fs.o
+ .debug_line    0x0000000000009800      0xb14 ./fs/disk_fs/dfs_inode.o
+ .debug_line    0x000000000000a314      0x4dc ./fs/disk_fs/dfs_iobuf.o
+ .debug_line    0x000000000000a7f0      0x5f1 ./fs/disk_fs/dfs_priv.o
+ .debug_line    0x000000000000ade1      0xa15 ./fs/disk_fs/dfs_virtio.o
+ .debug_line    0x000000000000b7f6     0x1309 ./fs/ram_fs/fs_ramfs.o
+ .debug_line    0x000000000000caff      0x5ad ./fs/virtual_fs/fs.o
+ .debug_line    0x000000000000d0ac      0x8e9 ./fs/virtual_fs/fs_dev.o
+ .debug_line    0x000000000000d995      0x8cf ./fs/virtual_fs/fs_dir.o
+ .debug_line    0x000000000000e264      0x56c ./fs/virtual_fs/fs_fd.o
+ .debug_line    0x000000000000e7d0      0xdfe ./fs/virtual_fs/fs_file.o
+ .debug_line    0x000000000000f5ce      0x32f ./fs/virtual_fs/fs_inode.o
+ .debug_line    0x000000000000f8fd      0x7f7 ./fs/virtual_fs/fs_path.o
+ .debug_line    0x00000000000100f4      0x4b1 ./fs/virtual_fs/fs_posix.o
 
-.debug_info     0x0000000000000000    0x1e187
+.debug_info     0x0000000000000000    0x1e16a
  .debug_info    0x0000000000000000       0x2e boot/entry.o
  .debug_info    0x000000000000002e       0x2e arch/kernelvec.o
  .debug_info    0x000000000000005c       0x2e arch/switch.o
@@ -902,39 +906,39 @@ OUTPUT(HSunix elf64-littleriscv)
  .debug_info    0x000000000000594d      0x1c8 cli/cli_exec.o
  .debug_info    0x0000000000005b15      0x16a cli/cli_parse.o
  .debug_info    0x0000000000005c7f      0xc7b lib/device.o
- .debug_info    0x00000000000068fa      0x140 lib/init.o
- .debug_info    0x0000000000006a3a      0x4a9 lib/kalloc.o
- .debug_info    0x0000000000006ee3      0x250 lib/kerror.o
- .debug_info    0x0000000000007133      0x4d5 lib/ringbuff.o
- .debug_info    0x0000000000007608      0x49a lib/string.o
- .debug_info    0x0000000000007aa2     0x103a lib/testCase.o
- .debug_info    0x0000000000008adc      0x964 lib/tinyprintf.o
- .debug_info    0x0000000000009440      0xccf src/console.o
- .debug_info    0x000000000000a10f     0x1300 src/exec.o
- .debug_info    0x000000000000b40f     0x1219 src/kernel_syscall.o
- .debug_info    0x000000000000c628      0x106 src/main.o
- .debug_info    0x000000000000c72e     0x1369 src/pcb.o
- .debug_info    0x000000000000da97      0x148 src/plic.o
- .debug_info    0x000000000000dbdf      0xe45 src/port.o
- .debug_info    0x000000000000ea24     0x1d34 src/proc.o
- .debug_info    0x0000000000010758     0x131c src/timer.o
- .debug_info    0x0000000000011a74      0x52b ./fs/disk_fs/dfs_dirent.o
- .debug_info    0x0000000000011f9f     0x13a0 ./fs/disk_fs/dfs_fs.o
- .debug_info    0x000000000001333f      0x992 ./fs/disk_fs/dfs_inode.o
- .debug_info    0x0000000000013cd1      0x671 ./fs/disk_fs/dfs_iobuf.o
- .debug_info    0x0000000000014342      0x6ff ./fs/disk_fs/dfs_priv.o
- .debug_info    0x0000000000014a41      0x6ba ./fs/disk_fs/dfs_virtio.o
- .debug_info    0x00000000000150fb     0x166c ./fs/ram_fs/fs_ramfs.o
- .debug_info    0x0000000000016767     0x1460 ./fs/virtual_fs/fs.o
- .debug_info    0x0000000000017bc7     0x104a ./fs/virtual_fs/fs_dev.o
- .debug_info    0x0000000000018c11      0xf2a ./fs/virtual_fs/fs_dir.o
- .debug_info    0x0000000000019b3b      0xf43 ./fs/virtual_fs/fs_fd.o
- .debug_info    0x000000000001aa7e     0x100f ./fs/virtual_fs/fs_file.o
- .debug_info    0x000000000001ba8d      0x9ad ./fs/virtual_fs/fs_inode.o
- .debug_info    0x000000000001c43a     0x1083 ./fs/virtual_fs/fs_path.o
- .debug_info    0x000000000001d4bd      0xcca ./fs/virtual_fs/fs_posix.o
+ .debug_info    0x00000000000068fa      0xe26 lib/init.o
+ .debug_info    0x0000000000007720      0x4a9 lib/kalloc.o
+ .debug_info    0x0000000000007bc9      0x250 lib/kerror.o
+ .debug_info    0x0000000000007e19      0x4d5 lib/ringbuff.o
+ .debug_info    0x00000000000082ee      0x49a lib/string.o
+ .debug_info    0x0000000000008788     0x103a lib/testCase.o
+ .debug_info    0x00000000000097c2      0x964 lib/tinyprintf.o
+ .debug_info    0x000000000000a126      0xccf src/console.o
+ .debug_info    0x000000000000adf5     0x12f1 src/exec.o
+ .debug_info    0x000000000000c0e6     0x1219 src/kernel_syscall.o
+ .debug_info    0x000000000000d2ff      0x106 src/main.o
+ .debug_info    0x000000000000d405     0x1369 src/pcb.o
+ .debug_info    0x000000000000e76e      0x148 src/plic.o
+ .debug_info    0x000000000000e8b6      0x17f src/port.o
+ .debug_info    0x000000000000ea35     0x1d06 src/proc.o
+ .debug_info    0x000000000001073b     0x131c src/timer.o
+ .debug_info    0x0000000000011a57      0x52b ./fs/disk_fs/dfs_dirent.o
+ .debug_info    0x0000000000011f82     0x13a0 ./fs/disk_fs/dfs_fs.o
+ .debug_info    0x0000000000013322      0x992 ./fs/disk_fs/dfs_inode.o
+ .debug_info    0x0000000000013cb4      0x671 ./fs/disk_fs/dfs_iobuf.o
+ .debug_info    0x0000000000014325      0x6ff ./fs/disk_fs/dfs_priv.o
+ .debug_info    0x0000000000014a24      0x6ba ./fs/disk_fs/dfs_virtio.o
+ .debug_info    0x00000000000150de     0x166c ./fs/ram_fs/fs_ramfs.o
+ .debug_info    0x000000000001674a     0x1460 ./fs/virtual_fs/fs.o
+ .debug_info    0x0000000000017baa     0x104a ./fs/virtual_fs/fs_dev.o
+ .debug_info    0x0000000000018bf4      0xf2a ./fs/virtual_fs/fs_dir.o
+ .debug_info    0x0000000000019b1e      0xf43 ./fs/virtual_fs/fs_fd.o
+ .debug_info    0x000000000001aa61     0x100f ./fs/virtual_fs/fs_file.o
+ .debug_info    0x000000000001ba70      0x9ad ./fs/virtual_fs/fs_inode.o
+ .debug_info    0x000000000001c41d     0x1083 ./fs/virtual_fs/fs_path.o
+ .debug_info    0x000000000001d4a0      0xcca ./fs/virtual_fs/fs_posix.o
 
-.debug_abbrev   0x0000000000000000     0x4e1b
+.debug_abbrev   0x0000000000000000     0x4e13
  .debug_abbrev  0x0000000000000000       0x14 boot/entry.o
  .debug_abbrev  0x0000000000000014       0x14 arch/kernelvec.o
  .debug_abbrev  0x0000000000000028       0x14 arch/switch.o
@@ -949,37 +953,37 @@ OUTPUT(HSunix elf64-littleriscv)
  .debug_abbrev  0x0000000000000e40       0xfe cli/cli_exec.o
  .debug_abbrev  0x0000000000000f3e       0xd6 cli/cli_parse.o
  .debug_abbrev  0x0000000000001014      0x224 lib/device.o
- .debug_abbrev  0x0000000000001238       0x94 lib/init.o
- .debug_abbrev  0x00000000000012cc      0x212 lib/kalloc.o
- .debug_abbrev  0x00000000000014de      0x10a lib/kerror.o
- .debug_abbrev  0x00000000000015e8      0x18a lib/ringbuff.o
- .debug_abbrev  0x0000000000001772      0x10f lib/string.o
- .debug_abbrev  0x0000000000001881      0x1c5 lib/testCase.o
- .debug_abbrev  0x0000000000001a46      0x2bc lib/tinyprintf.o
- .debug_abbrev  0x0000000000001d02      0x1d6 src/console.o
- .debug_abbrev  0x0000000000001ed8      0x1c9 src/exec.o
- .debug_abbrev  0x00000000000020a1      0x205 src/kernel_syscall.o
- .debug_abbrev  0x00000000000022a6       0x57 src/main.o
- .debug_abbrev  0x00000000000022fd      0x29f src/pcb.o
- .debug_abbrev  0x000000000000259c       0xd6 src/plic.o
- .debug_abbrev  0x0000000000002672      0x1be src/port.o
- .debug_abbrev  0x0000000000002830      0x3d3 src/proc.o
- .debug_abbrev  0x0000000000002c03      0x255 src/timer.o
- .debug_abbrev  0x0000000000002e58      0x151 ./fs/disk_fs/dfs_dirent.o
- .debug_abbrev  0x0000000000002fa9      0x25c ./fs/disk_fs/dfs_fs.o
- .debug_abbrev  0x0000000000003205      0x204 ./fs/disk_fs/dfs_inode.o
- .debug_abbrev  0x0000000000003409      0x21f ./fs/disk_fs/dfs_iobuf.o
- .debug_abbrev  0x0000000000003628      0x19b ./fs/disk_fs/dfs_priv.o
- .debug_abbrev  0x00000000000037c3      0x21f ./fs/disk_fs/dfs_virtio.o
- .debug_abbrev  0x00000000000039e2      0x323 ./fs/ram_fs/fs_ramfs.o
- .debug_abbrev  0x0000000000003d05      0x21e ./fs/virtual_fs/fs.o
- .debug_abbrev  0x0000000000003f23      0x2be ./fs/virtual_fs/fs_dev.o
- .debug_abbrev  0x00000000000041e1      0x2b8 ./fs/virtual_fs/fs_dir.o
- .debug_abbrev  0x0000000000004499      0x1da ./fs/virtual_fs/fs_fd.o
- .debug_abbrev  0x0000000000004673      0x21e ./fs/virtual_fs/fs_file.o
- .debug_abbrev  0x0000000000004891      0x189 ./fs/virtual_fs/fs_inode.o
- .debug_abbrev  0x0000000000004a1a      0x227 ./fs/virtual_fs/fs_path.o
- .debug_abbrev  0x0000000000004c41      0x1da ./fs/virtual_fs/fs_posix.o
+ .debug_abbrev  0x0000000000001238      0x18f lib/init.o
+ .debug_abbrev  0x00000000000013c7      0x212 lib/kalloc.o
+ .debug_abbrev  0x00000000000015d9      0x10a lib/kerror.o
+ .debug_abbrev  0x00000000000016e3      0x18a lib/ringbuff.o
+ .debug_abbrev  0x000000000000186d      0x10f lib/string.o
+ .debug_abbrev  0x000000000000197c      0x1c5 lib/testCase.o
+ .debug_abbrev  0x0000000000001b41      0x2bc lib/tinyprintf.o
+ .debug_abbrev  0x0000000000001dfd      0x1d6 src/console.o
+ .debug_abbrev  0x0000000000001fd3      0x1c9 src/exec.o
+ .debug_abbrev  0x000000000000219c      0x205 src/kernel_syscall.o
+ .debug_abbrev  0x00000000000023a1       0x57 src/main.o
+ .debug_abbrev  0x00000000000023f8      0x29f src/pcb.o
+ .debug_abbrev  0x0000000000002697       0xd6 src/plic.o
+ .debug_abbrev  0x000000000000276d       0xd0 src/port.o
+ .debug_abbrev  0x000000000000283d      0x3be src/proc.o
+ .debug_abbrev  0x0000000000002bfb      0x255 src/timer.o
+ .debug_abbrev  0x0000000000002e50      0x151 ./fs/disk_fs/dfs_dirent.o
+ .debug_abbrev  0x0000000000002fa1      0x25c ./fs/disk_fs/dfs_fs.o
+ .debug_abbrev  0x00000000000031fd      0x204 ./fs/disk_fs/dfs_inode.o
+ .debug_abbrev  0x0000000000003401      0x21f ./fs/disk_fs/dfs_iobuf.o
+ .debug_abbrev  0x0000000000003620      0x19b ./fs/disk_fs/dfs_priv.o
+ .debug_abbrev  0x00000000000037bb      0x21f ./fs/disk_fs/dfs_virtio.o
+ .debug_abbrev  0x00000000000039da      0x323 ./fs/ram_fs/fs_ramfs.o
+ .debug_abbrev  0x0000000000003cfd      0x21e ./fs/virtual_fs/fs.o
+ .debug_abbrev  0x0000000000003f1b      0x2be ./fs/virtual_fs/fs_dev.o
+ .debug_abbrev  0x00000000000041d9      0x2b8 ./fs/virtual_fs/fs_dir.o
+ .debug_abbrev  0x0000000000004491      0x1da ./fs/virtual_fs/fs_fd.o
+ .debug_abbrev  0x000000000000466b      0x21e ./fs/virtual_fs/fs_file.o
+ .debug_abbrev  0x0000000000004889      0x189 ./fs/virtual_fs/fs_inode.o
+ .debug_abbrev  0x0000000000004a12      0x227 ./fs/virtual_fs/fs_path.o
+ .debug_abbrev  0x0000000000004c39      0x1da ./fs/virtual_fs/fs_posix.o
 
 .debug_aranges  0x0000000000000000      0x870
  .debug_aranges
@@ -1073,7 +1077,7 @@ OUTPUT(HSunix elf64-littleriscv)
  .debug_aranges
                 0x0000000000000840       0x30 ./fs/virtual_fs/fs_posix.o
 
-.debug_str      0x0000000000000000     0x21e0
+.debug_str      0x0000000000000000     0x2204
  .debug_str     0x0000000000000000       0x37 boot/entry.o
  .debug_str     0x0000000000000037       0x11 arch/kernelvec.o
                                          0x3b (size before relaxing)
@@ -1101,70 +1105,70 @@ OUTPUT(HSunix elf64-littleriscv)
                                         0x177 (size before relaxing)
  .debug_str     0x0000000000000c70       0xa6 lib/device.o
                                         0x415 (size before relaxing)
- .debug_str     0x0000000000000d16       0x39 lib/init.o
-                                        0x18e (size before relaxing)
- .debug_str     0x0000000000000d4f       0xea lib/kalloc.o
+ .debug_str     0x0000000000000d16       0x58 lib/init.o
+                                        0x4e1 (size before relaxing)
+ .debug_str     0x0000000000000d6e       0xea lib/kalloc.o
                                         0x3c9 (size before relaxing)
- .debug_str     0x0000000000000e39       0x49 lib/kerror.o
+ .debug_str     0x0000000000000e58       0x49 lib/kerror.o
                                         0x2d0 (size before relaxing)
- .debug_str     0x0000000000000e82       0xfe lib/ringbuff.o
+ .debug_str     0x0000000000000ea1       0xfe lib/ringbuff.o
                                         0x396 (size before relaxing)
- .debug_str     0x0000000000000f80       0x41 lib/string.o
+ .debug_str     0x0000000000000f9f       0x41 lib/string.o
                                         0x1a4 (size before relaxing)
- .debug_str     0x0000000000000fc1       0x86 lib/testCase.o
+ .debug_str     0x0000000000000fe0       0x86 lib/testCase.o
                                         0x595 (size before relaxing)
- .debug_str     0x0000000000001047      0x140 lib/tinyprintf.o
+ .debug_str     0x0000000000001066      0x140 lib/tinyprintf.o
                                         0x2e3 (size before relaxing)
- .debug_str     0x0000000000001187       0xa9 src/console.o
+ .debug_str     0x00000000000011a6       0xa9 src/console.o
                                         0x4f7 (size before relaxing)
- .debug_str     0x0000000000001230      0x173 src/exec.o
+ .debug_str     0x000000000000124f      0x16b src/exec.o
                                         0x65d (size before relaxing)
- .debug_str     0x00000000000013a3       0xf7 src/kernel_syscall.o
+ .debug_str     0x00000000000013ba       0xf7 src/kernel_syscall.o
                                         0x580 (size before relaxing)
- .debug_str     0x000000000000149a       0x41 src/main.o
+ .debug_str     0x00000000000014b1       0x41 src/main.o
                                         0x1ba (size before relaxing)
- .debug_str     0x00000000000014db       0xba src/pcb.o
+ .debug_str     0x00000000000014f2       0xba src/pcb.o
                                         0x5ff (size before relaxing)
- .debug_str     0x0000000000001595        0xb src/plic.o
+ .debug_str     0x00000000000015ac        0xb src/plic.o
                                         0x16e (size before relaxing)
- .debug_str     0x00000000000015a0        0xb src/port.o
-                                        0x4c5 (size before relaxing)
- .debug_str     0x00000000000015ab       0xc6 src/proc.o
-                                        0x86d (size before relaxing)
- .debug_str     0x0000000000001671       0x3e src/timer.o
+ .debug_str     0x00000000000015b7       0x18 src/port.o
+                                        0x1ab (size before relaxing)
+ .debug_str     0x00000000000015cf       0xc6 src/proc.o
+                                        0x86f (size before relaxing)
+ .debug_str     0x0000000000001695       0x3e src/timer.o
                                         0x6a3 (size before relaxing)
- .debug_str     0x00000000000016af       0xba ./fs/disk_fs/dfs_dirent.o
+ .debug_str     0x00000000000016d3       0xba ./fs/disk_fs/dfs_dirent.o
                                         0x234 (size before relaxing)
- .debug_str     0x0000000000001769      0x224 ./fs/disk_fs/dfs_fs.o
+ .debug_str     0x000000000000178d      0x224 ./fs/disk_fs/dfs_fs.o
                                         0x622 (size before relaxing)
- .debug_str     0x000000000000198d       0xbc ./fs/disk_fs/dfs_inode.o
+ .debug_str     0x00000000000019b1       0xbc ./fs/disk_fs/dfs_inode.o
                                         0x39d (size before relaxing)
- .debug_str     0x0000000000001a49       0x6b ./fs/disk_fs/dfs_iobuf.o
+ .debug_str     0x0000000000001a6d       0x6b ./fs/disk_fs/dfs_iobuf.o
                                         0x26c (size before relaxing)
- .debug_str     0x0000000000001ab4       0x2c ./fs/disk_fs/dfs_priv.o
+ .debug_str     0x0000000000001ad8       0x2c ./fs/disk_fs/dfs_priv.o
                                         0x426 (size before relaxing)
- .debug_str     0x0000000000001ae0       0xc2 ./fs/disk_fs/dfs_virtio.o
+ .debug_str     0x0000000000001b04       0xc2 ./fs/disk_fs/dfs_virtio.o
                                         0x3fd (size before relaxing)
- .debug_str     0x0000000000001ba2      0x1fb ./fs/ram_fs/fs_ramfs.o
+ .debug_str     0x0000000000001bc6      0x1fb ./fs/ram_fs/fs_ramfs.o
                                         0x665 (size before relaxing)
- .debug_str     0x0000000000001d9d       0xf0 ./fs/virtual_fs/fs.o
+ .debug_str     0x0000000000001dc1       0xf0 ./fs/virtual_fs/fs.o
                                         0x60f (size before relaxing)
- .debug_str     0x0000000000001e8d       0xfc ./fs/virtual_fs/fs_dev.o
+ .debug_str     0x0000000000001eb1       0xfc ./fs/virtual_fs/fs_dev.o
                                         0x51c (size before relaxing)
- .debug_str     0x0000000000001f89       0xdc ./fs/virtual_fs/fs_dir.o
+ .debug_str     0x0000000000001fad       0xdc ./fs/virtual_fs/fs_dir.o
                                         0x4ea (size before relaxing)
- .debug_str     0x0000000000002065       0x39 ./fs/virtual_fs/fs_fd.o
+ .debug_str     0x0000000000002089       0x39 ./fs/virtual_fs/fs_fd.o
                                         0x4f5 (size before relaxing)
- .debug_str     0x000000000000209e       0x9e ./fs/virtual_fs/fs_file.o
+ .debug_str     0x00000000000020c2       0x9e ./fs/virtual_fs/fs_file.o
                                         0x548 (size before relaxing)
- .debug_str     0x000000000000213c       0x19 ./fs/virtual_fs/fs_inode.o
+ .debug_str     0x0000000000002160       0x19 ./fs/virtual_fs/fs_inode.o
                                         0x3a1 (size before relaxing)
- .debug_str     0x0000000000002155       0x6a ./fs/virtual_fs/fs_path.o
+ .debug_str     0x0000000000002179       0x6a ./fs/virtual_fs/fs_path.o
                                         0x567 (size before relaxing)
- .debug_str     0x00000000000021bf       0x21 ./fs/virtual_fs/fs_posix.o
+ .debug_str     0x00000000000021e3       0x21 ./fs/virtual_fs/fs_posix.o
                                         0x456 (size before relaxing)
 
-.debug_loc      0x0000000000000000     0xb8a1
+.debug_loc      0x0000000000000000     0xb82f
  .debug_loc     0x0000000000000000      0x5e4 arch/temp_trapuser.o
  .debug_loc     0x00000000000005e4      0x89e arch/trap.o
  .debug_loc     0x0000000000000e82      0x244 arch/uart.o
@@ -1175,39 +1179,39 @@ OUTPUT(HSunix elf64-littleriscv)
  .debug_loc     0x0000000000002bf0       0x76 cli/cli_exec.o
  .debug_loc     0x0000000000002c66       0xec cli/cli_parse.o
  .debug_loc     0x0000000000002d52      0x332 lib/device.o
- .debug_loc     0x0000000000003084      0x10c lib/init.o
- .debug_loc     0x0000000000003190      0x330 lib/kalloc.o
- .debug_loc     0x00000000000034c0       0x9a lib/kerror.o
- .debug_loc     0x000000000000355a      0x48c lib/ringbuff.o
- .debug_loc     0x00000000000039e6      0x502 lib/string.o
- .debug_loc     0x0000000000003ee8      0x248 lib/testCase.o
- .debug_loc     0x0000000000004130      0x83f lib/tinyprintf.o
- .debug_loc     0x000000000000496f      0x416 src/console.o
- .debug_loc     0x0000000000004d85      0x24a src/exec.o
- .debug_loc     0x0000000000004fcf      0x912 src/kernel_syscall.o
- .debug_loc     0x00000000000058e1       0x74 src/main.o
- .debug_loc     0x0000000000005955      0x330 src/pcb.o
- .debug_loc     0x0000000000005c85      0x244 src/plic.o
- .debug_loc     0x0000000000005ec9      0x32c src/port.o
- .debug_loc     0x00000000000061f5      0xaec src/proc.o
- .debug_loc     0x0000000000006ce1      0x1d6 src/timer.o
- .debug_loc     0x0000000000006eb7      0x338 ./fs/disk_fs/dfs_dirent.o
- .debug_loc     0x00000000000071ef      0x838 ./fs/disk_fs/dfs_fs.o
- .debug_loc     0x0000000000007a27      0x580 ./fs/disk_fs/dfs_inode.o
- .debug_loc     0x0000000000007fa7      0x2be ./fs/disk_fs/dfs_iobuf.o
- .debug_loc     0x0000000000008265      0x3a2 ./fs/disk_fs/dfs_priv.o
- .debug_loc     0x0000000000008607      0x330 ./fs/disk_fs/dfs_virtio.o
- .debug_loc     0x0000000000008937      0xaf6 ./fs/ram_fs/fs_ramfs.o
- .debug_loc     0x000000000000942d      0x742 ./fs/virtual_fs/fs.o
- .debug_loc     0x0000000000009b6f      0x50a ./fs/virtual_fs/fs_dev.o
- .debug_loc     0x000000000000a079      0x5ec ./fs/virtual_fs/fs_dir.o
- .debug_loc     0x000000000000a665      0x2bc ./fs/virtual_fs/fs_fd.o
- .debug_loc     0x000000000000a921      0x666 ./fs/virtual_fs/fs_file.o
- .debug_loc     0x000000000000af87      0x244 ./fs/virtual_fs/fs_inode.o
- .debug_loc     0x000000000000b1cb      0x2c2 ./fs/virtual_fs/fs_path.o
- .debug_loc     0x000000000000b48d      0x414 ./fs/virtual_fs/fs_posix.o
+ .debug_loc     0x0000000000003084      0x10e lib/init.o
+ .debug_loc     0x0000000000003192      0x330 lib/kalloc.o
+ .debug_loc     0x00000000000034c2       0x9a lib/kerror.o
+ .debug_loc     0x000000000000355c      0x48c lib/ringbuff.o
+ .debug_loc     0x00000000000039e8      0x502 lib/string.o
+ .debug_loc     0x0000000000003eea      0x248 lib/testCase.o
+ .debug_loc     0x0000000000004132      0x83f lib/tinyprintf.o
+ .debug_loc     0x0000000000004971      0x416 src/console.o
+ .debug_loc     0x0000000000004d87      0x24a src/exec.o
+ .debug_loc     0x0000000000004fd1      0x912 src/kernel_syscall.o
+ .debug_loc     0x00000000000058e3       0x74 src/main.o
+ .debug_loc     0x0000000000005957      0x330 src/pcb.o
+ .debug_loc     0x0000000000005c87      0x244 src/plic.o
+ .debug_loc     0x0000000000005ecb      0x32c src/port.o
+ .debug_loc     0x00000000000061f7      0xa78 src/proc.o
+ .debug_loc     0x0000000000006c6f      0x1d6 src/timer.o
+ .debug_loc     0x0000000000006e45      0x338 ./fs/disk_fs/dfs_dirent.o
+ .debug_loc     0x000000000000717d      0x838 ./fs/disk_fs/dfs_fs.o
+ .debug_loc     0x00000000000079b5      0x580 ./fs/disk_fs/dfs_inode.o
+ .debug_loc     0x0000000000007f35      0x2be ./fs/disk_fs/dfs_iobuf.o
+ .debug_loc     0x00000000000081f3      0x3a2 ./fs/disk_fs/dfs_priv.o
+ .debug_loc     0x0000000000008595      0x330 ./fs/disk_fs/dfs_virtio.o
+ .debug_loc     0x00000000000088c5      0xaf6 ./fs/ram_fs/fs_ramfs.o
+ .debug_loc     0x00000000000093bb      0x742 ./fs/virtual_fs/fs.o
+ .debug_loc     0x0000000000009afd      0x50a ./fs/virtual_fs/fs_dev.o
+ .debug_loc     0x000000000000a007      0x5ec ./fs/virtual_fs/fs_dir.o
+ .debug_loc     0x000000000000a5f3      0x2bc ./fs/virtual_fs/fs_fd.o
+ .debug_loc     0x000000000000a8af      0x666 ./fs/virtual_fs/fs_file.o
+ .debug_loc     0x000000000000af15      0x244 ./fs/virtual_fs/fs_inode.o
+ .debug_loc     0x000000000000b159      0x2c2 ./fs/virtual_fs/fs_path.o
+ .debug_loc     0x000000000000b41b      0x414 ./fs/virtual_fs/fs_posix.o
 
-.debug_frame    0x0000000000000000     0x4f78
+.debug_frame    0x0000000000000000     0x4f48
  .debug_frame   0x0000000000000000      0x290 arch/temp_trapuser.o
  .debug_frame   0x0000000000000290      0x3b0 arch/trap.o
  .debug_frame   0x0000000000000640      0x100 arch/uart.o
@@ -1232,23 +1236,23 @@ OUTPUT(HSunix elf64-littleriscv)
  .debug_frame   0x0000000000002698      0x160 src/pcb.o
  .debug_frame   0x00000000000027f8      0x100 src/plic.o
  .debug_frame   0x00000000000028f8      0x160 src/port.o
- .debug_frame   0x0000000000002a58      0x4b0 src/proc.o
- .debug_frame   0x0000000000002f08       0xd8 src/timer.o
- .debug_frame   0x0000000000002fe0      0x160 ./fs/disk_fs/dfs_dirent.o
- .debug_frame   0x0000000000003140      0x378 ./fs/disk_fs/dfs_fs.o
- .debug_frame   0x00000000000034b8      0x250 ./fs/disk_fs/dfs_inode.o
- .debug_frame   0x0000000000003708      0x138 ./fs/disk_fs/dfs_iobuf.o
- .debug_frame   0x0000000000003840      0x190 ./fs/disk_fs/dfs_priv.o
- .debug_frame   0x00000000000039d0      0x168 ./fs/disk_fs/dfs_virtio.o
- .debug_frame   0x0000000000003b38      0x4a0 ./fs/ram_fs/fs_ramfs.o
- .debug_frame   0x0000000000003fd8      0x310 ./fs/virtual_fs/fs.o
- .debug_frame   0x00000000000042e8      0x230 ./fs/virtual_fs/fs_dev.o
- .debug_frame   0x0000000000004518      0x280 ./fs/virtual_fs/fs_dir.o
- .debug_frame   0x0000000000004798      0x138 ./fs/virtual_fs/fs_fd.o
- .debug_frame   0x00000000000048d0      0x2b0 ./fs/virtual_fs/fs_file.o
- .debug_frame   0x0000000000004b80      0x100 ./fs/virtual_fs/fs_inode.o
- .debug_frame   0x0000000000004c80      0x138 ./fs/virtual_fs/fs_path.o
- .debug_frame   0x0000000000004db8      0x1c0 ./fs/virtual_fs/fs_posix.o
+ .debug_frame   0x0000000000002a58      0x480 src/proc.o
+ .debug_frame   0x0000000000002ed8       0xd8 src/timer.o
+ .debug_frame   0x0000000000002fb0      0x160 ./fs/disk_fs/dfs_dirent.o
+ .debug_frame   0x0000000000003110      0x378 ./fs/disk_fs/dfs_fs.o
+ .debug_frame   0x0000000000003488      0x250 ./fs/disk_fs/dfs_inode.o
+ .debug_frame   0x00000000000036d8      0x138 ./fs/disk_fs/dfs_iobuf.o
+ .debug_frame   0x0000000000003810      0x190 ./fs/disk_fs/dfs_priv.o
+ .debug_frame   0x00000000000039a0      0x168 ./fs/disk_fs/dfs_virtio.o
+ .debug_frame   0x0000000000003b08      0x4a0 ./fs/ram_fs/fs_ramfs.o
+ .debug_frame   0x0000000000003fa8      0x310 ./fs/virtual_fs/fs.o
+ .debug_frame   0x00000000000042b8      0x230 ./fs/virtual_fs/fs_dev.o
+ .debug_frame   0x00000000000044e8      0x280 ./fs/virtual_fs/fs_dir.o
+ .debug_frame   0x0000000000004768      0x138 ./fs/virtual_fs/fs_fd.o
+ .debug_frame   0x00000000000048a0      0x2b0 ./fs/virtual_fs/fs_file.o
+ .debug_frame   0x0000000000004b50      0x100 ./fs/virtual_fs/fs_inode.o
+ .debug_frame   0x0000000000004c50      0x138 ./fs/virtual_fs/fs_path.o
+ .debug_frame   0x0000000000004d88      0x1c0 ./fs/virtual_fs/fs_posix.o
 
 .debug_ranges   0x0000000000000000       0xc0
  .debug_ranges  0x0000000000000000       0x30 arch/uart.o
