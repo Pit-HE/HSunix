@@ -206,6 +206,15 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
     pcb->trapFrame->sp = sptop;
     pcb->trapFrame->epc = elf.e_entry;
 
+    /*
+    修改用户空间代码的入口，
+    用于验证开启页表后代码进出用户态是正常的
+    */
+    extern char user_space[];
+    kvm_setflag(pcb->pageTab, (uint64)user_space, PTE_U | PTE_X);
+    pcb->trapFrame->epc = (uint64)user_space;
+
+
     vfs_close(fd);
     return argc;
 

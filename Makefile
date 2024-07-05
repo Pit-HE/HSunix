@@ -37,7 +37,7 @@ all: remove
 	make app
 	make mkfs
 	make fs.img
-	make clean
+	sync
 
 # 重新构建整个系统内核
 build:

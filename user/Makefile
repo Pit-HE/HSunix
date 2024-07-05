@@ -3,8 +3,13 @@ include $(ROOT_DIR)/tools/tools.mak
 
 # 清空变量的内容
 INCLUDE_DIR := 
+LIB_OBJ := 
 C_FILE := 
+S_FILE := 
 C_OBJ := 
+S_OBJ := 
+
+
 
 # 获取当前 Makefile 所处的文件路径
 CURRENT_DIR := $(shell pwd)

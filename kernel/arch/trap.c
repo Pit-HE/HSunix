@@ -22,16 +22,6 @@ void init_trap(void)
     w_stvec((uint64)kernelvec);
 }
 
-/* TODO：用于测试用户空间进入内核空间的入口 */
-uint8 break_userspace = 0;
-void get_userspace (void)
-{
-    while (break_userspace == 0)
-    {
-        /* TODO: 通过 GDB 改值，使得代码可以继续往下执行 */
-    }
-    ((void (*)(void))uservec)();
-}
 
 /******************************************************
  *             外设中断与软件中断的处理函数
@@ -90,13 +80,6 @@ int dev_interrupt (void)
 uint8 break_userfunc = 0;
 void trap_userfunc(void)
 {
-    while (1)
-    {
-        /* TODO: 通过 GDB 改值，使得代码可以继续往下执行 */
-        if (break_userfunc == 1)
-            break;
-    }
-
     uint devnum = 0;
     struct ProcCB *pcb = getProcCB();
 
@@ -177,8 +160,6 @@ void trap_userret(void)
     uint64 satp = MAKE_SATP(pcb->pageTab);
 
     /* 跳转到汇编的用户空间返回代码 */
-    // uint64 trampoline_userret = TRAMPOLINE + (userret - trampoline);
-    // ((void (*)(uint64))trampoline_userret)(satp);
     ((void (*)(uint64))userret)(satp);
 }
 
