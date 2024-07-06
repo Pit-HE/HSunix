@@ -135,8 +135,7 @@ void trap_userret(void)
     /* 设置用户模式 trap 入口函数
      * (uservec - trampoline 是为了获取在代码对齐时的偏移值)
      */
-    // w_stvec((uint64)(TRAMPOLINE + (uservec - trampoline)));
-    w_stvec((uint64)(uservec));
+    w_stvec((uint64)(TRAMPOLINE + (uservec - trampoline)));
 
     /* 页表寄存器 */
     pcb->trapFrame->kernel_satp = r_satp();
@@ -160,7 +159,8 @@ void trap_userret(void)
     uint64 satp = MAKE_SATP(pcb->pageTab);
 
     /* 跳转到汇编的用户空间返回代码 */
-    ((void (*)(uint64))userret)(satp);
+    uint64 go_userret = TRAMPOLINE + (userret - trampoline);
+    ((void (*)(uint64))go_userret)(satp);
 }
 
 /******************************************************

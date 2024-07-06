@@ -129,12 +129,11 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
 {
     int fd, i;
     uint64 size, tmp;
-    uint64 argc, off, sptop;
     struct elf_ehdr elf;
     struct elf_phdr phdr;
-    struct ProcCB *pcb = NULL;
     pgtab_t *pgtab = NULL;
-
+    uint64 argc, off, sptop;
+    struct ProcCB *pcb = NULL;
 
     fd = vfs_open(path, O_RDWR, S_IRWXU);
 
@@ -148,15 +147,15 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
     pcb = (obj == NULL) ? getProcCB():obj;
 
     /* 创建新的虚拟内存页 */
-    // pgtab = proc_alloc_pgtab(pcb);
-    // if (pgtab == NULL)
-    //     goto _err_exec_open;
+    pgtab = proc_alloc_pgtab(pcb);
+    if (pgtab == NULL)
+        goto _err_exec_open;
     /* 让进程携带内核的内容，方便进行 mmu 的调试 */
-    pgtab = uvm_create();
-    kvm_map(pgtab, TRAMPOLINE, (uint64)trampoline, PGSIZE, PTE_R | PTE_X);
-    kvm_map(pgtab, TRAPFRAME, (uint64)pcb->trapFrame, PGSIZE, PTE_R|PTE_W);
-    kvm_map(pgtab, KERNBASE, KERNBASE, (uint64)etext-KERNBASE, PTE_R | PTE_X);
-    kvm_map(pgtab, (uint64)etext, (uint64)etext, PHYSTOP-(uint64)etext, PTE_R | PTE_W);
+    // pgtab = uvm_create();
+    // kvm_map(pgtab, TRAMPOLINE, (uint64)trampoline, PGSIZE, PTE_R | PTE_X);
+    // kvm_map(pgtab, TRAPFRAME, (uint64)pcb->trapFrame, PGSIZE, PTE_R|PTE_W);
+    // kvm_map(pgtab, KERNBASE, KERNBASE, (uint64)etext-KERNBASE, PTE_R | PTE_X);
+    // kvm_map(pgtab, (uint64)etext, (uint64)etext, PHYSTOP-(uint64)etext, PTE_R | PTE_W);
 
     /* 遍历所有的段内容，并为虚拟内存页申请段内容所需的地址 */
     off = elf.e_phoff;
@@ -183,7 +182,7 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
 
         /* 将数据段写入页表所对应的虚拟内存中 */
         if (-1 == elf_load_segment(pgtab, phdr.p_vaddr,
-                phdr.p_memsz, fd, off))
+                phdr.p_filesz, fd, phdr.p_offset))
             goto _err_exec_uvm;
     }
 
@@ -210,9 +209,9 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
     修改用户空间代码的入口，
     用于验证开启页表后代码进出用户态是正常的
     */
-    extern char user_space[];
-    kvm_setflag(pcb->pageTab, (uint64)user_space, PTE_U | PTE_X);
-    pcb->trapFrame->epc = (uint64)user_space;
+    // extern char user_space[];
+    // kvm_setflag(pcb->pageTab, (uint64)user_space, PTE_U | PTE_X);
+    // pcb->trapFrame->epc = (uint64)user_space;
 
 
     vfs_close(fd);
