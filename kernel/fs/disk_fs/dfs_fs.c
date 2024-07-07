@@ -43,7 +43,7 @@ int dfs_open (struct File *file)
         /* 丢弃该文件节点之前的内容 */
         if (inode->flags & O_TRUNC)
         {
-            /* TODO */
+            /* TODO: 实现释放的实体文件接口 */
             // kfree((void*)node->data);
             // node->data = NULL;
             node->size = 0;

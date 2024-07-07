@@ -1,5 +1,7 @@
-
-#include "syscall.h"
+/*
+ * 当前文件主要记录内核对用户层提供的系统调用接口
+ */
+#include "ksyscall.h"
 #include "defs.h"
 #include "proc.h"
 
@@ -107,19 +109,19 @@ static uint64 (*syscall_entry[])(int arg[]) =
     [SYS_fsync]     sys_fsync,
     [SYS_dup]       sys_dup,
 };
-#define SYSCALL_BUFF_SIZE (sizeof(syscall_entry)/sizeof(syscall_entry[0]))
+#define SYSCALL_NUM (sizeof(syscall_entry)/sizeof(syscall_entry[0]))
 
 
 
 void do_syscall (void)
 {
-    int code;
+    uint code;
     int args[7];
     struct ProcCB *pcb = getProcCB();
 
     code = pcb->trapFrame->a7;
 
-    if ((0 < code) && (code < SYSCALL_BUFF_SIZE) &&
+    if ((code < SYSCALL_NUM) &&
         (syscall_entry[code] != NULL))
     {
         args[0] = pcb->trapFrame->a0;
@@ -134,7 +136,7 @@ void do_syscall (void)
     }
     else
     {
-        kprintf ("do_syscall fail !\r\n");
+        kprintf ("This system call is invalid !\r\n");
         pcb->trapFrame->a0 = -1;
     }
 }

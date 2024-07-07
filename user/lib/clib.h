@@ -5,7 +5,6 @@
 #define __USER_LIB_H__
 
 
-
 void    exit    (int code);
 void    fork    (void);
 void    wait    (int *code);
@@ -25,8 +24,10 @@ void    seek    (void);
 void    fstat   (void);
 void    fsync   (void);
 void    dup     (void);
-void    uprintf (char *fmt, ...);
 
+
+#include "uprintf.h"
+#define printf tfp_printf
 
 
 #endif

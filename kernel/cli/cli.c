@@ -111,15 +111,20 @@ void cli_main (void)
                 kprintf ("\r\n");
                 shell.buf[shell.buf_index] = '\0';
 
-                /* 去除字符串前的无效字符 */
-                shell.cmd = shell.buf;
-                while(*shell.cmd == ' ')
-                    shell.cmd++;
+                /* 处理仅输入回车键的情况 */
+                if (shell.buf[0] != '\0')
+                {
+                    /* 去除字符串前的无效字符 */
+                    shell.cmd = shell.buf;
+                    while(*shell.cmd == ' ')
+                        shell.cmd++;
 
-                /* 执行命令的处理 */
-                cli_exec(shell.cmd, &shell.cmd_ret);
+                    /* 执行命令的处理 */
+                    cli_exec(shell.cmd, &shell.cmd_ret);
+                }
                 shell.finish = TRUE;
                 shell.buf_index = 0;
+                shell.buf[0] = '\0';
                 break;
             case 0x00:
             case 0xFF:

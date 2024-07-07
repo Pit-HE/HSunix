@@ -57,18 +57,18 @@ void  init_kmem     (void);
 
 /******************** vm ********************/
 void     init_kvm    (void);
-int      kvm_setflag (pgtab_t *pagetable, uint64 vAddr, int flag);
-int      kvm_clrflag (pgtab_t *pagetable, uint64 vAddr, int flag);
-uint64   kvm_phyaddr (pgtab_t *pagetable, uint64 vAddr);
-int      kvm_map     (pgtab_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag);
-void     uvm_unmap   (pgtab_t *pagetable, uint64 vAddr, uint64 npages, bool free);
-uint64   uvm_alloc   (pgtab_t *pagetable, uint64 start_addr, uint64 end_addr, int flag);
-uint64   uvm_free    (pgtab_t *pagetable, uint64 oldsz, uint64 newsz);
-void     uvm_destroy (pgtab_t *pagetable);
-int      uvm_copy    (pgtab_t *destPage, pgtab_t *srcPage, uint64 sz, bool alloc);
-int      uvm_copyout (pgtab_t *pagetable, uint64 dstva, char *src, uint64 len);
-int      uvm_copyin  (pgtab_t *pagetable, char *dst, uint64 srcva, uint64 len);
 pgtab_t *uvm_create  (void);
+int      kvm_setflag (pgtab_t *pgtab, uint64 vAddr, int flag);
+int      kvm_clrflag (pgtab_t *pgtab, uint64 vAddr, int flag);
+uint64   kvm_phyaddr (pgtab_t *pgtab, uint64 vAddr);
+int      kvm_map     (pgtab_t *pgtab, uint64 vAddr, uint64 pAddr, uint64 sz, int flag);
+void     uvm_unmap   (pgtab_t *pgtab, uint64 vAddr, uint64 npages, bool free);
+uint64   uvm_alloc   (pgtab_t *pgtab, uint64 start_addr, uint64 end_addr, int flag);
+uint64   uvm_free    (pgtab_t *pgtab, uint64 oldsz, uint64 newsz);
+void     uvm_destroy (pgtab_t *pgtab, uint64 size);
+int      uvm_copyout (pgtab_t *pgtab, uint64 dstva, char *src, uint64 len);
+int      uvm_copyin  (pgtab_t *pgtab, char *dst, uint64 srcva, uint64 len);
+int      uvm_copy    (pgtab_t *destPage, pgtab_t *srcPage, uint64 sz, bool alloc);
 
 /******************** trap ********************/
 void init_trap     (void);
@@ -105,7 +105,7 @@ struct ProcCB *do_kthread (char *name, void(*thread)(void));
 /******************** pcb ********************/
 void pcb_dump (void);
 int  pcb_free (struct ProcCB *pcb);
-int  proc_free_pgtab (pgtab_t *pgtab);
+int  proc_free_pgtab (pgtab_t *pgtab, uint64 size);
 pgtab_t *proc_alloc_pgtab (struct ProcCB *pcb);
 struct ProcCB *getProcCB  (void);
 struct ProcCB *pcb_alloc  (void);

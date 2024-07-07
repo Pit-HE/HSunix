@@ -33,8 +33,8 @@ void tc_virtualmemory (void)
     uvm_free(pgtab, 0, PGSIZE);
     uvm_free(Spgatab, 0, PGSIZE);
 
-    uvm_destroy(pgtab);
-    uvm_destroy(Spgatab);
+    uvm_destroy(pgtab, PGSIZE);
+    uvm_destroy(Spgatab, PGSIZE);
 }
 
 

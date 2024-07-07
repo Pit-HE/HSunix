@@ -33,7 +33,8 @@
     "utility": "c",
     "cli.h": "c",
     "user_lib.h": "c",
-    "mkfs.h": "c"
+    "mkfs.h": "c",
+    "ksyscall.h": "c"
   },
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",

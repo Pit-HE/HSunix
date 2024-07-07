@@ -32,12 +32,7 @@ export CPUS ROOT_DIR
 
 
 # 默认清空工程重新编译并运行 HSunix
-all: remove
-	make build
-	make app
-	make mkfs
-	make fs.img
-	sync
+all: remove build app
 
 # 重新构建整个系统内核
 build:
@@ -47,16 +42,18 @@ build:
 mkfs:
 	make -C mkfs
 
-# 仅编译 user/app 中写的执行在用户空间的代码
-app:
-	make -C user
-
 # 生成可以挂载到 qemu 上的磁盘文件
 fs.img:mkfs
 	cd user && make fs_img
 
+# 仅编译 user/app 中写的执行在用户空间的代码
+app:mkfs
+	cp -rf kernel/lib/ksyscall.h user/lib/syscall.h
+	make -C user
+	cd user && make fs_img
+
 # 运行 qemu 让操作系统开始模拟运行
-qemu:build
+qemu:
 	cd kernel && make qemu
 
 # 运行 qemu 让操作系统进入调试模式

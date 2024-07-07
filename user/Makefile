@@ -1,14 +1,15 @@
 
 include $(ROOT_DIR)/tools/tools.mak
 
+
 # 清空变量的内容
+CURRENT_DIR :=
 INCLUDE_DIR := 
 LIB_OBJ := 
 C_FILE := 
 S_FILE := 
 C_OBJ := 
 S_OBJ := 
-
 
 
 # 获取当前 Makefile 所处的文件路径
@@ -18,6 +19,8 @@ CURRENT_DIR := $(shell pwd)
 INCLUDE_DIR += -I$(CURRENT_DIR)/app
 INCLUDE_DIR += -I$(CURRENT_DIR)/lib
 
+# 获取指定路径下的所有 o 文件列表
+LIB_OBJ += $(call all-o-files, lib)
 # 获取当前目录下的所有 C 文件
 C_FILE	+= $(call all-c-files, app)
 C_FILE	+= $(call all-c-files, lib)
@@ -27,8 +30,6 @@ S_FILE	+= $(call all-S-files, lib)
 C_OBJ	+= $(patsubst %.c, %.o, $(C_FILE)) 
 # 获取所有汇编文件对应的 o 文件列表
 S_OBJ	+= $(patsubst %.S, %.o, $(S_FILE)) 
-# 获取指定路径下的所有 o 文件列表
-LIB_OBJ += $(call all-o-files, lib)
 
 # 获取 app 中所有 c 文件的名字 (没有后缀)
 BIN_OBJ += $(basename $(notdir $(wildcard app/*.c)))

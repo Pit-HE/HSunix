@@ -34,7 +34,7 @@ S_FILE += $(call all-S-files-in, ./fs)
 
 # 获取所有 C 文件对应的 o 文件列表
 C_OBJ	+= $(patsubst %.c, %.o, $(C_FILE))
-# 获取所有汇编文件对应的 o 文件列表
+# 获取所有 S 文件对应的 o 文件列表
 S_OBJ	+= $(patsubst %.S, %.o, $(S_FILE)) 
 
 
@@ -51,7 +51,7 @@ all: $(S_OBJ) $(C_OBJ)
 # 用于 all 中，编译所有的 c 文件
 $(C_OBJ):%.o:%.c
 	$(CC) $(CFLAGS) $(INCLUDE_DIR) -c -o $@ $^
-# 用于 all 中，编译所有的汇编文件
+# 用于 all 中，编译所有的 S 文件
 $(S_OBJ):%.o:%.S
 	$(CC) $(CFLAGS) $(INCLUDE_DIR) -c -o $@ $^
 
@@ -62,11 +62,11 @@ QEMUOPTS += -global virtio-mmio.force-legacy=false
 QEMUOPTS += -drive file=../fs.img,if=none,format=raw,id=x0
 QEMUOPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 
-# 通过 qemu 运行系统可执行文件并进入调试模式
+#  qemu 加载 HSunix 系统的可执行文件并进入调试模式
 debug:
 	$(QEMU) $(QEMUOPTS) -S -gdb tcp::25000
 
-# 通过 qemu 运行当前系统内核的可执行文件
+# qemu 加载 HSunix 系统内核的可执行文件
 qemu:
 	$(QEMU)  $(QEMUOPTS)
 

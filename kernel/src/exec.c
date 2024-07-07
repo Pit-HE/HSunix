@@ -128,9 +128,9 @@ int elf_para_create (pgtab_t *pgtab, uint64 *sptop, char *argv[])
 int do_exec(struct ProcCB *obj, char *path, char *argv[])
 {
     int fd, i;
-    uint64 size, tmp;
     struct elf_ehdr elf;
     struct elf_phdr phdr;
+    uint64 size = 0, tmp;
     pgtab_t *pgtab = NULL;
     uint64 argc, off, sptop;
     struct ProcCB *pcb = NULL;
@@ -150,12 +150,6 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
     pgtab = proc_alloc_pgtab(pcb);
     if (pgtab == NULL)
         goto _err_exec_open;
-    /* 让进程携带内核的内容，方便进行 mmu 的调试 */
-    // pgtab = uvm_create();
-    // kvm_map(pgtab, TRAMPOLINE, (uint64)trampoline, PGSIZE, PTE_R | PTE_X);
-    // kvm_map(pgtab, TRAPFRAME, (uint64)pcb->trapFrame, PGSIZE, PTE_R|PTE_W);
-    // kvm_map(pgtab, KERNBASE, KERNBASE, (uint64)etext-KERNBASE, PTE_R | PTE_X);
-    // kvm_map(pgtab, (uint64)etext, (uint64)etext, PHYSTOP-(uint64)etext, PTE_R | PTE_W);
 
     /* 遍历所有的段内容，并为虚拟内存页申请段内容所需的地址 */
     off = elf.e_phoff;
@@ -196,7 +190,7 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
         goto _err_exec_uvm;
 
     /* 释放进程原先的虚拟内存页资源 */
-    // proc_free_pgtab(pcb->pageTab);
+    proc_free_pgtab(pcb->pageTab, pcb->memSize);
 
     /* 将虚拟页表的信息写入进程中 */
     pcb->pageTab = pgtab;
@@ -205,20 +199,11 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
     pcb->trapFrame->sp = sptop;
     pcb->trapFrame->epc = elf.e_entry;
 
-    /*
-    修改用户空间代码的入口，
-    用于验证开启页表后代码进出用户态是正常的
-    */
-    // extern char user_space[];
-    // kvm_setflag(pcb->pageTab, (uint64)user_space, PTE_U | PTE_X);
-    // pcb->trapFrame->epc = (uint64)user_space;
-
-
     vfs_close(fd);
     return argc;
 
 _err_exec_uvm:
-    // proc_free_pgtab(pgtab);
+    proc_free_pgtab(pgtab, size);
 
 _err_exec_open:
     vfs_close(fd);

@@ -6,10 +6,11 @@
 /* 进程在用户空间(模式)中执行的函数 */ 
 void main (void)
 {
+    printf("User space code is running !\r\n");
+
     while(1)
     {
-        uprintf("Hello World !\r\n");
-        sleep(500);
+        sleep(1000);
     }
 }
 

@@ -242,7 +242,7 @@ int do_fork (void)
     {
         kfree(stack);
         pcb_free(newPcb);
-        uvm_destroy(newPcb->pageTab);
+        uvm_destroy(newPcb->pageTab, newPcb->memSize);
         goto _exit_fork;
     }
 

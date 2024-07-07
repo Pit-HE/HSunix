@@ -9,7 +9,7 @@
 #include "defs.h"
 
 
-pgtab_t     *kernel_pgtab;
+pgtab_t        *kernel_pgtab;
 extern char     etext[];
 extern char     trampoline[];
 
@@ -20,7 +20,7 @@ extern char     trampoline[];
  *  vAddr：要解析的虚拟地址
  *  alloc：是否要为空的页表条目申请新的内存空间
  */
-static pte_t *_mmu (pgtab_t *pagetable, uint64 vAddr, bool alloc)
+static pte_t *_mmu (pgtab_t *pgtab, uint64 vAddr, bool alloc)
 {
     pte_t *pte = NULL;
 
@@ -29,26 +29,26 @@ static pte_t *_mmu (pgtab_t *pagetable, uint64 vAddr, bool alloc)
 
     for (int level = 2; level > 0; level--)
     {
-        pte = &pagetable[PX(level, vAddr)];
+        pte = &pgtab[PX(level, vAddr)];
 
         /* Whether pte is available */
         if (*pte & PTE_V)
         {
-            pagetable = (pgtab_t *)PTE2PA(*pte);
+            pgtab = (pgtab_t *)PTE2PA(*pte);
         }
         else
         {
-            if (!alloc || (pagetable = (pde_t *)kallocPhyPage()) == 0)
+            if (!alloc || (pgtab = (pde_t *)kallocPhyPage()) == 0)
                 return 0;
-            kmemset(pagetable, 0, PGSIZE);
-            *pte = PA2PTE(pagetable) | PTE_V;
+            kmemset(pgtab, 0, PGSIZE);
+            *pte = PA2PTE(pgtab) | PTE_V;
         }
     }
-    return &pagetable[PX(0, vAddr)];
+    return &pgtab[PX(0, vAddr)];
 }
 
 /* 为指定地址与大小的虚拟内存与物理内存建立映射关系 */
-static int mappages (pgtab_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 size, int flag)
+static int mappages (pgtab_t *pgtab, uint64 vAddr, uint64 pAddr, uint64 size, int flag)
 {
     uint64  start, end;
     pte_t   *pte = NULL;
@@ -61,7 +61,7 @@ static int mappages (pgtab_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 size
 
     while(1)
     {
-        pte = _mmu(pagetable, start, TRUE);
+        pte = _mmu(pgtab, start, TRUE);
         if (pte == 0)
             return -1;
         if (*pte & PTE_V)
@@ -78,7 +78,7 @@ static int mappages (pgtab_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 size
 }
 
 /* 释放页表本身占用的物理地址 */
-static void freepages (pgtab_t *pagetable)
+static void freepages (pgtab_t *pgtab)
 {
     int     i;
     pte_t   pte;
@@ -86,30 +86,30 @@ static void freepages (pgtab_t *pagetable)
 
     for (i=0; i<512; i++)
     {
-        pte = pagetable[i];
+        pte = pgtab[i];
 
         if ((pte & PTE_V) && ((pte & (PTE_R|PTE_W|PTE_X)) == 0))
         {
             pa = PTE2PA(pte);
             freepages((pgtab_t *)pa);
-            pagetable[i] = 0;
+            pgtab[i] = 0;
         }
         else if (pte & PTE_V)
         {
             return;
         }
     }
-    kfreePhyPage(pagetable);
+    kfreePhyPage(pgtab);
 }
 
 
 /*******************************************************/
 /* 设置虚拟内存页中指定的权限标志 */
-int kvm_setflag (pgtab_t *pagetable, uint64 vAddr, int flag)
+int kvm_setflag (pgtab_t *pgtab, uint64 vAddr, int flag)
 {
     pte_t   *pte = NULL;
 
-    pte = _mmu(pagetable, vAddr, FALSE);
+    pte = _mmu(pgtab, vAddr, FALSE);
     if (pte == NULL)
         return -1;
     
@@ -118,11 +118,11 @@ int kvm_setflag (pgtab_t *pagetable, uint64 vAddr, int flag)
 }
 
 /* 清除虚拟内存页中指定的权限标志 */
-int kvm_clrflag (pgtab_t *pagetable, uint64 vAddr, int flag)
+int kvm_clrflag (pgtab_t *pgtab, uint64 vAddr, int flag)
 {
     pte_t   *pte = NULL;
 
-    pte = _mmu(pagetable, vAddr, FALSE);
+    pte = _mmu(pgtab, vAddr, FALSE);
     if (pte == NULL)
         return -1;
     
@@ -131,7 +131,7 @@ int kvm_clrflag (pgtab_t *pagetable, uint64 vAddr, int flag)
 }
 
 /* 获取虚拟地址对应的物理地址 */
-uint64 kvm_phyaddr (pgtab_t *pagetable, uint64 vAddr)
+uint64 kvm_phyaddr (pgtab_t *pgtab, uint64 vAddr)
 {
     pte_t   *pte;
 
@@ -140,26 +140,26 @@ uint64 kvm_phyaddr (pgtab_t *pagetable, uint64 vAddr)
         return 0;
 
     /* 获取第三级的页表条目 */
-    pte = _mmu(pagetable, vAddr, FALSE);
+    pte = _mmu(pgtab, vAddr, FALSE);
 
     /* 页表条目的有效性检查 */
     if (! (*pte & PTE_V))
         return 0;
-    // if (! (*pte & PTE_U))    /* TODO: */
-    //     return 0;
+    if (! (*pte & PTE_U))
+        return 0;
 
     /* 将页表条目内存储的物理地址返回 */
     return PTE2PA(*pte);
 }
 
 /* 将指定大小的物理地址与虚拟地址建立映射关系 */
-int kvm_map (pgtab_t *pagetable, uint64 vAddr, uint64 pAddr, uint64 sz, int flag)
+int kvm_map (pgtab_t *pgtab, uint64 vAddr, uint64 pAddr, uint64 sz, int flag)
 {
-    return mappages(pagetable, vAddr, pAddr, sz, flag);
+    return mappages(pgtab, vAddr, pAddr, sz, flag);
 }
 
-/* 释放范围的页表条目所映射的物理内存页 */
-void uvm_unmap (pgtab_t *pagetable, uint64 vAddr, uint64 npages, bool free)
+/* 释放指定地址范围内页表条目所映射的物理内存页 */
+void uvm_unmap (pgtab_t *pgtab, uint64 vAddr, uint64 npages, bool free)
 {
     uint64  start, end;
     pte_t   *pte;
@@ -172,7 +172,7 @@ void uvm_unmap (pgtab_t *pagetable, uint64 vAddr, uint64 npages, bool free)
     end = vAddr + (npages * PGSIZE);
     for (start = vAddr; start < end; start += PGSIZE)
     {
-        pte = _mmu(pagetable, start, FALSE);
+        pte = _mmu(pgtab, start, FALSE);
 
         if (pte == NULL)
             return;
@@ -180,9 +180,7 @@ void uvm_unmap (pgtab_t *pagetable, uint64 vAddr, uint64 npages, bool free)
             return;
 
         if (free == TRUE)
-        {
             kfreePhyPage((void*)PTE2PA(*pte));
-        }
 
         *pte = 0;
     }
@@ -201,16 +199,18 @@ pgtab_t *uvm_create (void)
 }
 
 /* 销毁已申请的页表所占用的内存页 (与 uvm_create 成对使用) */
-void uvm_destroy (pgtab_t *pagetable)
+void uvm_destroy (pgtab_t *pgtab, uint64 size)
 {
-    //TODO: 需要释放每一个终端'页表项'所占用的物理内存页
+    /* 释放每一个终端'页表项'所占用的物理内存页 */
+    if (size)
+        uvm_unmap(pgtab, 0, PGROUNDUP(size)/PGSIZE, TRUE);
 
     /* 释放页表本身所占用的内存页 */
-    freepages(pagetable);
+    freepages(pgtab);
 }
 
 /* 为指定范围的虚拟地址映射可用的物理地址 */
-uint64 uvm_alloc (pgtab_t *pagetable, uint64 start_addr, uint64 end_addr, int flag)
+uint64 uvm_alloc (pgtab_t *pgtab, uint64 start_addr, uint64 end_addr, int flag)
 {
     char *mem = NULL;
     uint64  addr;
@@ -227,7 +227,7 @@ uint64 uvm_alloc (pgtab_t *pagetable, uint64 start_addr, uint64 end_addr, int fl
         kmemset(mem, 0, PGSIZE);
 
         /* 建立映射关系 */
-        if (mappages(pagetable, addr, (uint64)mem, PGSIZE, flag) != 0)
+        if (mappages(pgtab, addr, (uint64)mem, PGSIZE, flag) != 0)
         {
             /* 释放已申请的内存页 */
             kfreePhyPage(mem);
@@ -237,12 +237,12 @@ uint64 uvm_alloc (pgtab_t *pagetable, uint64 start_addr, uint64 end_addr, int fl
     return end_addr;
  error_map:
     /* 处理之前已映射成功的内存页 */
-    uvm_unmap(pagetable, start_addr, (addr - start_addr)/PGSIZE, TRUE);
+    uvm_unmap(pgtab, start_addr, (addr - start_addr)/PGSIZE, TRUE);
     return 0;
 }
 
 /* 释放指定范围内虚拟地址所映射的物理地址 */
-uint64 uvm_free (pgtab_t *pagetable, uint64 oldsz, uint64 newsz)
+uint64 uvm_free (pgtab_t *pgtab, uint64 oldsz, uint64 newsz)
 {
     int npages;
 
@@ -251,7 +251,7 @@ uint64 uvm_free (pgtab_t *pagetable, uint64 oldsz, uint64 newsz)
     if (PGROUNDUP(newsz) > PGROUNDUP(oldsz))
     {
         npages = (PGROUNDUP(newsz) - PGROUNDUP(oldsz)) / PGSIZE;
-        uvm_unmap(pagetable, oldsz, npages, TRUE);
+        uvm_unmap(pgtab, oldsz, npages, TRUE);
     }
 
     return newsz;
@@ -314,7 +314,7 @@ int uvm_copy (pgtab_t *destPage, pgtab_t *srcPage, uint64 sz, bool alloc)
 }
 
 /* 从内核空间拷贝数据到用户空间 */
-int uvm_copyout (pgtab_t *pagetable, uint64 dstva, char *src, uint64 len)
+int uvm_copyout (pgtab_t *pgtab, uint64 dstva, char *src, uint64 len)
 {
     uint64 n, va_base, pa;
 
@@ -322,7 +322,7 @@ int uvm_copyout (pgtab_t *pagetable, uint64 dstva, char *src, uint64 len)
     {
         va_base = PGROUNDDOWN(dstva);
 
-        pa = kvm_phyaddr(pagetable, va_base);
+        pa = kvm_phyaddr(pgtab, va_base);
         if (pa <= 0)
             return -1;
 
@@ -340,7 +340,7 @@ int uvm_copyout (pgtab_t *pagetable, uint64 dstva, char *src, uint64 len)
 }
 
 /* 从用户空间拷贝数据到内核空间 */
-int uvm_copyin (pgtab_t *pagetable, char *dst, uint64 srcva, uint64 len)
+int uvm_copyin (pgtab_t *pgtab, char *dst, uint64 srcva, uint64 len)
 {
     uint64 n, va0, pa0;
 
@@ -350,7 +350,7 @@ int uvm_copyin (pgtab_t *pagetable, char *dst, uint64 srcva, uint64 len)
         va0 = PGROUNDDOWN(srcva);
 
         /* 获取该虚拟地址所对应的物理地址 */
-        pa0 = kvm_phyaddr(pagetable, va0);
+        pa0 = kvm_phyaddr(pgtab, va0);
         if (pa0 == 0)
             return -1;
 

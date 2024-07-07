@@ -121,7 +121,7 @@ int pcb_free (struct ProcCB *pcb)
     list_del_init(&pcb->list);
 
     /* 是否进程页表内所占用的内存空间 */
-    proc_free_pgtab(pcb->pageTab);
+    proc_free_pgtab(pcb->pageTab, pcb->memSize);
     pcb->pageTab = NULL;
 
     /* 释放进程控制块的资源 */
@@ -171,7 +171,7 @@ pgtab_t *proc_alloc_pgtab (struct ProcCB *pcb)
     /* 给进程申请存放进出内核空间代码的地址 */
     if (0 > kvm_map(pgtab, TRAMPOLINE, (uint64)trampoline, PGSIZE, PTE_R|PTE_X))
     {
-        uvm_destroy(pgtab);
+        uvm_destroy(pgtab, 0);
         return NULL;
     }
 
@@ -179,7 +179,7 @@ pgtab_t *proc_alloc_pgtab (struct ProcCB *pcb)
     if (0 > kvm_map(pgtab, TRAPFRAME, (uint64)pcb->trapFrame, PGSIZE, PTE_R|PTE_W))
     {
         uvm_unmap(pgtab, TRAMPOLINE, 1, TRUE);
-        uvm_destroy(pgtab);
+        uvm_destroy(pgtab, 0);
         return NULL;
     }
 
@@ -189,15 +189,14 @@ pgtab_t *proc_alloc_pgtab (struct ProcCB *pcb)
 /* 释放进程虚拟页表占用的所有物理内存空间 
  * ( 与 proc_alloc_pgtab 成对使用 ) 
  */
-int proc_free_pgtab (pgtab_t *pgtab)
+int proc_free_pgtab (pgtab_t *pgtab, uint64 size)
 {
     /* 处理特殊页已经映射的物理内存 (不做释放) */
     uvm_unmap(pgtab, TRAPFRAME , 1, FALSE);
     uvm_unmap(pgtab, TRAMPOLINE, 1, FALSE);
 
-    /* TODO: 还未完善处理普通内存页映射与页表的释放 (参考xv6) */
-    uvm_destroy(pgtab);
-
+    /* 释放进程用户空间与页表本身占用的物理内存 */
+    uvm_destroy(pgtab, size);
     return 0;
 }
 
