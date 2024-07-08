@@ -93,6 +93,9 @@ int elf_para_create (pgtab_t *pgtab, uint64 *sptop, char *argv[])
     int argc;
     uint64 len, array[CLI_ARG_MAX];
 
+    if (argv == NULL)
+        return 0;
+
     /* 将参数数组写入栈空间内，记录每一个数组成员存放的地址 */
     for (argc = 0; argv[argc] != NULL; argc++)
     {

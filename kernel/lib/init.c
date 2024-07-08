@@ -39,8 +39,10 @@ void idle_main (void)
     }
 }
 
-void cmd_main (void)
+void test_main (void)
 {
+    kENABLE_INTERRUPT();
+
     while(1)
     {
         cli_main();

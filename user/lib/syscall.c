@@ -19,9 +19,9 @@ void wait (int *code)
     syscall(SYS_wait, code);
 }
 
-void exec (void)
+void exec (char *path, char *argv[])
 {
-    syscall(SYS_exec);
+    syscall(SYS_exec, path, argv);
 }
 
 void yield (void)

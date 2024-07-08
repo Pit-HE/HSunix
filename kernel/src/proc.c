@@ -84,6 +84,16 @@ int proc_killstate (struct ProcCB *pcb)
     return pcb->killState;
 }
 
+/* 每个 fork 后的进程第一次执行的函数入口 
+ * (当任务创建后，通过 kswitch_to 到此函数)
+ */
+void proc_entry (void)
+{
+    kENABLE_INTERRUPT();
+
+    trap_userret();
+}
+
 /* 就绪进程调度器 */
 void do_scheduler (void)
 {
@@ -229,7 +239,7 @@ int do_fork (void)
         return -1;
 
     /* 创建内核线程 */
-    newPcb = create_kthread(curPcb->name, NULL);
+    newPcb = create_kthread(curPcb->name, proc_entry);
     if (newPcb == NULL)
         return -1;
 
@@ -370,7 +380,7 @@ int do_sleep (int ms)
 }
 
 /* 创建内核线程 */
-struct ProcCB *create_kthread (char *name, void(*thread)(void))
+struct ProcCB *create_kthread (char *name, void(*entry)(void))
 {
     char *stack = NULL;
     struct ProcCB *pcb = NULL;
@@ -387,7 +397,7 @@ struct ProcCB *create_kthread (char *name, void(*thread)(void))
 
     /* 添加信息到进程的控制块 */
     kstrcpy(pcb->name, name);
-    pcb->context.ra = (uint64)thread;
+    pcb->context.ra = (uint64)entry;
     pcb->stackAddr  = (uint64)stack;
     pcb->stackSize  = (uint64)PGSIZE;
     pcb->context.sp = (uint64)(stack + PGSIZE);
@@ -422,12 +432,7 @@ void init_proc (void)
     proc_wakeup(kIdlePCB);
 
     /* 命令行交互进程 (仅用于内核开发阶段的测试进程) */
-    proc_wakeup(create_kthread("user", cmd_main));
-
-    /* 注释以下进程创建，
-     * 便能关闭用户模式切换的测试功能
-     */
-    // proc_wakeup(create_kthread("user", user_main));
+    proc_wakeup(create_kthread("test", test_main));
 
     /* 设置当前 CPU 的默认进程 */
     setCpuCB(kIdlePCB);

@@ -36,25 +36,7 @@ BIN_OBJ += $(basename $(notdir $(wildcard app/*.c)))
 
 
 # 列举所有需要写入到磁盘文件 fs.img 中的目标
-U = bin
-UPROGS=\
-	$U/_cat\
-	$U/_echo\
-	$U/_forktest\
-	$U/_grep\
-	$U/_init\
-	$U/_kill\
-	$U/_ln\
-	$U/_ls\
-	$U/_mkdir\
-	$U/_rm\
-	$U/_sh\
-	$U/_stressfs\
-	$U/_usertests\
-	$U/_grind\
-	$U/_wc\
-	$U/_zombie\
-	$U/_test\
+UPROGS := $(addprefix bin/, $(BIN_OBJ))
 
 # 编译所有用户层的源码文件并链接生成可执行文件
 all: $(C_OBJ) $(S_OBJ)
@@ -77,12 +59,13 @@ $(S_OBJ):%.o:%.S
 	$(CC) $(CFLAGS) $(INCLUDE_DIR) -c -o $@ $^
 # 在 bin 目录生成可执行文件
 $(BIN_OBJ):%: app/%.o
-	$(LD) $(LDFLAGS) -T user.ld -o bin/_$@ $^ $(LIB_OBJ)
+	$(LD) $(LDFLAGS) -T user.ld -o bin/$@ $^ $(LIB_OBJ)
 
 
 clean:
 	rm -rf app/*.o app/*.d
 	rm -rf lib/*.o lib/*.d
+	rm -rf bin/*
 
 remove:
 	rm -rf bin/_test

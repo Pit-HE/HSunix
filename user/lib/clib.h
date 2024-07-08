@@ -8,7 +8,7 @@
 void    exit    (int code);
 void    fork    (void);
 void    wait    (int *code);
-void    exec    (void);
+void    exec    (char *path, char *argv[]);
 void    yield   (void);
 void    kill    (int pid);
 int     getpid  (void);

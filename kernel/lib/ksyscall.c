@@ -21,7 +21,20 @@ static uint64 sys_wait (int arg[])
 }
 static uint64 sys_exec (int arg[])
 {
-    return 0;
+    char  path[16];
+    char *argv[6];
+    struct ProcCB *pcb = getProcCB();
+
+    uvm_copyin(pcb->pageTab, path, (uint64)argv[0], 16);
+
+    argv[0] = (char *)kvm_phyaddr(pcb->pageTab, (uint64)argv[1]);
+    argv[1] = (char *)kvm_phyaddr(pcb->pageTab, (uint64)argv[2]);
+    argv[2] = (char *)kvm_phyaddr(pcb->pageTab, (uint64)argv[3]);
+    argv[3] = (char *)kvm_phyaddr(pcb->pageTab, (uint64)argv[4]);
+    argv[4] = (char *)kvm_phyaddr(pcb->pageTab, (uint64)argv[5]);
+    argv[6] = (char *)kvm_phyaddr(pcb->pageTab, (uint64)argv[6]);
+
+    return do_exec(NULL, path, argv);
 }
 static uint64 sys_yield (int arg[])
 {
@@ -130,7 +143,7 @@ void do_syscall (void)
         args[3] = pcb->trapFrame->a3;
         args[4] = pcb->trapFrame->a4;
         args[5] = pcb->trapFrame->a5;
-        args[5] = pcb->trapFrame->a6;
+        args[6] = pcb->trapFrame->a6;
 
         pcb->trapFrame->a0 = syscall_entry[code](args);
     }

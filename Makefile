@@ -73,6 +73,8 @@ remove: clean
 	cd mkfs && make remove
 	cd user && make remove
 
+test:
+	cd user && make all
 
 
 .PHONY: all clean debug qemu build remove fs.img app mkfs

@@ -99,7 +99,7 @@ int  do_sleep     (int ms);
 void init_proc    (void);
 struct CpuCB  *getCpuCB (void);
 void destroy_kthread (struct ProcCB *pcb);
-struct ProcCB *create_kthread (char *name, void(*thread)(void));
+struct ProcCB *create_kthread (char *name, void(*entry)(void));
 #define getCpuID() r_tp()
 
 
@@ -162,8 +162,8 @@ void cli_main (void);
 /******************** init **********************/
 void init_main (void);
 void idle_main (void);
+void test_main (void);
 void user_main (void);
-void cmd_main  (void);
 
 
 /******************** timer *********************/
