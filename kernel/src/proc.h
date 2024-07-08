@@ -86,8 +86,8 @@ struct Trapframe  //trapStackFrame
 /* 进程控制块 */
 struct ProcCB // processControlBlock
 {
-  enum Procstate state;                 // Process state
-  struct ProcCB *parent;          // Parent process
+  enum Procstate  state;          // Process state
+  struct ProcCB  *parent;         // Parent process
 
   void         *pendObj;          // If non-zero, sleeping on special object
   uint          killState;        // If non-zero, have been killed
@@ -105,9 +105,10 @@ struct ProcCB // processControlBlock
   uint64        stackSize;        // Virtual address of kernel stack size
   uint64        memSize;          // Size of process memory (bytes)
   pgtab_t      *pageTab;          // User page table
-  struct Trapframe    *trapFrame;        // data page for trampoline.S
-  struct Context       context;          // kswitch_to() here to run process
   char          name[20];         // Process name (debugging)
+
+  struct Trapframe *trapFrame; // data page for trampoline.S
+  struct Context    context;   // kswitch_to() here to run process
 };
 
 

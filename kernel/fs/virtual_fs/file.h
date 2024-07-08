@@ -182,7 +182,7 @@ void fdTab_free  (struct ProcCB *pcb);
 int  fd_alloc    (void);
 void fd_free     (int fd);
 struct File *fd_get (int fd);
-int  fd_copy     (int fd);
+struct File *fd_copy (struct File *file);
 
 /**********************************/
 struct Inode *inode_getdev (struct Device *dev, uint flag, uint mode);

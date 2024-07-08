@@ -23,7 +23,7 @@ void init_main (void)
 
     while (1)
     {
-        cli_main();
+        do_wait(NULL);
     }
 }
 
@@ -39,6 +39,13 @@ void idle_main (void)
     }
 }
 
+void cmd_main (void)
+{
+    while(1)
+    {
+        cli_main();
+    }
+}
 
 void user_main (void)
 {

@@ -133,29 +133,17 @@ struct File *fd_get (int fd)
  *
  * 返回值：-1为失败，非负值为正常
  */
-int fd_copy (int fd)
+struct File *fd_copy (struct File *file)
 {
-    int newfd;
-    struct ProcCB *pcb = NULL;
-    struct File *f = NULL;
+    if (file == NULL)
+        return NULL;
+    if (file->magic != FILE_MAGIC)
+        return NULL;
+    if (file->ref == 0)
+        return NULL;
 
-    f = fd_get(fd);
-    if (f == NULL)
-        return -1;
-    if (f->magic != FILE_MAGIC)
-        return -1;
-    if (f->ref == 0)
-        return -1;
+    file->ref += 1;
 
-    newfd = fd_alloc();
-    if (newfd < 0)
-        return -1;
-
-    pcb = getProcCB();
-    pcb->fdTab[newfd] = f;
-
-    f->ref += 1;
-
-    return newfd;
+    return file;
 }
 

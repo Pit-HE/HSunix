@@ -15,8 +15,8 @@ extern ListEntry_t  kUnregistList;
 extern ListEntry_t  kRegistList;
 extern ListEntry_t  kReadyList;
 extern ListEntry_t  kPendList;
-extern struct ProcCB      *kInitProcCB;
-extern struct ProcCB      *kIdleProcCB;
+extern struct ProcCB      *kInitPCB;
+extern struct ProcCB      *kIdlePCB;
 
 
 struct ProcCB *getProcCB (void)
@@ -115,22 +115,23 @@ int pcb_free (struct ProcCB *pcb)
     if (pcb == NULL)
         return -1;
 
-    kDISABLE_INTERRUPT();
     /* 移除进程所挂载的链表 */
+    kDISABLE_INTERRUPT();
     list_del_init(&pcb->regist);
     list_del_init(&pcb->list);
+    kENABLE_INTERRUPT();
 
-    /* 是否进程页表内所占用的内存空间 */
+    /* 释放进程页表内所占用的内存空间 */
     proc_free_pgtab(pcb->pageTab, pcb->memSize);
-    pcb->pageTab = NULL;
+
+    /* 释放进程占用的 Trapframe 空间 */
+    kfreePhyPage((void *)pcb->trapFrame);
+
+    /* 释放进程的文件描述符数组 */
+    vfs_pcbdeinit(pcb);
 
     /* 释放进程控制块的资源 */
     kfree(pcb);
-
-    /* 释放进程的文件描述符数组 */
-    fdTab_free(pcb);
-
-    kENABLE_INTERRUPT();
 
     return 1;
 }

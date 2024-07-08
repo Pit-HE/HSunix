@@ -297,7 +297,7 @@ int cmd_clear(int argc, char *argv[])
 
 int cmd_exec (int argc, char *argv[])
 {
-    proc_wakeup(do_kthread("user", user_main));
+    proc_wakeup(create_kthread("user", user_main));
     return 0;
 }
 

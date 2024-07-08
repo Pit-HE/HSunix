@@ -11,8 +11,8 @@ ListEntry_t     kUnregistList;
 ListEntry_t     kRegistList;
 ListEntry_t     kReadyList;
 ListEntry_t     kPendList;
-struct ProcCB  *kInitProcCB = NULL;
-struct ProcCB  *kIdleProcCB = NULL;
+struct ProcCB  *kInitPCB = NULL;
+struct ProcCB  *kIdlePCB = NULL;
 
 /***********************************************
  *  Process file public library function
@@ -70,10 +70,10 @@ void proc_freechild (struct ProcCB *pcb)
 	    /* 将子进程挂载到 init 进程上 */
         if (childPcb->parent == pcb)
         {
-            childPcb->parent = kInitProcCB;
+            childPcb->parent = kInitPCB;
 
             if (childPcb->state == EXITING)
-                do_resume(kInitProcCB);
+                do_resume(kInitPCB);
         }
     }
 }
@@ -109,7 +109,7 @@ void do_scheduler (void)
 
             kswitch_to(&cpu->context, &pcb->context);
 
-            cpu->proc = kIdleProcCB;
+            cpu->proc = kIdlePCB;
             kENABLE_INTERRUPT();
             break;
         }
@@ -131,13 +131,11 @@ void do_defuncter (void)
     {
         pcb = list_container_of(ptr, struct ProcCB, regist);
 
-        kDISABLE_INTERRUPT();
         /* 处理当前死亡进程的子进程 */
         proc_freechild(pcb);
 
         /* 释放该死亡进程占用的所有资源 */
-        pcb_free(pcb);
-        kENABLE_INTERRUPT();
+        destroy_kthread(pcb);
     }
 }
 
@@ -148,6 +146,7 @@ void do_switch (void)
     struct CpuCB  *cpu = getCpuCB();
     struct ProcCB *pcb = getProcCB();
 
+    /* TODO: */
     // if (cpu->intrOffNest != 0)
     //     kErrPrintf("fail: do_switch isr nest!\r\n");
     if (pcb->state == RUNNING)
@@ -220,54 +219,50 @@ void do_resume (void *obj)
 /* 复制当前进程，生成新的进程 */
 int do_fork (void)
 {
-    int pid = -1;
+    int i;
     char *stack = NULL;
     struct ProcCB *newPcb = NULL;
     struct ProcCB *curPcb = getProcCB();
 
     stack = (char *)kallocPhyPage;
     if (stack == NULL)
-        goto _exit_fork;
+        return -1;
 
-    /* 申请新的进程控制块 */
-    newPcb = pcb_alloc();
+    /* 创建内核线程 */
+    newPcb = create_kthread(curPcb->name, NULL);
     if (newPcb == NULL)
-    {
-        kfree(stack);
-        goto _exit_fork;
-    }
+        return -1;
 
     /* 完成两个进程间页表空间的复制 */
     if (uvm_copy(newPcb->pageTab, curPcb->pageTab, curPcb->memSize, TRUE) < 0)
     {
-        kfree(stack);
-        pcb_free(newPcb);
-        uvm_destroy(newPcb->pageTab, newPcb->memSize);
-        goto _exit_fork;
+        destroy_kthread(newPcb);
+        return -1;
     }
 
     /* 设置新进程文件系统相关的内容 */
     vfs_pcbInit(newPcb, curPcb->cwd);
+    for (i=0; i<curPcb->fdCnt; i++)
+    {
+        if (curPcb->fdTab[i])
+            newPcb->fdTab[i] = fd_copy(curPcb->fdTab[i]);
+    }
 
+    /* 完成进程控制块相关信息的拷贝 */
     kDISABLE_INTERRUPT();
-    newPcb->stackSize = PGSIZE;
-    newPcb->memSize = curPcb->memSize;
-    newPcb->stackAddr = (uint64)stack;
-    newPcb->trapFrame->a0 = 0;
-    newPcb->parent = curPcb;
-
-    kstrcpy(newPcb->name, curPcb->name);
+    kmemcpy(newPcb->trapFrame, curPcb->trapFrame, PGSIZE);
     kmemcpy(&newPcb->context, &curPcb->context, sizeof(struct Context));
     kmemcpy((void*)newPcb->stackAddr, (void*)curPcb->stackAddr, curPcb->stackSize);
 
     newPcb->context.sp = (uint64)(stack + (curPcb->context.sp - curPcb->stackAddr));
-    proc_wakeup(newPcb);
+    newPcb->memSize = curPcb->memSize;
+    newPcb->trapFrame->a0 = 0;
+    newPcb->parent = curPcb;
 
-    pid = newPcb->pid;
+    proc_wakeup(newPcb);
     kENABLE_INTERRUPT();
 
- _exit_fork:
-    return pid;
+    return newPcb->pid;
 }
 
 /* 等待处理退出的子进程 */
@@ -282,6 +277,7 @@ int do_wait (int *code)
     curPcb = getProcCB();
     while(1)
     {
+        /* 遍历当前内核里的所有进程控制块链表 */
         list_for_each_safe(ptr, qtr, &kRegistList)
         {
             childPcb = list_container_of(ptr, struct ProcCB, regist);
@@ -295,18 +291,17 @@ int do_wait (int *code)
                     *code = childPcb->exitState;
 
                 pid = childPcb->pid;
-                pcb_free(childPcb);
+                destroy_kthread(childPcb);
                 goto _exit_wait;
             }
+            /* 非法操作：释放当前进程 */
             if (proc_killstate(curPcb))
-            {
-                pid = -1;
                 goto _exit_wait;
-            }
         }
         do_suspend(curPcb);
     }
 
+/* 返回已退出的子进程 ID */
  _exit_wait:
     return pid;
 }
@@ -314,20 +309,20 @@ int do_wait (int *code)
 /* 退出当前进程 */
 void do_exit (int state)
 {
-    struct ProcCB *curPcb = NULL;
+    struct ProcCB *pcb = NULL;
 
-    curPcb = getProcCB();
-    if ((curPcb == kInitProcCB) ||
-        (curPcb == kIdleProcCB))
-        kError(eSVC_Process,E_DANGER);
+    pcb = getProcCB();
+    if ((pcb == kInitPCB) || (pcb == kIdlePCB))
+        kErrPrintf("exit error process !\r\n");
 
-    /* 确定当前进程是否有子进程 */
-    proc_freechild(curPcb);
+    /* 将子进程释放到 init 进程上 */
+    proc_freechild(pcb);
 
-    curPcb->exitState = state;
-    curPcb->state = EXITING;
+    pcb->exitState = state;
+    pcb->state = EXITING;
 
-    do_resume(curPcb->parent);
+    /* 唤醒父进程 */
+    do_resume(pcb->parent);
     do_switch();
 }
 
@@ -375,13 +370,20 @@ int do_sleep (int ms)
 }
 
 /* 创建内核线程 */
-struct ProcCB *do_kthread (char *name, void(*thread)(void))
+struct ProcCB *create_kthread (char *name, void(*thread)(void))
 {
     char *stack = NULL;
     struct ProcCB *pcb = NULL;
 
     pcb = pcb_alloc();
+    if (pcb == NULL)
+        return NULL;
     stack = (char *)kallocPhyPage();
+    if (stack == NULL)
+    {
+        pcb_free(pcb);
+        return NULL;
+    }
 
     /* 添加信息到进程的控制块 */
     kstrcpy(pcb->name, name);
@@ -395,6 +397,14 @@ struct ProcCB *do_kthread (char *name, void(*thread)(void))
     return pcb;
 }
 
+/* 销毁创建的内核线程 */
+void destroy_kthread (struct ProcCB *pcb)
+{
+    vfs_pcbdeinit(pcb);
+    kfreePhyPage((void*)pcb->stackAddr);
+    pcb_free(pcb);
+}
+
 /* 初始化当前用于测试的指定进程 */
 void init_proc (void)
 {
@@ -404,20 +414,21 @@ void init_proc (void)
     list_init(&kUnregistList);
 
     /* Init processs */
-    kInitProcCB = do_kthread("init", init_main);
-    proc_wakeup(kInitProcCB);
+    kInitPCB = create_kthread("init", init_main);
+    proc_wakeup(kInitPCB);
 
     /* Idle processs */
-    kIdleProcCB = do_kthread("idle", idle_main);
-    proc_wakeup(kIdleProcCB);
+    kIdlePCB = create_kthread("idle", idle_main);
+    proc_wakeup(kIdlePCB);
 
+    /* 命令行交互进程 (仅用于内核开发阶段的测试进程) */
+    proc_wakeup(create_kthread("user", cmd_main));
 
-    /* 只要注释以下的进程创建，
-     * 便能关闭用户模式切换的测试功能, 之后系统正常工作
+    /* 注释以下进程创建，
+     * 便能关闭用户模式切换的测试功能
      */
-    // proc_wakeup(do_kthread("user", user_main));
-
+    // proc_wakeup(create_kthread("user", user_main));
 
     /* 设置当前 CPU 的默认进程 */
-    setCpuCB(kIdleProcCB);
+    setCpuCB(kIdlePCB);
 }

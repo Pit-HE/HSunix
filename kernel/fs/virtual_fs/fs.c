@@ -258,7 +258,7 @@ int vfs_pcbdeinit (struct ProcCB *pcb)
     if (pcb == NULL)
         return -1;
 
-    // /* 释放进程占用的内存资源 */
+    /* 释放进程占用的内存资源 */
     kfree(pcb->cwd);
     fdTab_free(pcb);
 
