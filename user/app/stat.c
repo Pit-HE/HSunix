@@ -1,7 +1,7 @@
 /*
  * 显示指定文件对象的信息
  */
-#include "clib.h"
+#include "libc.h"
 
 
 int main (int argc, char *argv[])

@@ -18,12 +18,15 @@ CURRENT_DIR := $(shell pwd)
 # 设置参与文件编译的头文件路径
 INCLUDE_DIR += -I$(CURRENT_DIR)/app
 INCLUDE_DIR += -I$(CURRENT_DIR)/lib
+INCLUDE_DIR += -I$(CURRENT_DIR)/shell
 
 # 获取指定路径下的所有 o 文件列表
 LIB_OBJ += $(call all-o-files, lib)
+LIB_OBJ += $(call all-o-files, shell)
 # 获取当前目录下的所有 C 文件
 C_FILE	+= $(call all-c-files, app)
 C_FILE	+= $(call all-c-files, lib)
+C_FILE	+= $(call all-c-files, shell)
 # 获取当前目录下的所有汇编文件
 S_FILE	+= $(call all-S-files, lib)
 # 获取所有 C 文件对应的 o 文件列表
@@ -63,9 +66,10 @@ $(BIN_OBJ):%: app/%.o
 
 
 clean:
+	rm -rf bin/*
 	rm -rf app/*.o app/*.d
 	rm -rf lib/*.o lib/*.d
-	rm -rf bin/*
+	rm -rf shell/*.o shell/*.d
 
 remove:
 	rm -rf bin/_test

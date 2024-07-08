@@ -1,7 +1,7 @@
 /*
  * 卸载已经挂载的文件系统
  */
-#include "clib.h"
+#include "libc.h"
 
 
 int main (int argc, char *argv[])

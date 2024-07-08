@@ -4,6 +4,7 @@
 #ifndef __USER_LIB_H__
 #define __USER_LIB_H__
 
+#include "string.h"
 
 void    exit    (int code);
 void    fork    (void);
@@ -13,21 +14,25 @@ void    yield   (void);
 void    kill    (int pid);
 int     getpid  (void);
 void    putc    (int ch);
+int     getc    (void);
 void    pgdir   (void);
 int     gettime (void);
 void    sleep   (int ms);
-void    open    (void);
-void    close   (void);
-void    read    (void);
-void    write   (void);
-void    seek    (void);
+int     open    (char *path, uint flags, uint mode);
+int     close   (int fd);
+int     read    (int fd, void *buf, int len);
+int     write   (int fd, void *buf, int len);
+int     lseek   (int fd, uint off, int whence);
 void    fstat   (void);
-void    fsync   (void);
+int     fsync   (int fd);
 void    dup     (void);
-
+void    suspend (void *obj);
+void    resume  (void *obj);
 
 #include "uprintf.h"
 #define printf tfp_printf
+
+#include "shell.h"
 
 
 #endif

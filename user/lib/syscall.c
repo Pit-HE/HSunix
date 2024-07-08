@@ -1,4 +1,5 @@
 
+#include "types.h"
 #include "syscall.h"
 
 extern int syscall (int code, ...);
@@ -44,6 +45,11 @@ void putc (int ch)
     syscall(SYS_putc, ch);
 }
 
+int getc (void)
+{
+    return syscall(SYS_getc);
+}
+
 void pgdir (void)
 {
     syscall(SYS_pgdir);
@@ -59,39 +65,39 @@ void sleep (int ms)
     syscall(SYS_sleep, ms);
 }
 
-void open (void)
+int open (char *path, uint flags, uint mode)
 {
-    syscall(SYS_open);
+    return syscall(SYS_open, path, flags, mode);
 }
 
-void close (void)
+int close (int fd)
 {
-    syscall(SYS_clone);
+    return syscall(SYS_clone, fd);
 }
 
-void read (void)
+int read (int fd, void *buf, int len)
 {
-    syscall(SYS_read);
+    return syscall(SYS_read, fd, buf, len);
 }
 
-void write (void)
+int write (int fd, void *buf, int len)
 {
-    syscall(SYS_write);
+    return syscall(SYS_write, fd, buf, len);
 }
 
-void seek (void)
+int lseek (int fd, uint off, int whence)
 {
-    syscall(SYS_seek);
+    return syscall(SYS_lseek, fd, off, whence);
 }
 
 void fstat (void)
 {
-    syscall(SYS_fstat);
+
 }
 
-void fsync (void)
+int fsync (int fd)
 {
-    syscall(SYS_fsync);
+    return syscall(SYS_fsync);
 }
 
 void dup (void)
@@ -99,3 +105,12 @@ void dup (void)
     syscall(SYS_dup);
 }
 
+void suspend (void *obj)
+{
+    syscall(SYS_suspend, obj);
+}
+
+void resume (void *obj)
+{
+    syscall(SYS_resume, obj);
+}

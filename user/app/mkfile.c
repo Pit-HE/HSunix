@@ -1,7 +1,7 @@
 /*
  * 创建文件
  */
-#include "clib.h"
+#include "libc.h"
 
 
 int main (int argc, char *argv[])

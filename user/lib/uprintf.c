@@ -421,7 +421,7 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
 }
 
 #if TINYPRINTF_DEFINE_TFP_PRINTF
-#include "clib.h"
+#include "libc.h"
 void default_putf (void *func, char ch)
 {
     ((void(*)(char))func)(ch);

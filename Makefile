@@ -14,7 +14,7 @@ ROOT_DIR = $(shell pwd)
 
 # 编译时的参数
 CFLAGS := -Wall -Werror -O0 -fno-omit-frame-pointer -ggdb -gdwarf-2
-CFLAGS += -MD
+CFLAGS += -MD -Wno-int-to-pointer-cast
 CFLAGS += -mcmodel=medany
 CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
@@ -53,7 +53,7 @@ app:mkfs
 	cd user && make fs_img
 
 # 运行 qemu 让操作系统开始模拟运行
-qemu:
+qemu:build
 	cd kernel && make qemu
 
 # 运行 qemu 让操作系统进入调试模式
@@ -72,9 +72,6 @@ remove: clean
 	cd kernel && make remove
 	cd mkfs && make remove
 	cd user && make remove
-
-test:
-	cd user && make all
 
 
 .PHONY: all clean debug qemu build remove fs.img app mkfs

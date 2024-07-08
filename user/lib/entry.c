@@ -1,5 +1,5 @@
 
-#include "clib.h"
+#include "libc.h"
 
 
 void _main (void)

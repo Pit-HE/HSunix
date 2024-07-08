@@ -1,7 +1,7 @@
 /*
  * 内核 exec 函数的封装
  */
-#include "clib.h"
+#include "libc.h"
 
 int main (int argc, char *argv[])
 {
