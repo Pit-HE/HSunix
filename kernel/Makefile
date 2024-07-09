@@ -83,7 +83,7 @@ clean:
 	rm -rf ./fs/ram_fs/*.o ./fs/ram_fs/*.d
 	rm -rf ./fs/disk_fs/*.o ./fs/disk_fs/*.d
 	rm -rf ./fs/virtual_fs/*.o ./fs/virtual_fs/*.d
-	rm -rf HSunix.asm HSunix.sym
+	rm -rf HSunix.asm HSunix.sym HSunix.map
 
 remove:
-	rm -rf HSunix HSunix.map
+	rm -rf HSunix

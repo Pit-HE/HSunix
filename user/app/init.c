@@ -8,11 +8,11 @@ int main (int argc, char *argv[])
 {
     printf("Init function is running !\r\n");
 
-    // init_cli();
+    init_shell();
 
     while(1)
     {
-        // shell_main();
+        shell_main();
     }
     return 0;
 }

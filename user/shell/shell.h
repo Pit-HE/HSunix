@@ -36,6 +36,6 @@ void  cli_cmd_get (char *name);
 void cmd_clear (void);
 int  cmd_exec  (char *cmd);
 void shell_main(void);
-void init_cli  (void);
+void init_shell(void);
 
 #endif

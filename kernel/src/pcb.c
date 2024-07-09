@@ -127,9 +127,6 @@ int pcb_free (struct ProcCB *pcb)
     /* 释放进程占用的 Trapframe 空间 */
     kfreePhyPage((void *)pcb->trapFrame);
 
-    /* 释放进程的文件描述符数组 */
-    vfs_pcbdeinit(pcb);
-
     /* 释放进程控制块的资源 */
     kfree(pcb);
 

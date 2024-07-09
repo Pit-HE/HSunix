@@ -40,18 +40,16 @@ void proc_wakeup (struct ProcCB *pcb)
 
     if (pcb == NULL)
         return;
+    if (pcb->state == READY)
+        return;
+    pcb->state = READY;
 
-    if (pcb->state != READY)
+    if (pcb != curPcb)
     {
-        pcb->state = READY;
-
-        if (pcb != curPcb)
-        {
-            kDISABLE_INTERRUPT();
-            list_del_init(&pcb->list);
-            list_add(&kReadyList, &pcb->list);
-            kENABLE_INTERRUPT();
-        }
+        kDISABLE_INTERRUPT();
+        list_del_init(&pcb->list);
+        list_add(&kReadyList, &pcb->list);
+        kENABLE_INTERRUPT();
     }
 }
 
@@ -234,7 +232,7 @@ int do_fork (void)
     struct ProcCB *newPcb = NULL;
     struct ProcCB *curPcb = getProcCB();
 
-    stack = (char *)kallocPhyPage;
+    stack = (char *)kallocPhyPage();
     if (stack == NULL)
         return -1;
 
@@ -268,9 +266,9 @@ int do_fork (void)
     newPcb->memSize = curPcb->memSize;
     newPcb->trapFrame->a0 = 0;
     newPcb->parent = curPcb;
+    kENABLE_INTERRUPT();
 
     proc_wakeup(newPcb);
-    kENABLE_INTERRUPT();
 
     return newPcb->pid;
 }
@@ -385,9 +383,12 @@ struct ProcCB *create_kthread (char *name, void(*entry)(void))
     char *stack = NULL;
     struct ProcCB *pcb = NULL;
 
+    /* 申请新的任务控制块 */
     pcb = pcb_alloc();
     if (pcb == NULL)
         return NULL;
+    
+    /* 申请内核栈地址 */
     stack = (char *)kallocPhyPage();
     if (stack == NULL)
     {
@@ -402,8 +403,6 @@ struct ProcCB *create_kthread (char *name, void(*entry)(void))
     pcb->stackSize  = (uint64)PGSIZE;
     pcb->context.sp = (uint64)(stack + PGSIZE);
 
-    vfs_pcbInit(pcb, "/");
-
     return pcb;
 }
 
@@ -411,13 +410,15 @@ struct ProcCB *create_kthread (char *name, void(*entry)(void))
 void destroy_kthread (struct ProcCB *pcb)
 {
     vfs_pcbdeinit(pcb);
-    kfreePhyPage((void*)pcb->stackAddr);
+    kfreePhyPage((void *)pcb->stackAddr);
     pcb_free(pcb);
 }
 
 /* 初始化当前用于测试的指定进程 */
 void init_proc (void)
 {
+    struct ProcCB  *tempPCB = NULL;
+
     list_init(&kRegistList);
     list_init(&kReadyList);
     list_init(&kPendList);
@@ -425,14 +426,18 @@ void init_proc (void)
 
     /* Init processs */
     kInitPCB = create_kthread("init", init_main);
+    vfs_pcbInit(kInitPCB, "/");
     proc_wakeup(kInitPCB);
 
     /* Idle processs */
     kIdlePCB = create_kthread("idle", idle_main);
+    vfs_pcbInit(kIdlePCB, "/");
     proc_wakeup(kIdlePCB);
 
     /* 命令行交互进程 (仅用于内核开发阶段的测试进程) */
-    proc_wakeup(create_kthread("test", test_main));
+    tempPCB = create_kthread("test", test_main);
+    vfs_pcbInit(tempPCB, "/");
+    proc_wakeup(tempPCB);
 
     /* 设置当前 CPU 的默认进程 */
     setCpuCB(kIdlePCB);

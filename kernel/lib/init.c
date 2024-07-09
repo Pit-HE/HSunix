@@ -7,6 +7,8 @@
 
 void init_main (void)
 {
+    // struct ProcCB  *tempPCB = NULL;
+
     kENABLE_INTERRUPT();
 
     /* 设置根文件系统 */
@@ -20,6 +22,9 @@ void init_main (void)
     vfs_mount("ramfs", "/home", O_RDWR | O_CREAT | O_DIRECTORY, NULL);
     mkfile("/home/a.a", O_CREAT|O_RDWR, S_IRWXU);
 
+    // tempPCB = create_kthread("user", user_main);
+    // vfs_pcbInit(tempPCB, "/");
+    // proc_wakeup(tempPCB);
 
     while (1)
     {
@@ -52,16 +57,18 @@ void test_main (void)
 void user_main (void)
 {
     char *argv[8] = {0};
-    char buf[] = "Hello World";
-    struct ProcCB *pcb = getProcCB();
+    char *param0 = "Hello World";
+    char *param1 = "user_main";
 
     kENABLE_INTERRUPT();
-
-    argv[0] = buf;
-    argv[1] = NULL;
+    argv[0] = param0;
+    argv[1] = param1;
+    argv[2] = NULL;
 
     /* 设置进入用户空间后要执行的函数 */
-    do_exec(pcb, "/bin/init", argv);
+    // do_exec(NULL, "/bin/init", argv);
+    do_exec(NULL, "/bin/test", argv);
 
+    getProcCB()->trapFrame->a0 = 2;
     trap_userret();
 }

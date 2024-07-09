@@ -261,10 +261,12 @@ uint64 uvm_free (pgtab_t *pgtab, uint64 oldsz, uint64 newsz)
 /* 完成两个内存页中指定大小内存的拷贝 */
 int uvm_copy (pgtab_t *destPage, pgtab_t *srcPage, uint64 sz, bool alloc)
 {
-    uint64  i;
-    pte_t   *d_pte = NULL, *s_pte = NULL;
-    uint64  d_pa, s_pa;
-    uint    s_flags;
+    uint64 i;
+    uint s_flags;
+    uint64 d_pa, s_pa;
+    pte_t *d_pte = NULL;
+    pte_t *s_pte = NULL;
+
 
     for (i=0; i<sz; i+=PGSIZE)
     {
@@ -302,9 +304,10 @@ int uvm_copy (pgtab_t *destPage, pgtab_t *srcPage, uint64 sz, bool alloc)
 
             /* 完成内存页的数据拷贝 */
             kmemmove ((void*)d_pa, (void*)s_pa, PGSIZE);
+
             /* 为目标页表建立新的映射关系 */
             if (mappages(destPage, i, d_pa, PGSIZE, s_flags) != 0)
-                goto error_cpy;
+                return -1;
         }
     }
     return 0;

@@ -70,8 +70,8 @@ uint64 elf_stack_create (pgtab_t *pgtab, uint64 vAddr)
     tmp = PGROUNDUP(vAddr);
     /* 设置进程的栈监测页 (大小为一页 4096) */
     uvm_alloc(pgtab, tmp, tmp + PGSIZE, 0);
-    /* 限制访问该栈监测页，否则触发页故障 */
-    kvm_clrflag(pgtab, tmp, PTE_V);
+    /* 限制用户访问该栈监测页，否则触发页故障 */
+    kvm_clrflag(pgtab, tmp, PTE_U);
 
     /* 因为栈是由大到小递减的，所以将页的最大地址设置为栈顶 */
     tmp += PGSIZE; /* 设置进程栈空间 (大小为 4096)  */
@@ -182,6 +182,7 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
                 phdr.p_filesz, fd, phdr.p_offset))
             goto _err_exec_uvm;
     }
+    vfs_close(fd);
 
     /* 设置页表中关于栈的内容，代码空间设置完后就设置栈 */
     sptop = elf_stack_create(pgtab, size);
@@ -200,9 +201,9 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
     pcb->memSize = size;
     pcb->stackSize = PGSIZE;
     pcb->trapFrame->sp = sptop;
+    pcb->trapFrame->a1 = sptop;
     pcb->trapFrame->epc = elf.e_entry;
 
-    vfs_close(fd);
     return argc;
 
 _err_exec_uvm:

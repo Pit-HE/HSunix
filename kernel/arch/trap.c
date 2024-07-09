@@ -67,7 +67,7 @@ int dev_interrupt (void)
     }
     else
     {
-        kError(eSVC_Interrupt, E_STATUS);
+        kErrPrintf("Undefined interrupt %d\r\n", scause & 0xFF);
     }
 
     return ret;

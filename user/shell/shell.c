@@ -158,7 +158,7 @@ void shell_main (void)
 
 
 /* 初始化整个命令行模块 */
-void init_cli (void)
+void init_shell (void)
 {
     memset(&shell, 0, sizeof(shell));
 

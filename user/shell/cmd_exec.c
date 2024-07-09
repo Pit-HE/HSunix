@@ -26,7 +26,6 @@ int cmd_exec (char *cmd)
     /* 获取 bin 文件夹中对应的命令 */
     strcpy(path, "/bin/");
     strcat(path, cmd);
-    printf ("exec: %s\r\n", path);
 
     // pid = fork();
     // if (pid < 0)
@@ -36,7 +35,7 @@ int cmd_exec (char *cmd)
     // }
     // if (pid == 0)
     // {
-    //    exec (path, argv);
+        exec (path, argv);
     //     printf ("fail: shell exec !\r\n");
     //     exit(1);
     // }

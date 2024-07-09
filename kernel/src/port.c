@@ -45,15 +45,25 @@ void k_enable_all_interrupt (void)
 /* 嵌套实现关闭中断 */
 void kPortDisableInterrupt (void)
 {
+    struct CpuCB *cpu = getCpuCB();
+
     if (Os_interrupt == 0)
         return;
     intr_off();
+    cpu->intrOffNest++;
 }
 
 /* 嵌套实现开启中断 */
 void kPortEnableInterrupt (void)
 {
+    struct CpuCB *cpu = getCpuCB();
+
     if (Os_interrupt == 0)
         return;
-    intr_on();
+
+    if (cpu->intrOffNest > 0)
+    {
+        if ((--cpu->intrOffNest) == 0)
+            intr_on();
+    }
 }
