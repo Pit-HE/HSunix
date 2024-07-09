@@ -7,7 +7,7 @@
 #include "string.h"
 
 void    exit    (int code);
-void    fork    (void);
+int     fork    (void);
 void    wait    (int *code);
 void    exec    (char *path, char *argv[]);
 void    yield   (void);

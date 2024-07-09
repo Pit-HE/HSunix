@@ -30,11 +30,11 @@ struct cli_cmd
 
 
 char *cli_parse_cmd (char *str);
-int   cli_parse_parameter (char *param, char *argv[CLI_ARG_MAX-1]);
+int   cli_parse_parameter (char *param, char *argv[]);
 void  cli_cmd_get (char *name);
 
 void cmd_clear (void);
-int  cmd_exec  (char *cmd, int *retp);
+int  cmd_exec  (char *cmd);
 void shell_main(void);
 void init_cli  (void);
 

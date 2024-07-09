@@ -12,7 +12,6 @@ struct cli_manage_info
     bool        finish;
     char        chr;
     char        *cmd;
-    int         cmd_ret;
     int         buf_index;
     char        buf[CLI_CMD_BUFF_SIZE];
 };
@@ -120,8 +119,8 @@ void shell_main (void)
                     while(*shell.cmd == ' ')
                         shell.cmd++;
 
-                    // /* 执行命令的处理 */
-                    cmd_exec(shell.cmd, &shell.cmd_ret);
+                    /* 执行命令的处理 */
+                    cmd_exec(shell.cmd);
                 }
                 shell.finish = TRUE;
                 shell.buf_index = 0;

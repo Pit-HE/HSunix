@@ -104,7 +104,7 @@ struct ProcCB // processControlBlock
   uint64        stackAddr;        // Virtual address of kernel stack
   uint64        stackSize;        // Virtual address of kernel stack size
   uint64        memSize;          // Size of process memory (bytes)
-  pgtab_t      *pageTab;          // User page table
+  pgtab_t      *pgtab;          // User page table
   char          name[20];         // Process name (debugging)
 
   struct Trapframe *trapFrame; // data page for trampoline.S

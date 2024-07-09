@@ -48,7 +48,7 @@ fs.img:mkfs
 
 # 仅编译 user/app 中写的执行在用户空间的代码
 app:mkfs
-	cp -rf kernel/lib/ksyscall.h user/lib/syscall.h
+	cp -rf kernel/lib/syscall/syscall.h user/lib/
 	make -C user
 	cd user && make fs_img
 

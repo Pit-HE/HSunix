@@ -8,10 +8,10 @@
 /* 解析传入的字符串，并执行相应的命令 
  * 1、传入的 cmd 会通过插入 '\0' 来分割为多个字符串
  */
-int cmd_exec (char *cmd, int *retp)
+int cmd_exec (char *cmd)
 {
+    int argc = 0;//, pid;
     char *param = NULL;
-    int   argc = 0, ret = 0;
     char *argv[CLI_ARG_MAX];
     char  path[32];
 
@@ -19,25 +19,27 @@ int cmd_exec (char *cmd, int *retp)
         return -1;
     memset(argv, 0, sizeof(argv));
 
-    /* 获取命令参数字符串的首地址 */
+    /* 解析要处理的命令字符串 */
     param = cli_parse_cmd(cmd);
+    argc += cli_parse_parameter(param, argv);
 
-    /* 将命令存储在第一位 */
-    argv[argc++] = cmd;
-
-    /* 解析参数的内容 */
-    argc += cli_parse_parameter(param, &argv[1]);
-
+    /* 获取 bin 文件夹中对应的命令 */
     strcpy(path, "/bin/");
-    strcat(path, argv[0]);
-
-    /* TODO: */
+    strcat(path, cmd);
     printf ("exec: %s\r\n", path);
-    // exec(path, argv);
 
-    /* 是否需要返回值 */
-    if (retp != NULL)
-        *retp = ret;
+    // pid = fork();
+    // if (pid < 0)
+    // {
+    //     printf ("fail: shell fork !\r\n");
+    //     exit(1);
+    // }
+    // if (pid == 0)
+    // {
+    //    exec (path, argv);
+    //     printf ("fail: shell exec !\r\n");
+    //     exit(1);
+    // }
 
     return 0;
 }

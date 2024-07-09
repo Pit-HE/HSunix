@@ -66,8 +66,8 @@ void     uvm_unmap   (pgtab_t *pgtab, uint64 vAddr, uint64 npages, bool free);
 uint64   uvm_alloc   (pgtab_t *pgtab, uint64 start_addr, uint64 end_addr, int flag);
 uint64   uvm_free    (pgtab_t *pgtab, uint64 oldsz, uint64 newsz);
 void     uvm_destroy (pgtab_t *pgtab, uint64 size);
-int      uvm_copyout (pgtab_t *pgtab, uint64 dstva, char *src, uint64 len);
-int      uvm_copyin  (pgtab_t *pgtab, char *dst, uint64 srcva, uint64 len);
+int      uvm_copyout (pgtab_t *pgtab, uint64 dst_va, char *src, uint64 len);
+int      uvm_copyin  (pgtab_t *pgtab, char *dst, uint64 src_va, uint64 len);
 int      uvm_copy    (pgtab_t *destPage, pgtab_t *srcPage, uint64 sz, bool alloc);
 
 /******************** trap ********************/

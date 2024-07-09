@@ -156,7 +156,7 @@ void trap_userret(void)
     w_sepc(pcb->trapFrame->epc);
 
     /* 获取当前进程用户空间的页表地址 */
-    uint64 satp = MAKE_SATP(pcb->pageTab);
+    uint64 satp = MAKE_SATP(pcb->pgtab);
 
     /* 跳转到汇编的用户空间返回代码 */
     uint64 go_userret = TRAMPOLINE + (userret - trampoline);

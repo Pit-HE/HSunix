@@ -10,6 +10,7 @@ INCLUDE_DIR += -I$(CURRENT_DIR)/arch
 INCLUDE_DIR += -I$(CURRENT_DIR)/boot
 INCLUDE_DIR += -I$(CURRENT_DIR)/cli
 INCLUDE_DIR += -I$(CURRENT_DIR)/lib
+INCLUDE_DIR += -I$(CURRENT_DIR)/lib/syscall
 INCLUDE_DIR += -I$(CURRENT_DIR)/src
 INCLUDE_DIR += -I$(CURRENT_DIR)/fs
 INCLUDE_DIR += -I$(CURRENT_DIR)/fs/disk_fs
@@ -20,17 +21,17 @@ INCLUDE_DIR += -I$(CURRENT_DIR)/fs/virtual_fs
 C_FILE += $(call all-c-files, arch)
 C_FILE += $(call all-c-files, boot)
 C_FILE += $(call all-c-files, cli)
-C_FILE += $(call all-c-files, lib)
 C_FILE += $(call all-c-files, src)
 C_FILE += $(call all-c-files-in, ./fs)
+C_FILE += $(call all-c-files-in, ./lib)
 
 # 获取当前目录下的所有汇编文件
 S_FILE += $(call all-S-files, boot)
 S_FILE += $(call all-S-files, arch)
 S_FILE += $(call all-S-files, cli)
-S_FILE += $(call all-S-files, lib)
 S_FILE += $(call all-S-files, src)
 S_FILE += $(call all-S-files-in, ./fs)
+S_FILE += $(call all-S-files-in, ./lib)
 
 # 获取所有 C 文件对应的 o 文件列表
 C_OBJ	+= $(patsubst %.c, %.o, $(C_FILE))
@@ -76,6 +77,7 @@ clean:
 	rm -rf ./boot/*.o ./boot/*.d
 	rm -rf ./cli/*.o ./cli/*.d
 	rm -rf ./lib/*.o ./lib/*.d
+	rm -rf ./lib/syscall/*.o ./lib/syscall/*.d
 	rm -rf ./src/*.o ./src/*.d
 	rm -rf ./fs/*.o ./fs/*.d
 	rm -rf ./fs/ram_fs/*.o ./fs/ram_fs/*.d

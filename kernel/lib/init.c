@@ -61,7 +61,7 @@ void user_main (void)
     argv[1] = NULL;
 
     /* 设置进入用户空间后要执行的函数 */
-    do_exec(pcb, "/bin/test", argv);
+    do_exec(pcb, "/bin/init", argv);
 
     trap_userret();
 }

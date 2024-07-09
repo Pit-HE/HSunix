@@ -244,7 +244,7 @@ int do_fork (void)
         return -1;
 
     /* 完成两个进程间页表空间的复制 */
-    if (uvm_copy(newPcb->pageTab, curPcb->pageTab, curPcb->memSize, TRUE) < 0)
+    if (uvm_copy(newPcb->pgtab, curPcb->pgtab, curPcb->memSize, TRUE) < 0)
     {
         destroy_kthread(newPcb);
         return -1;

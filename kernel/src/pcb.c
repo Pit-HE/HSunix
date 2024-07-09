@@ -84,8 +84,8 @@ struct ProcCB *pcb_alloc (void)
     }
 
     /* 申请进程的虚拟页表并初始化 */
-    pcb->pageTab = proc_alloc_pgtab(pcb);
-    if (pcb->pageTab == NULL)
+    pcb->pgtab = proc_alloc_pgtab(pcb);
+    if (pcb->pgtab == NULL)
     {
         kfreePhyPage(pcb->trapFrame);
         kfree (pcb);
@@ -122,7 +122,7 @@ int pcb_free (struct ProcCB *pcb)
     kENABLE_INTERRUPT();
 
     /* 释放进程页表内所占用的内存空间 */
-    proc_free_pgtab(pcb->pageTab, pcb->memSize);
+    proc_free_pgtab(pcb->pgtab, pcb->memSize);
 
     /* 释放进程占用的 Trapframe 空间 */
     kfreePhyPage((void *)pcb->trapFrame);

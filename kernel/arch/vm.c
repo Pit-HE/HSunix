@@ -314,63 +314,65 @@ int uvm_copy (pgtab_t *destPage, pgtab_t *srcPage, uint64 sz, bool alloc)
 }
 
 /* 从内核空间拷贝数据到用户空间 */
-int uvm_copyout (pgtab_t *pgtab, uint64 dstva, char *src, uint64 len)
+int uvm_copyout (pgtab_t *pgtab, uint64 dst_va, char *src, uint64 len)
 {
     uint64 n, va_base, pa;
 
     while (len)
     {
-        va_base = PGROUNDDOWN(dstva);
+        va_base = PGROUNDDOWN(dst_va);
 
         pa = kvm_phyaddr(pgtab, va_base);
         if (pa <= 0)
             return -1;
 
-        n = PGSIZE - (dstva - va_base);
+        n = PGSIZE - (dst_va - va_base);
         if (n > len)
             n = len;
 
-        kmemmove ((void*)(pa + (dstva - va_base)), src, n);
+        kmemmove ((void*)(pa + (dst_va - va_base)), src, n);
 
         src += n;
         len -= n;
-        dstva += va_base + PGSIZE;
+        dst_va += va_base + PGSIZE;
     }
     return 0;
 }
 
 /* 从用户空间拷贝数据到内核空间 */
-int uvm_copyin (pgtab_t *pgtab, char *dst, uint64 srcva, uint64 len)
+int uvm_copyin (pgtab_t *pgtab, char *dst, uint64 src_va, uint64 len)
 {
+    int ret = 0;
     uint64 n, va0, pa0;
 
     while (len > 0)
     {
         /* 对齐用户空间缓冲区的虚拟地址 */
-        va0 = PGROUNDDOWN(srcva);
+        va0 = PGROUNDDOWN(src_va);
 
         /* 获取该虚拟地址所对应的物理地址 */
         pa0 = kvm_phyaddr(pgtab, va0);
         if (pa0 == 0)
             return -1;
 
-        /* dstva - va0 = 表示虚拟地址在页基上的偏移数量
+        /* dst - va0 = 表示虚拟地址在页基上的偏移数量
          *
          * n 表示需要拷贝的数据大小 (同时处理了满一页与不满一页的情况)
          */
-        n = PGSIZE - (srcva - va0);
+        n = PGSIZE - (src_va - va0);
         if (n > len)
             n = len;
 
         /* 将用户空间数据拷贝到内核空间 */
-        kmemmove(dst, (void *)(pa0 + (srcva - va0)), n);
+        kmemmove(dst, (void *)(pa0 + (src_va - va0)), n);
 
         /* 确认数据是否拷贝完成 */
         len -= n;
         dst += n;
-        srcva = va0 + PGSIZE;
+        ret += n;
+        src_va = va0 + PGSIZE;
     }
-    return 0;
+    return ret;
 }
 
 

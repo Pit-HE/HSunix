@@ -10,9 +10,9 @@ void exit(int code)
     syscall(SYS_exit, code);
 }
 
-void fork (void)
+int fork (void)
 {
-    syscall(SYS_fork);
+    return syscall(SYS_fork);
 }
 
 void wait (int *code)

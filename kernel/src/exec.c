@@ -193,10 +193,10 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
         goto _err_exec_uvm;
 
     /* 释放进程原先的虚拟内存页资源 */
-    proc_free_pgtab(pcb->pageTab, pcb->memSize);
+    proc_free_pgtab(pcb->pgtab, pcb->memSize);
 
     /* 将虚拟页表的信息写入进程中 */
-    pcb->pageTab = pgtab;
+    pcb->pgtab = pgtab;
     pcb->memSize = size;
     pcb->stackSize = PGSIZE;
     pcb->trapFrame->sp = sptop;

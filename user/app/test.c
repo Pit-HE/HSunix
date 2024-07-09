@@ -6,7 +6,16 @@
 /* 进程在用户空间(模式)中执行的函数 */ 
 int main (int argc, char *argv[])
 {
-    printf("User space code is running !\r\n");
+    // int i;
+
+    printf("User space 'test' is running !\r\n");
+
+    // for (i=0; i<8; i++)
+    // {
+    //     if (argv[i] == NULL)
+    //         break;
+    //     printf ("argv[%d] = %s\r\n", i, argv[i]);
+    // }
 
     while(1)
     {

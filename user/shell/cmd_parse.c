@@ -59,7 +59,7 @@ char *cli_parse_cmd (char *str)
  * 
  * 返回值：参数的数量
  */
-int cli_parse_parameter (char *param, char *argv[CLI_ARG_MAX-1])
+int cli_parse_parameter (char *param, char *argv[])
 {
     int argc = 0, index = 0, str_len = 0;
     char *ptr = param;
