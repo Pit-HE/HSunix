@@ -114,3 +114,18 @@ void resume (void *obj)
 {
     syscall(SYS_resume, obj);
 }
+
+int getdirent (int fd, void *buf, uint len)
+{
+    return syscall(SYS_getdirent, fd, buf, len);
+}
+
+int unlink (char *path)
+{
+    return syscall(SYS_unlink, path);
+}
+
+int chdir (char *path)
+{
+    return syscall(SYS_chdir, path);
+}

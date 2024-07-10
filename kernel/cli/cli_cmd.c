@@ -25,7 +25,7 @@ int cmd_cd (int argc, char *argv[])
     if ((argc != 2) || (argv[1] == NULL))
         return -1;
 
-    return k_chdir(argv[1]);
+    return chdir(argv[1]);
 }
 
 /* 列举当前目录下的所有对象 */
@@ -34,7 +34,6 @@ int cmd_ls (int argc, char *argv[])
     DIR *dir = NULL;
     uint count = 0;
     struct dirent *dirent = NULL;
-    struct ProcCB *pcb = getProcCB();
 
     if (argc > 2)
         return -1;
@@ -42,7 +41,7 @@ int cmd_ls (int argc, char *argv[])
     switch (argc)
     {
         case 1: /* 列举当前目录 */
-            dir = opendir(pcb->cwd);
+            dir = opendir(".");
             break;
         case 2: /* 列举指定路径 */
             if (argv[1] == NULL)
@@ -83,7 +82,7 @@ int cmd_mkfile (int argc, char *argv[])
     if ((argc != 2) || (argv[1] == NULL))
         return -1;
 
-    return mkfile(argv[1], O_CREAT|O_RDWR, S_IRWXU);
+    return mkfile(argv[1], O_CREAT | O_RDWR, S_IRWXU);
 }
 
 /* 显示当前进程的工作路径 */
@@ -176,7 +175,7 @@ int cmd_rmdir (int argc, char *argv[])
     if ((argc != 2) || (argv[1] == NULL))
         return -1;
     
-    return k_rmdir(argv[1]);
+    return rmdir(argv[1]);
 }
 
 /* 同步文件系统内的缓存到磁盘 */
@@ -366,11 +365,11 @@ struct cli_cmd func_list[] =
         "Deletes the specified file or directory\r\n    \
             example: rm a.a | rm /bin/a.a"
     },
-    {/* k_rmdir */
+    {/* rmdir */
         &cmd_rmdir,
-        "k_rmdir",
+        "rmdir",
         "Deletes the specified directory\r\n    \
-            example: k_rmdir usr | k_rmdir /usr/tmp1"
+            example: rmdir usr | rmdir /usr/tmp1"
     },
     {/* fsync */
         &cmd_fsync,

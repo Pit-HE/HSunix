@@ -226,6 +226,22 @@ int vfs_lseek (int fd, uint off, int whence)
     return file_lseek(file, off, whence);
 }
 
+/*
+ * 获取指定数量的目录项信息
+ */
+int vfs_getdirent (int fd, void *buf, uint len)
+{
+    struct File *file = NULL;
+
+    file = fd_get(fd);
+    if (file < 0)
+    {
+        kprintf("fail: vfs_getdirent get fd !\r\n");
+        return -1;
+    }
+    return file_getdents(file, (struct dirent *)buf, len);
+}
+
 /* 初始化进程文件系统相关的内容 */
 int vfs_pcbInit (struct ProcCB *pcb, char *path)
 {

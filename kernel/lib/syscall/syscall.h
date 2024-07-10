@@ -34,6 +34,9 @@ enum system_call_code
     SYS_fstat,
     SYS_fsync,
     SYS_dup,
+    SYS_getdirent,
+    SYS_unlink,
+    SYS_chdir,
 
 /************** 以下内容不可添加与修改****************/
     SYS_callmax,
@@ -69,6 +72,9 @@ uint64 sys_lseek (void);
 uint64 sys_fstat (void);
 uint64 sys_fsync (void);
 uint64 sys_dup (void);
+uint64 sys_getdirent(void);
+uint64 sys_unlink (void);
+uint64 sys_chdir (void);
 uint64 sys_exec (void);
 
 

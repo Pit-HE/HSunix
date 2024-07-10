@@ -28,6 +28,10 @@ int     fsync   (int fd);
 void    dup     (void);
 void    suspend (void *obj);
 void    resume  (void *obj);
+int     getdirent (int fd, void *buf, uint len);
+int     unlink  (char *path);
+int     chdir   (char *path);
+
 
 #include "uprintf.h"
 #define printf tfp_printf

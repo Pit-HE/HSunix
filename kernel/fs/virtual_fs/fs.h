@@ -58,5 +58,5 @@ int  vfs_creat  (char *path, uint mode);
 int  vfs_rename (char *oldname, char *newname);
 int  vfs_stat   (int fd, struct stat *buf);
 int  vfs_lseek  (int fd, uint off, int whence);
-
+int  vfs_getdirent (int fd, void *buf, uint len);
 #endif

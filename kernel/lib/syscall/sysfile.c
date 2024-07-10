@@ -1,6 +1,8 @@
 
 #include "syscall.h"
+#include "fcntl.h"
 #include "defs.h"
+#include "file.h"
 #include "fs.h"
 
 uint64 sys_pgdir (void)
@@ -67,6 +69,40 @@ uint64 sys_fsync (void)
 uint64 sys_dup (void)
 {
     return 0;
+}
+uint64 sys_getdirent(void)
+{
+    uint64 buf;
+    int fd, len;
+
+    arg_int (0, &fd);
+    arg_addr(1, &buf);
+    arg_int (2, &len);
+    return vfs_getdirent(fd, (void *)buf, len);
+}
+uint64 sys_unlink (void)
+{
+    char path[32];
+
+    arg_str(0, path, 32);
+    return vfs_unlink(path);
+}
+uint64 sys_chdir (void)
+{
+    int fd;
+    char path[32];
+
+    arg_str(0, path, 32);
+    if (path == NULL)
+        return -1;
+
+    /* 确认该目录项存在 */
+    fd = vfs_open(path, O_RDONLY | O_DIRECTORY, S_IRWXU);
+    if (fd < 0)
+        return -1;
+    vfs_close(fd);
+
+    return path_setcwd(path);
 }
 uint64 sys_exec (void)
 {

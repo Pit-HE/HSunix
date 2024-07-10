@@ -1,11 +1,10 @@
-/*
- * 记录用户可用的关于文件目录的操作与信息
- */
+
 #ifndef __DIRENT_H__
 #define __DIRENT_H__
 
-#include "param.h"
+
 #include "types.h"
+
 
 /* 用于目录操作中，缓存多个 dirent 的结构体
  * ( 减少操作 dirent 时读写文件系统的次数 )
@@ -33,14 +32,13 @@ struct dirent
 };
 
 
+#define SEEK_SET	0	/* 设置值为距离文件开始位置的绝对值 */
+#define SEEK_CUR	1	/* 在当前位置修改偏移值 */
+#define SEEK_END	2	/* 移动到文件末尾 */
+#define SEEK_DATA	3	/* seek to the next data */
+#define SEEK_HOLE	4	/* seek to the next hole */
+#define SEEK_MAX	SEEK_HOLE
 
-DIR *opendir(char *path);
-int  closedir(DIR *dir);
-void seekdir(DIR *dir, long offset);
-struct dirent *readdir(DIR *dir);
-int mkdir  (char *path, uint mode);
-int mkfile (char *path, uint flag, uint mode);
-int chdir (char *path);
-int rmdir (char *path);
+
 
 #endif
