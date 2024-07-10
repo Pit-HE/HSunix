@@ -258,12 +258,10 @@ int do_fork (void)
 
     /* 完成进程控制块相关信息的拷贝 */
     kDISABLE_INTERRUPT();
+    /* 确保新进程返回用户空间后，从指定位置开始继续执行 */
     kmemcpy(newPcb->trapFrame, curPcb->trapFrame, PGSIZE);
-    kmemcpy(&newPcb->context, &curPcb->context, sizeof(struct Context));
-    kmemcpy((void*)newPcb->stackAddr, (void*)curPcb->stackAddr, curPcb->stackSize);
-
-    newPcb->context.sp = (uint64)(stack + (curPcb->context.sp - curPcb->stackAddr));
     newPcb->memSize = curPcb->memSize;
+    /* 设置新进程的返回值 */
     newPcb->trapFrame->a0 = 0;
     newPcb->parent = curPcb;
     kENABLE_INTERRUPT();
@@ -297,8 +295,12 @@ int do_wait (int *code)
 		        /* 处理正在退出的子进程 */
                 if (code != NULL)
                     *code = childPcb->exitState;
-
                 pid = childPcb->pid;
+            
+                /* TODO：临时添加查看进程退出情况 */
+                kprintf ("do_wait process pid: %d\r\n", pid);
+                kprintf ("do_wait process name: %s\r\n", childPcb->name);
+
                 destroy_kthread(childPcb);
                 goto _exit_wait;
             }
@@ -323,11 +325,14 @@ void do_exit (int state)
     if ((pcb == kInitPCB) || (pcb == kIdlePCB))
         kErrPrintf("exit error process !\r\n");
 
-    /* 将子进程释放到 init 进程上 */
+    /* 将目标的所有子进程挂到 init 进程上 */
     proc_freechild(pcb);
 
+    kDISABLE_INTERRUPT();
     pcb->exitState = state;
     pcb->state = EXITING;
+    pcb->parent = kInitPCB; /* TODO: 临时添加用于测试 */
+    kENABLE_INTERRUPT();
 
     /* 唤醒父进程 */
     do_resume(pcb->parent);

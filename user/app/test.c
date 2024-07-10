@@ -8,8 +8,7 @@ int main (int argc, char *argv[])
 {
     int i;
 
-    printf("User space 'test' is running !\r\n");
-
+    printf("Test process: argc = %d\r\n",argc);
     printf ("argc = %d\r\n", argc);
     for (i=0; i<8; i++)
     {

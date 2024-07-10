@@ -10,7 +10,7 @@
  */
 int cmd_exec (char *cmd)
 {
-    int argc = 0;//, pid;
+    int argc = 0, pid;
     char *param = NULL;
     char *argv[CLI_ARG_MAX];
     char  path[32];
@@ -27,18 +27,19 @@ int cmd_exec (char *cmd)
     strcpy(path, "/bin/");
     strcat(path, cmd);
 
-    // pid = fork();
-    // if (pid < 0)
-    // {
-    //     printf ("fail: shell fork !\r\n");
-    //     exit(1);
-    // }
-    // if (pid == 0)
-    // {
+    pid = fork();
+    if (pid < 0)
+    {
+        printf ("fail: shell fork !\r\n");
+        exit(1);
+    }
+    if (pid == 0)
+    {
         exec (path, argv);
-    //     printf ("fail: shell exec !\r\n");
-    //     exit(1);
-    // }
+        printf ("fail: shell exec !\r\n");
+        exit(1);
+    }
+    printf ("child pid = %d\r\n", pid);
 
     return 0;
 }

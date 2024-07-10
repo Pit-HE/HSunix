@@ -203,12 +203,11 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
     pcb->trapFrame->sp = sptop;
     pcb->trapFrame->a1 = sptop;
     pcb->trapFrame->epc = elf.e_entry;
+    kstrcpy(pcb->name, kstrrchr(path, '/')+1);    
 
     return argc;
-
 _err_exec_uvm:
     proc_free_pgtab(pgtab, size);
-
 _err_exec_open:
     vfs_close(fd);
     return -1;
