@@ -18,7 +18,6 @@ typedef struct
 }DIR;
 
 
-
 /* 目录信息
  * ( 提供给用户层获取目录项信息的结构体 )
  */
@@ -31,6 +30,15 @@ struct dirent
     char name[128]; /* 目录项的名字 */
 };
 
+
+struct statfs
+{
+    char name[16];
+    uint f_total;  /* 文件系统的总大小 */
+    uint f_bsize;  /* block size */
+    uint f_block;  /* total data blocks in file system */
+    uint f_bfree;  /* free blocks in file system */
+};
 
 #define SEEK_SET	0	/* 设置值为距离文件开始位置的绝对值 */
 #define SEEK_CUR	1	/* 在当前位置修改偏移值 */

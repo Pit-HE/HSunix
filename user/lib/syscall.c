@@ -90,9 +90,14 @@ int lseek (int fd, uint off, int whence)
     return syscall(SYS_lseek, fd, off, whence);
 }
 
-void fstat (void)
+int stat (char *path)
 {
+    return syscall(SYS_stat, path);
+}
 
+int fstatfs (int fd, void *buf)
+{
+    return syscall(SYS_fstatfs, fd, buf);
 }
 
 int fsync (int fd)
@@ -128,4 +133,24 @@ int unlink (char *path)
 int chdir (char *path)
 {
     return syscall(SYS_chdir, path);
+}
+
+int mount (char *fsname, char *path)
+{
+    return syscall(SYS_mount, fsname, path);
+}
+
+int umount (char *path)
+{
+    return syscall(SYS_umount, path);
+}
+
+int getcwd (char *buf, int len)
+{
+    return syscall(SYS_getcwd, buf, len);
+}
+
+int rename (char *oldname, char *newname)
+{
+    return syscall(SYS_rename, oldname, newname);
 }

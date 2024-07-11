@@ -55,9 +55,39 @@ uint64 sys_lseek (void)
     arg_int (2, &flag);
     return vfs_lseek(fd, off, flag);
 }
-uint64 sys_fstat (void)
+uint64 sys_stat (void)
 {
-    return 0;
+    char path[64];
+    int fd, ret = -1;
+    struct stat buf;
+
+    arg_str(0, path, 64);
+
+    fd = vfs_open(path, O_RDONLY, S_IRWXU);
+    if (fd < 0)
+        return -1;
+
+    ret = vfs_stat(fd, &buf);
+    vfs_close(fd);
+
+    kprintf("    name: %s\r\n", buf.name);
+    kprintf("    size: %d\r\n", buf.size);
+    if (buf.type == VFS_DIR)
+        kprintf("    type: dir\r\n");
+    else
+        kprintf("    type: file\r\n");
+    kprintf("    fsname: %s\r\n", buf.fsname);
+
+    return ret;
+}
+uint64 sys_fstatfs (void)
+{
+    int fd;
+    uint64 buf;
+
+    arg_int (0, &fd);
+    arg_addr(1, &buf);
+    return vfs_fstatfs(fd, (struct statfs *)buf);
 }
 uint64 sys_fsync (void)
 {
@@ -103,6 +133,42 @@ uint64 sys_chdir (void)
     vfs_close(fd);
 
     return path_setcwd(path);
+}
+uint64 sys_mount (void)
+{
+    char name[16];
+    char path[32];
+
+    arg_str(0, name, 16);
+    arg_str(1, path, 32);
+    return vfs_mount(name, path, 
+        O_RDWR | O_CREAT | O_DIRECTORY, NULL);
+}
+uint64 sys_umount (void)
+{
+    char path[32];
+
+    arg_str(0, path, 32);
+    return vfs_unmount(path);
+}
+uint64 sys_getcwd (void)
+{
+    int len;
+    uint64 buf;
+
+    arg_addr(0, &buf);
+    arg_int (1, &len);
+    kstrcpy((void *)buf, getProcCB()->cwd);
+    return 0;
+}
+uint64 sys_rename (void)
+{
+    char oldname[16];
+    char newname[16];
+
+    arg_str(0, oldname, 16);
+    arg_str(1, newname, 16);
+    return vfs_rename(oldname, newname);
 }
 uint64 sys_exec (void)
 {

@@ -6,6 +6,12 @@
 
 int main (int argc, char *argv[])
 {
+    int ret;
 
-    return 0;
+    if ((argc != 3) || 
+        (argv[1] == NULL) || (argv[2] == NULL))
+        return -1;
+
+    ret = mount(argv[1], argv[2]);
+    return ret;
 }

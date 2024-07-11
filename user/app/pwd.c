@@ -6,6 +6,12 @@
 
 int main (int argc, char *argv[])
 {
+    int ret;
+    char buf[32];
 
-    return 0;
+    ret = getcwd(buf, 32);
+    if (ret >= 0)
+        printf ("%s\r\n", buf);
+
+    return ret;
 }

@@ -31,12 +31,17 @@ enum system_call_code
     SYS_read,
     SYS_write,
     SYS_lseek,
-    SYS_fstat,
+    SYS_stat,
     SYS_fsync,
     SYS_dup,
     SYS_getdirent,
     SYS_unlink,
     SYS_chdir,
+    SYS_fstatfs,
+    SYS_mount,
+    SYS_umount,
+    SYS_getcwd,
+    SYS_rename,
 
 /************** 以下内容不可添加与修改****************/
     SYS_callmax,
@@ -69,12 +74,17 @@ uint64 sys_close (void);
 uint64 sys_read (void);
 uint64 sys_write (void);
 uint64 sys_lseek (void);
-uint64 sys_fstat (void);
+uint64 sys_stat (void);
+uint64 sys_fstatfs (void);
 uint64 sys_fsync (void);
 uint64 sys_dup (void);
 uint64 sys_getdirent(void);
 uint64 sys_unlink (void);
 uint64 sys_chdir (void);
+uint64 sys_mount (void);
+uint64 sys_umount(void);
+uint64 sys_getcwd(void);
+uint64 sys_rename (void);
 uint64 sys_exec (void);
 
 

@@ -23,7 +23,8 @@ int     close   (int fd);
 int     read    (int fd, void *buf, int len);
 int     write   (int fd, void *buf, int len);
 int     lseek   (int fd, uint off, int whence);
-void    fstat   (void);
+int     stat    (char *path);
+int     fstatfs (int fd, void *buf);
 int     fsync   (int fd);
 void    dup     (void);
 void    suspend (void *obj);
@@ -31,12 +32,24 @@ void    resume  (void *obj);
 int     getdirent (int fd, void *buf, uint len);
 int     unlink  (char *path);
 int     chdir   (char *path);
+int     mount   (char *fsname, char *path);
+int     umount (char *path);
+int     getcwd  (char *buf, int len);
+int     rename  (char *oldname, char *newname);
 
 
 #include "uprintf.h"
 #define printf tfp_printf
 
 #include "shell.h"
+
+#include "fcntl.h"
+#include "dirent.h"
+DIR *opendir(char *path);
+int  closedir(DIR *dir);
+void seekdir(DIR *dir, long offset);
+int  rmdir (char *path);
+struct dirent *readdir(DIR *dir);
 
 
 #endif

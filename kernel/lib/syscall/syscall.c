@@ -65,12 +65,17 @@ static uint64 (*_syscall[])(void) =
     [SYS_read   ]   sys_read,
     [SYS_write  ]   sys_write,
     [SYS_lseek  ]   sys_lseek,
-    [SYS_fstat  ]   sys_fstat,
+    [SYS_stat   ]   sys_stat,
     [SYS_fsync  ]   sys_fsync,
     [SYS_dup    ]   sys_dup,
     [SYS_getdirent] sys_getdirent,
-    [SYS_unlink]    sys_unlink,
-    [SYS_chdir]     sys_chdir,
+    [SYS_unlink ]   sys_unlink,
+    [SYS_chdir  ]   sys_chdir,
+    [SYS_fstatfs]   sys_fstatfs,
+    [SYS_mount  ]   sys_mount,
+    [SYS_umount ]   sys_umount,
+    [SYS_getcwd ]   sys_getcwd,
+    [SYS_rename ]   sys_rename,
 };
 #define SYSCALL_NUM (sizeof(_syscall)/sizeof(_syscall[0]))
 
