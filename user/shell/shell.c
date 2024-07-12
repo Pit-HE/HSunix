@@ -96,9 +96,11 @@ void shell_main (void)
         /* 每次命令执行完成，重新输出当前命令交互的提示 */
         if (shell.finish == TRUE)
         {
+            char cwd[32];
+            getcwd(cwd, 32);
+
             shell.finish = FALSE;
-            // printf("\033[1;32madmin\033[0m:\033[1;34m%s\033[0m$ ", getProcCB()->cwd);
-            printf("admin: ");
+            printf("\033[1;32madmin\033[0m:\033[1;34m%s\033[0m$ ", cwd);
         }
 
         /* 从控制台获取单个字符 */

@@ -130,10 +130,10 @@ int kvm_clrflag (pgtab_t *pgtab, uint64 vAddr, int flag)
     return 0;
 }
 
-/* 获取虚拟地址对应的物理地址 */
-uint64 kvm_phyaddr (pgtab_t *pgtab, uint64 vAddr)
+/* 获取虚拟地址所在的页表首地址 */
+uint64 kvm_pagephyaddr (pgtab_t *pgtab, uint64 vAddr)
 {
-    pte_t   *pte;
+    pte_t *pte;
 
     /* 虚拟地址的有效性检查 */
     if (vAddr > MAXVA)
@@ -150,6 +150,18 @@ uint64 kvm_phyaddr (pgtab_t *pgtab, uint64 vAddr)
 
     /* 将页表条目内存储的物理地址返回 */
     return PTE2PA(*pte);
+}
+
+/* 获取虚拟地址对应的物理地址 */
+uint64 kvm_phyaddr (pgtab_t *pgtab, uint64 vAddr)
+{
+    uint64 pa;
+
+    pa = kvm_pagephyaddr(pgtab, vAddr);
+    pa |= vAddr & 0xFFF;
+
+    /* 将页表条目内存储的物理地址返回 */
+    return pa;
 }
 
 /* 将指定大小的物理地址与虚拟地址建立映射关系 */
@@ -325,7 +337,7 @@ int uvm_copyout (pgtab_t *pgtab, uint64 dst_va, char *src, uint64 len)
     {
         va_base = PGROUNDDOWN(dst_va);
 
-        pa = kvm_phyaddr(pgtab, va_base);
+        pa = kvm_pagephyaddr(pgtab, va_base);
         if (pa <= 0)
             return -1;
 
@@ -354,7 +366,7 @@ int uvm_copyin (pgtab_t *pgtab, char *dst, uint64 src_va, uint64 len)
         va0 = PGROUNDDOWN(src_va);
 
         /* 获取该虚拟地址所对应的物理地址 */
-        pa0 = kvm_phyaddr(pgtab, va0);
+        pa0 = kvm_pagephyaddr(pgtab, va0);
         if (pa0 == 0)
             return -1;
 

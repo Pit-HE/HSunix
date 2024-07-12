@@ -9,10 +9,10 @@ int main (int argc, char *argv[])
     int fd, ret = -1;
     struct statfs fsbuf;
 
-    if ((argc != 2) || (argv[1] == NULL))
+    if ((argc != 1) || (argv[0] == NULL))
         return -1;
     
-    fd = open(argv[1], O_RDWR, S_IRWXU);
+    fd = open(argv[0], O_RDWR, S_IRWXU);
     if (fd < 0)
         return -1;
 

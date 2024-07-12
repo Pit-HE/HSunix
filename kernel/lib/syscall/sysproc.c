@@ -1,4 +1,5 @@
 
+#include "syspriv.h"
 #include "syscall.h"
 #include "defs.h"
 #include "proc.h"
@@ -9,7 +10,6 @@ uint64 sys_exit (void)
 
     arg_int(0, &num);
     do_exit(num);
-
     return 0;
 }
 uint64 sys_fork (void)
@@ -18,10 +18,12 @@ uint64 sys_fork (void)
 }
 uint64 sys_wait (void)
 {
-    int num;
+    uint64 code;
 
-    do_wait(&num);
-    return num;
+    arg_addr(0, &code);
+    code = kvm_phyaddr(getProcCB()->pgtab, code);
+
+    return do_wait((int *)code);
 }
 uint64 sys_yield (void)
 {
@@ -30,10 +32,10 @@ uint64 sys_yield (void)
 }
 uint64 sys_kill (void)
 {
-    int num;
+    int pid;
 
-    arg_int(0, &num);
-    return do_kill(num);
+    arg_int(0, &pid);
+    return do_kill(pid);
 }
 uint64 sys_getpid (void)
 {
@@ -41,30 +43,30 @@ uint64 sys_getpid (void)
 }
 uint64 sys_putc (void)
 {
-    int num;
+    int ch;
 
-    arg_int(0, &num);
-    console_wChar(NULL, num);
+    arg_int(0, &ch);
+    console_wChar(NULL, ch);
     return 0;
 }
 uint64 sys_getc (void)
 {
-    return (uint64)console_rChar();
+    return console_rChar();
 }
 uint64 sys_suspend (void)
 {
-    uint64 num;
+    uint64 obj;
 
-    arg_addr(0, &num);
-    do_suspend((void *)num);
+    arg_addr(0, &obj);
+    do_suspend((void *)obj);
     return 0;
 }
 uint64 sys_resume (void)
 {
-    uint64 num;
+    uint64 obj;
 
-    arg_addr(0, &num);
-    do_resume((void *)num);
+    arg_addr(0, &obj);
+    do_resume((void *)obj);
     return 0;
 }
 uint64 sys_gettime (void)

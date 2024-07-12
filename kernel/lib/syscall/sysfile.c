@@ -1,14 +1,12 @@
 
+#include "syspriv.h"
 #include "syscall.h"
 #include "fcntl.h"
 #include "defs.h"
 #include "file.h"
 #include "fs.h"
 
-uint64 sys_pgdir (void)
-{
-    return 0;
-}
+
 uint64 sys_open (void)
 {
     char path[32];
@@ -17,7 +15,7 @@ uint64 sys_open (void)
     arg_str(0, path, 32);
     arg_int(1, &flag);
     arg_int(2, &mode);
-    return (uint64)vfs_open(path, flag, mode);
+    return vfs_open(path, flag, mode);
 }
 uint64 sys_close (void)
 {
@@ -34,6 +32,8 @@ uint64 sys_read (void)
     arg_int (0, &fd);
     arg_addr(1, &buf);
     arg_int (2, &len);
+    buf = kvm_phyaddr(getProcCB()->pgtab, buf);
+
     return vfs_read(fd, (void *)buf, len);
 }
 uint64 sys_write (void)
@@ -44,6 +44,8 @@ uint64 sys_write (void)
     arg_int (0, &fd);
     arg_addr(1, &buf);
     arg_int (2, &len);
+    buf = kvm_phyaddr(getProcCB()->pgtab, buf);
+
     return vfs_write(fd, (void *)buf, len);
 }
 uint64 sys_lseek (void)
@@ -58,8 +60,8 @@ uint64 sys_lseek (void)
 uint64 sys_stat (void)
 {
     char path[64];
-    int fd, ret = -1;
     struct stat buf;
+    int fd, ret = -1;
 
     arg_str(0, path, 64);
 
@@ -87,6 +89,8 @@ uint64 sys_fstatfs (void)
 
     arg_int (0, &fd);
     arg_addr(1, &buf);
+    buf = kvm_phyaddr(getProcCB()->pgtab, buf);
+
     return vfs_fstatfs(fd, (struct statfs *)buf);
 }
 uint64 sys_fsync (void)
@@ -108,6 +112,8 @@ uint64 sys_getdirent(void)
     arg_int (0, &fd);
     arg_addr(1, &buf);
     arg_int (2, &len);
+    buf = kvm_phyaddr(getProcCB()->pgtab, buf);
+
     return vfs_getdirent(fd, (void *)buf, len);
 }
 uint64 sys_unlink (void)
@@ -149,7 +155,7 @@ uint64 sys_umount (void)
     char path[32];
 
     arg_str(0, path, 32);
-    return vfs_unmount(path);
+    return vfs_umount(path);
 }
 uint64 sys_getcwd (void)
 {
@@ -158,6 +164,8 @@ uint64 sys_getcwd (void)
 
     arg_addr(0, &buf);
     arg_int (1, &len);
+    buf = kvm_phyaddr(getProcCB()->pgtab, buf);
+
     kstrcpy((void *)buf, getProcCB()->cwd);
     return 0;
 }
@@ -205,7 +213,7 @@ uint64 sys_exec (void)
     ret = do_exec(NULL, path, argv);
 
     /* 释放已经申请的内存空间 */
-__err_sys_exec:
+ __err_sys_exec:
     for (i=0; i<6; i++)
     {
         if (argv[i] == NULL)

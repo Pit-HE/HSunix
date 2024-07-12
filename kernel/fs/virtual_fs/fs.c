@@ -119,14 +119,14 @@ int vfs_creat (char *path, uint mode)
     fd = fd_alloc();
     if (fd < 0)
     {
-        kprintf("fail: vfs_open alloc fd !\r\n");
+        kprintf("fail: vfs_creat alloc fd !\r\n");
         return -1;
     }
 
     file = fd_get(fd);
     if (file == NULL)
     {
-        kprintf("fail: vfs_open get fd !\r\n");
+        kprintf("fail: vfs_creat get fd !\r\n");
         return -1;
     }
 
@@ -134,7 +134,7 @@ int vfs_creat (char *path, uint mode)
         O_WRONLY | O_CREAT | O_TRUNC, mode);
     if (ret < 0)
     {
-        kprintf("fail: vfs_open open file !\r\n");
+        kprintf("fail: vfs_creat open file !\r\n");
         fd_free(fd);
         return -1;
     }
@@ -301,7 +301,7 @@ int vfs_mount(char *fsname, char *path,
 /* 对外提供的文件系统卸载接口
  *  ( 传入的必须是绝对路径 )
  */
-int vfs_unmount (char *path)
+int vfs_umount (char *path)
 {
     if (path == NULL)
         return -1;

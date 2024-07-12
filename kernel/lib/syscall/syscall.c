@@ -1,6 +1,7 @@
 /*
  * 主要提供处理系统调用接口相关的基本功能
  */
+#include "syspriv.h"
 #include "syscall.h"
 #include "defs.h"
 #include "proc.h"
@@ -55,7 +56,6 @@ static uint64 (*_syscall[])(void) =
     [SYS_getpid ]   sys_getpid,
     [SYS_putc   ]   sys_putc,
     [SYS_getc   ]   sys_getc,
-    [SYS_pgdir  ]   sys_pgdir,
     [SYS_gettime]   sys_gettime,
     [SYS_sleep  ]   sys_sleep,
     [SYS_suspend]   sys_suspend,

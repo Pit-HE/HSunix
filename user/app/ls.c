@@ -15,13 +15,13 @@ int main (int argc, char *argv[])
 
     switch (argc)
     {
-        case 1: /* 列举当前目录 */
+        case 0: /* 列举当前目录 */
             dir = opendir(".");
             break;
-        case 2: /* 列举指定路径 */
-            if (argv[1] == NULL)
+        case 1: /* 列举指定路径 */
+            if (argv[0] == NULL)
                 return -1;
-            dir = opendir(argv[1]);
+            dir = opendir(argv[0]);
             break;
         default:/* 暂不认可其他参数 */
             break;

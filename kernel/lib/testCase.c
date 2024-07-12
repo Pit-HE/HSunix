@@ -25,8 +25,8 @@ void tc_virtualmemory (void)
 
     uvm_copy(Spgatab, pgtab, 20, TRUE);
 
-    extern uint64  kvm_phyaddr (pgtab_t *pagetable, uint64 va);
-    buf = (char *)kvm_phyaddr(Spgatab, 0);
+    extern uint64  kvm_pagephyaddr (pgtab_t *pagetable, uint64 va);
+    buf = (char *)kvm_pagephyaddr(Spgatab, 0);
 
     kprintf ("%s", buf);
 

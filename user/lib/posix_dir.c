@@ -4,11 +4,14 @@
 #include "syscall.h"
 #include "dirent.h"
 
+/* TODO: 临时添加，确保目录操作能正常使用 */
+DIR global_dir;
 
 /* 仅打开指定路径的目录对象 */
 DIR *opendir(char *path)
 {
-    DIR *dir = NULL;
+    // DIR *dir = NULL;
+    DIR *dir = &global_dir;
 
     if (path == NULL)
         return NULL;
@@ -42,6 +45,10 @@ struct dirent *readdir(DIR *dir)
 {
     if (dir == NULL)
         return NULL;
+
+    dir->buf[0] = 0x5A;
+    dir->buf[1] = 0x66;
+    dir->buf[2] = 0xA5;
 
     if(0 >= getdirent(dir->fd,
         dir->buf, sizeof(struct dirent)))

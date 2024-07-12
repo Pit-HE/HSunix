@@ -15,7 +15,6 @@ void    kill    (int pid);
 int     getpid  (void);
 void    putc    (int ch);
 int     getc    (void);
-void    pgdir   (void);
 int     gettime (void);
 void    sleep   (int ms);
 int     open    (char *path, uint flags, uint mode);

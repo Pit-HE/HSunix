@@ -7,9 +7,9 @@
 int main (int argc, char *argv[])
 {
     int ret;
-    char buf[32];
+    char buf[64];
 
-    ret = getcwd(buf, 32);
+    ret = getcwd(buf, 64);
     if (ret >= 0)
         printf ("%s\r\n", buf);
 

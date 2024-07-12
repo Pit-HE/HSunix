@@ -60,6 +60,7 @@ void     init_kvm    (void);
 pgtab_t *uvm_create  (void);
 int      kvm_setflag (pgtab_t *pgtab, uint64 vAddr, int flag);
 int      kvm_clrflag (pgtab_t *pgtab, uint64 vAddr, int flag);
+uint64   kvm_pagephyaddr (pgtab_t *pgtab, uint64 vAddr);
 uint64   kvm_phyaddr (pgtab_t *pgtab, uint64 vAddr);
 int      kvm_map     (pgtab_t *pgtab, uint64 vAddr, uint64 pAddr, uint64 sz, int flag);
 void     uvm_unmap   (pgtab_t *pgtab, uint64 vAddr, uint64 npages, bool free);

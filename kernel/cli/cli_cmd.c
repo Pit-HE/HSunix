@@ -281,7 +281,7 @@ int cmd_unmount (int argc, char *argv[])
     if ((argc != 2) || (argv[1] == NULL))
         return -1;
 
-    return vfs_unmount(argv[1]);
+    return vfs_umount(argv[1]);
 }
 
 /* 清除命令行交互的屏幕 */

@@ -296,10 +296,6 @@ int do_wait (int *code)
                 if (code != NULL)
                     *code = childPcb->exitState;
                 pid = childPcb->pid;
-            
-                /* TODO：临时添加查看进程退出情况 */
-                kprintf ("do_wait process pid: %d\r\n", pid);
-                kprintf ("do_wait process name: %s\r\n", childPcb->name);
 
                 destroy_kthread(childPcb);
                 goto _exit_wait;
@@ -331,7 +327,6 @@ void do_exit (int state)
     kDISABLE_INTERRUPT();
     pcb->exitState = state;
     pcb->state = EXITING;
-    pcb->parent = kInitPCB; /* TODO: 临时添加用于测试 */
     kENABLE_INTERRUPT();
 
     /* 唤醒父进程 */

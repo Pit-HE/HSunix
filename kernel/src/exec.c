@@ -39,7 +39,7 @@ int elf_load_segment (pgtab_t *pgtab, uint64 vAddr,
     for (i=0; i < segsize; i += PGSIZE)
     {
         /* 获取页表虚拟地址所对应的物理地址 */
-        pAddr = kvm_phyaddr(pgtab, vAddr + i);
+        pAddr = kvm_pagephyaddr(pgtab, vAddr + i);
         if (pAddr == 0)
             return -1;
 
