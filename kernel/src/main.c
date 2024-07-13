@@ -6,7 +6,6 @@
 #include "list.h"
 
 
-
 void main (void)
 {
     init_kmem();

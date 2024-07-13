@@ -67,7 +67,7 @@ int dev_interrupt (void)
     }
     else
     {
-        kErrPrintf("Undefined interrupt %d\r\n", scause & 0xFF);
+        ErrPrint("Undefined interrupt %d\r\n", scause & 0xFF);
     }
 
     return ret;
@@ -85,7 +85,7 @@ void trap_userfunc(void)
 
     /* 判断 trap 是否来自用户模式 */
     if ((r_sstatus() & SSTATUS_SPP) != 0)
-      kError(eSVC_Trap, E_STATUS);
+        ErrPrint("trap_userfunc: Not an interruption of user mode\r\n");
 
     /* 避免发生中断嵌套,
      * 在特权模式下的中断应由内核处理
@@ -176,14 +176,14 @@ void kerneltrap(void)
 
     /* 有效性检查 */
     if ((sstatus & SSTATUS_SPP)==0)
-      kError(eSVC_Trap, E_STATUS);
+        ErrPrint("kerneltrap: Not an interruption of Supervisor mode\r\n");
     if (intr_get() != 0)
-      kError(eSVC_Trap, E_INTERRUPT);
+        ErrPrint("kerneltrap: The interrupt function is not enabled\r\n");
 
     /* 处理外设中断与软件中断 */
     devnum = dev_interrupt();
     if (devnum == 0)
-        kError(eSVC_Trap, E_INTERRUPT);
+        ErrPrint("kerneltrap: Unknown interrupt event\r\n");
     pcb = getProcCB();
 
     /* 是否为定时器中断 */

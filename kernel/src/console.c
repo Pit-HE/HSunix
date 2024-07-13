@@ -34,6 +34,8 @@ int console_wString (char *src)
     }
     return 0;
 }
+
+/* 往控制台输入字符串 */
 int console_wCmd (char *src, int len)
 {
     int i;
@@ -45,10 +47,14 @@ int console_wCmd (char *src, int len)
     }
     return i;
 }
+
+/* 往控制台输入单个字符 */
 void console_wChar (void *v, char src)
 {
     console_putc(src);
 }
+
+/* 从控制台读取指定长度的字符串 */
 int console_rCmd (char *src, int len)
 {
     int idx = 0;
@@ -66,6 +72,8 @@ int console_rCmd (char *src, int len)
     }
     return len;
 }
+
+/* 从控制台读取单个字符 */
 int console_rChar (void)
 {
     int ch;
@@ -116,7 +124,6 @@ void init_console (void)
     if (dev != NULL)
     {
         dev->opt = &console_dev_opt;
-
         dev_register(dev);
     }
 

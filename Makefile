@@ -74,6 +74,14 @@ remove: clean
 	cd mkfs && make remove
 	cd user && make remove
 
+# 自动安装 HSunix 系统的编译环境与开发环境
+install:
+	sudo apt install libc6-riscv64-cross
+	sudo apt install binutils-riscv64-linux-gnu
+	sudo apt install gcc-riscv64-linux-gnu
+	sudo apt install binutils-riscv64-unknown-elf
+	sudo apt install gcc-riscv64-unknown-elf
+	sudo apt install qemu-system qemu-user
 
 .PHONY: all clean debug qemu build remove fs.img app mkfs
 

@@ -1,26 +1,50 @@
-
+/* 
+ * 操作系统进程管理模块
+ */
 #include "defs.h"
 #include "param.h"
 #include "memlayout.h"
 
 
 /**********************************************/
+/* PID 令牌：
+用于记录每一次进程创建时所分配的PID，该变量自动递增
+*/
 uint64          kPidToken = 1;
+/* cpu 管理链表：
+记录每一个 cpu 在运行过程中的信息 (当前系统未适配多核）
+*/
 struct CpuCB    kCpusList[NCPU];
+/* 进程注销链表：
+记录被杀死(kill)的进程，由死亡进程回收器对其进行释放
+*/
 ListEntry_t     kUnregistList;
+/* 进程注册链表：
+记录系统从运行到结束过程中，创建的所有存活的进程
+*/
 ListEntry_t     kRegistList;
+/* 进程就绪链表：
+记录所有就绪的等待切换执行的进程
+*/
 ListEntry_t     kReadyList;
+/* 进程挂起链表：
+记录所有在等待指定世界的进程
+*/
 ListEntry_t     kPendList;
+/* 记录 init 进程控制块 */
 struct ProcCB  *kInitPCB = NULL;
+/* 记录 idle 进程控制块 */
 struct ProcCB  *kIdlePCB = NULL;
 
 /***********************************************
  *  Process file public library function
 */
+/* 设置占用当前 cpu 使用权的进程 */
 void setCpuCB (struct ProcCB *pcb)
 {
     kCpusList[getCpuID()].proc = pcb;
 }
+/* 获取当前占用 cpu 使用权的进程 */
 struct CpuCB *getCpuCB (void)
 {
     return &kCpusList[getCpuID()];
@@ -156,11 +180,11 @@ void do_switch (void)
 
     /* TODO: */
     if (cpu->intrOffNest != 0)
-        kErrPrintf("fail: do_switch isr nest!\r\n");
+        ErrPrint("fail: do_switch isr nest!\r\n");
     if (pcb->state == RUNNING)
-        kErrPrintf("fail: do_switch process is running!\r\n");
+        ErrPrint("fail: do_switch process is running!\r\n");
     // if (intr_get())
-    //     kErrPrintf("fail: do_switch isr no close!\r\n");
+    //     ErrPrint("fail: do_switch isr no close!\r\n");
 
     /* 记录进程切换前的中断状态，并执行切换 */
     kDISABLE_INTERRUPT();
@@ -319,7 +343,7 @@ void do_exit (int state)
 
     pcb = getProcCB();
     if ((pcb == kInitPCB) || (pcb == kIdlePCB))
-        kErrPrintf("exit error process !\r\n");
+        ErrPrint("exit error process !\r\n");
 
     /* 将目标的所有子进程挂到 init 进程上 */
     proc_freechild(pcb);
@@ -346,9 +370,9 @@ int do_kill (int pid)
         pcb->killState = 1;
         list_del_init(&pcb->regist);
         list_add(&kUnregistList, &pcb->regist);
+        kENABLE_INTERRUPT();
 
         proc_wakeup(pcb);
-        kENABLE_INTERRUPT();
         return 0;
     }
     return -1;
@@ -363,6 +387,7 @@ int do_sleep (int ms)
     if (ms != 0)
     {
         pcb = getProcCB();
+
         kDISABLE_INTERRUPT();
         timer = timer_add(pcb, ms);
         kENABLE_INTERRUPT();

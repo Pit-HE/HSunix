@@ -1,6 +1,6 @@
 /*
  * 软件定时器模块，
- * 用于实现指定进程休眠的时长
+ * ( 目前用于实现进程休眠指定时长 )
  */
 #include "defs.h"
 #include "time.h"
@@ -22,7 +22,7 @@ struct Timer *timer_add (struct ProcCB *pcb, int expires)
     ListEntry_t *plist = NULL;
 
     if ((pcb == NULL) || (expires == 0))
-        kError(eSVC_Timer, E_PARAM);
+        ErrPrint("timer_add: Illegal function argument !\r\n");
 
     timer = (struct Timer *)kalloc(sizeof(struct Timer));
     if (timer != NULL)

@@ -9,14 +9,14 @@
 /* 作为指针，指向 trampoline.S 里的代码 */
 extern char trampoline[];
 
-extern uint64       kPidToken;
-extern struct CpuCB        kCpusList[NCPU];
-extern ListEntry_t  kUnregistList;
-extern ListEntry_t  kRegistList;
-extern ListEntry_t  kReadyList;
-extern ListEntry_t  kPendList;
-extern struct ProcCB      *kInitPCB;
-extern struct ProcCB      *kIdlePCB;
+extern uint64           kPidToken;
+extern struct CpuCB     kCpusList[NCPU];
+extern ListEntry_t      kUnregistList;
+extern ListEntry_t      kRegistList;
+extern ListEntry_t      kReadyList;
+extern ListEntry_t      kPendList;
+extern struct ProcCB   *kInitPCB;
+extern struct ProcCB   *kIdlePCB;
 
 
 struct ProcCB *getProcCB (void)

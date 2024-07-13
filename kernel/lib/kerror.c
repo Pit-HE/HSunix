@@ -1,16 +1,10 @@
-
+/*
+ * 内核错误处理模块，打印错误信息
+ */
 #include "defs.h"
-#include "kerror.h"
 
-void kError (eService SVC, eCode code)
-{
-    kprintf ("error: SCV = %d, code = %d", SVC, code);
 
-    while(1)
-    {}
-}
-
-void kErrPrintf (char *fmt, ...)
+void ErrPrint (char *fmt, ...)
 {
     va_list va;
     struct ProcCB *pcb = getProcCB();

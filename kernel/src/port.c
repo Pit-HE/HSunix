@@ -35,7 +35,10 @@
 //     }
 // }
 
-uint8 Os_interrupt = 0;
+static uint8 Os_interrupt = 0;
+
+
+/* 开启当前芯片的中断功能 */
 void k_enable_all_interrupt (void)
 {
     Os_interrupt = 1;

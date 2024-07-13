@@ -8,7 +8,6 @@
 #include "proc.h"
 #include "fs.h"
 #include "timer.h"
-#include "kerror.h"
 #include "device.h"
 #include "ringbuff.h"
 #include "tinyprintf.h"
@@ -138,8 +137,7 @@ void kPortEnableInterrupt (void);
 
 
 /******************** error *********************/
-void kError (eService SVC, eCode code);
-void kErrPrintf (char *fmt, ...);
+void ErrPrint (char *fmt, ...);
 
 
 /******************** ringbuff ******************/

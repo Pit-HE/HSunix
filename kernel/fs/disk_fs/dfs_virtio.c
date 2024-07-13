@@ -60,7 +60,7 @@ void virtio_disk_init(void)
       *R(VIRTIO_MMIO_DEVICE_ID) != 2 ||
       *R(VIRTIO_MMIO_VENDOR_ID) != 0x554d4551)
   {
-    kError(eSVC_fs, E_STATUS);
+    ErrPrint("could not find virtio disk");
   }
 
   // reset device
@@ -92,28 +92,28 @@ void virtio_disk_init(void)
   // re-read status to ensure FEATURES_OK is set.
   status = *R(VIRTIO_MMIO_STATUS);
   if (!(status & VIRTIO_CONFIG_S_FEATURES_OK))
-    kError(eSVC_fs, E_STATUS);
+    ErrPrint("virtio disk FEATURES_OK unset");
 
   // initialize queue 0.
   *R(VIRTIO_MMIO_QUEUE_SEL) = 0;
 
   // ensure queue 0 is not in use.
   if (*R(VIRTIO_MMIO_QUEUE_READY))
-    kError(eSVC_fs, E_STATUS);
+    ErrPrint("virtio disk should not be ready");
 
   // check maximum queue size.
   uint32 max = *R(VIRTIO_MMIO_QUEUE_NUM_MAX);
   if (max == 0)
-    kError(eSVC_fs, E_STATUS);
+    ErrPrint("virtio disk has no queue 0");
   if (max < NUM)
-    kError(eSVC_fs, E_STATUS);
-
+    ErrPrint("virtio disk max queue too short");
+  
   // allocate and zero queue memory.
   disk.desc = alloc_page();
   disk.avail = alloc_page();
   disk.used = alloc_page();
   if (!disk.desc || !disk.avail || !disk.used)
-    kError(eSVC_fs, E_STATUS);
+    ErrPrint("virtio disk kalloc");
   kmemset(disk.desc, 0, PGSIZE);
   kmemset(disk.avail, 0, PGSIZE);
   kmemset(disk.used, 0, PGSIZE);
@@ -161,10 +161,10 @@ static int alloc_desc()
 static void free_desc(int i)
 {
   if (i >= NUM)
-    kError(eSVC_fs, E_STATUS);
+    ErrPrint("free_desc 1");
     
   if (disk.free[i])
-    kError(eSVC_fs, E_STATUS);
+    ErrPrint("free_desc 2");
 
   disk.desc[i].addr = 0;
   disk.desc[i].len = 0;
@@ -302,7 +302,7 @@ void virtio_disk_isr()
     int id = disk.used->ring[disk.used_idx % NUM].id;
 
     if (disk.status[id] != 0)
-      kError(eSVC_fs, E_STATUS);
+      ErrPrint("virtio_disk_intr status");
 
     sleeplock = 0;
     do_resume(&sleeplock);

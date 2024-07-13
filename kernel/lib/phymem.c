@@ -296,7 +296,7 @@ void *kalloc (int size)
             ksm_node *obj = (ksm_node *)alloc_page();
             if (obj == NULL)
             {
-                kError(eSVC_VirtualMem, E_INVAL);
+                ErrPrint("kalloc: alloc_page fail !\r\n");
                 return NULL;
             }
             /* 设置为当前空闲内存块的大小 */

@@ -72,7 +72,7 @@ uint bmap (struct disk_inode *dnode, uint bn)
 	}
 
 	/* inode 可用空间溢出，不支持继续扩展 */
-	kErrPrintf("bmap: out of range");
+	ErrPrint("bmap: out of range");
     return -1;
 }
 
@@ -225,9 +225,8 @@ void dbmap_free (uint blknum)
 	bi = blknum % (BSIZE * 8);
 	map = 1 << (bi % 8);
 	if((buf->data[bi / 8] & map) == 0)
-    {
-        kError(eSVC_fs, E_STATUS);
-    }
+		ErrPrint("dbmap_free: Invalid bitmap object !\r\n");
+
 	buf->data[bi / 8] &= ~map;
 
 	/* 将位图所在的块写回磁盘 */

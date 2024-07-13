@@ -3,7 +3,6 @@
  */
 #include "defs.h"
 #include "file.h"
-#include "kerror.h"
 #include "fcntl.h"
 #include "dirent.h"
 #include "dfs_fs.h"

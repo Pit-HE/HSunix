@@ -25,7 +25,7 @@ static pte_t *_mmu (pgtab_t *pgtab, uint64 vAddr, bool alloc)
     pte_t *pte = NULL;
 
     if (vAddr >= MAXVA)
-        kError(eSVC_VirtualMem, E_PARAM);
+        ErrPrint("_mmu: Invalid virtual address !\r\n");
 
     for (int level = 2; level > 0; level--)
     {
@@ -54,7 +54,7 @@ static int mappages (pgtab_t *pgtab, uint64 vAddr, uint64 pAddr, uint64 size, in
     pte_t   *pte = NULL;
 
     if (size == 0)
-        kError(eSVC_VirtualMem, E_PARAM);
+        ErrPrint("mappages: Invalid memory size !\r\n");
 
     start = PGROUNDDOWN(vAddr);
     end   = PGROUNDDOWN(vAddr + size - 1);
@@ -65,7 +65,7 @@ static int mappages (pgtab_t *pgtab, uint64 vAddr, uint64 pAddr, uint64 size, in
         if (pte == 0)
             return -1;
         if (*pte & PTE_V)
-            kError(eSVC_VirtualMem, E_STATUS);
+            ErrPrint("mappages: Invalid PTE object !\r\n");
 
         *pte = PA2PTE(pAddr) | flag | PTE_V;
 

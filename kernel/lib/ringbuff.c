@@ -6,10 +6,8 @@
 /* 初始化缓冲区对象 */
 void kRingbuf_init (ringbuf_t *rb, char *buf, int len)
 {
-    if (buf == NULL)
-        kError(eSVC_Ringbuf, E_PARAM);
-    if (len == 0)
-        kError(eSVC_Ringbuf, E_PARAM);
+    if ((buf == NULL) || (len == 0))
+        ErrPrint("kRingbuf_init: Illegal function argument !\r\n");
 
     kmemset(rb, 0, sizeof(ringbuf_t));
 
@@ -23,7 +21,7 @@ void kRingbuf_init (ringbuf_t *rb, char *buf, int len)
 void kRingbuf_clean (ringbuf_t *rb)
 {
     if (rb == NULL)
-        kError (eSVC_Ringbuf, E_PARAM);
+        ErrPrint("kRingbuf_clean: Illegal function argument !\r\n");
 
     kmemset(rb->buf, 0, rb->baseSize);
     rb->idleSize = rb->baseSize;
@@ -37,7 +35,7 @@ int kRingbuf_put (ringbuf_t *rb, char *buf, int len)
     int margin;
 
     if ((buf == NULL) || (rb == NULL))
-        kError(eSVC_Ringbuf, E_PARAM);
+        ErrPrint("kRingbuf_put: Illegal function argument !\r\n");
     if ((len == 0) || (rb->idleSize == 0))
         return 0;
 
@@ -69,7 +67,7 @@ int kRingbuf_get (ringbuf_t *rb, char *buf, int len)
     int margin;
 
     if ((rb == NULL) || (buf == NULL))
-        kError(eSVC_Ringbuf, E_PARAM);
+        ErrPrint("kRingbuf_get: Illegal function argument !\r\n");
     if ((len == 0) || (rb->idleSize == rb->baseSize))
         return 0;
 
@@ -100,7 +98,7 @@ int kRingbuf_get (ringbuf_t *rb, char *buf, int len)
 int kRingbuf_putChar (ringbuf_t *rb, char ch)
 {
     if (rb == NULL)
-        kError(eSVC_Ringbuf, E_PARAM);
+        ErrPrint("kRingbuf_putChar: Illegal function argument !\r\n");
     if (rb->idleSize == 0)
         return 0;
 
@@ -119,7 +117,7 @@ int kRingbuf_putChar (ringbuf_t *rb, char ch)
 int kRingbuf_getChar (ringbuf_t *rb, char *ch)
 {
     if (rb == NULL)
-        kError(eSVC_Ringbuf, E_PARAM);
+        ErrPrint("kRingbuf_getChar: Illegal function argument !\r\n");
     if (rb->idleSize == rb->baseSize)
         return 0;
 
@@ -138,7 +136,7 @@ int kRingbuf_getChar (ringbuf_t *rb, char *ch)
 int kRingbuf_delChar (ringbuf_t *rb)
 {
     if (rb == NULL)
-        kError(eSVC_Ringbuf, E_PARAM);
+        ErrPrint("kRingbuf_getChar: Illegal function argument !\r\n");
     if (rb->idleSize >= rb->baseSize)
         return -1;
     if (rb->rIndex == rb->wIndex)
