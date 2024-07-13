@@ -232,7 +232,7 @@ int do_fork (void)
     struct ProcCB *newPcb = NULL;
     struct ProcCB *curPcb = getProcCB();
 
-    stack = (char *)kallocPhyPage();
+    stack = (char *)alloc_page();
     if (stack == NULL)
         return -1;
 
@@ -389,7 +389,7 @@ struct ProcCB *create_kthread (char *name, void(*entry)(void))
         return NULL;
     
     /* 申请内核栈地址 */
-    stack = (char *)kallocPhyPage();
+    stack = (char *)alloc_page();
     if (stack == NULL)
     {
         pcb_free(pcb);
@@ -410,7 +410,7 @@ struct ProcCB *create_kthread (char *name, void(*entry)(void))
 void destroy_kthread (struct ProcCB *pcb)
 {
     vfs_pcbdeinit(pcb);
-    kfreePhyPage((void *)pcb->stackAddr);
+    free_page((void *)pcb->stackAddr);
     pcb_free(pcb);
 }
 

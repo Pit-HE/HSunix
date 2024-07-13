@@ -47,9 +47,9 @@ char *kstrchr (const char *str, int chr);
 char *kstrrchr(const char *str, int ch);
 
 
-/******************** kallocPhyPage ********************/
-void *kallocPhyPage (void);
-void  kfreePhyPage  (void *pa);
+/******************** alloc_page ********************/
+void *alloc_page (void);
+void  free_page  (void *pa);
 void *kalloc        (int size);
 void  kfree         (void *obj);
 void  init_kmem     (void);
@@ -60,7 +60,7 @@ void     init_kvm    (void);
 pgtab_t *uvm_create  (void);
 int      kvm_setflag (pgtab_t *pgtab, uint64 vAddr, int flag);
 int      kvm_clrflag (pgtab_t *pgtab, uint64 vAddr, int flag);
-uint64   kvm_pagephyaddr (pgtab_t *pgtab, uint64 vAddr);
+uint64   kvm_pageaddr (pgtab_t *pgtab, uint64 vAddr);
 uint64   kvm_phyaddr (pgtab_t *pgtab, uint64 vAddr);
 int      kvm_map     (pgtab_t *pgtab, uint64 vAddr, uint64 pAddr, uint64 sz, int flag);
 void     uvm_unmap   (pgtab_t *pgtab, uint64 vAddr, uint64 npages, bool free);
@@ -79,7 +79,7 @@ void kerneltrap    (void);
 
 
 /******************** test ********************/
-void selfInspection (void);
+void init_selfdetect (void);
 
 
 /******************** proc ********************/
@@ -153,11 +153,6 @@ int  kRingbuf_delChar   (ringbuf_t *rb);
 int  kRingbuf_putState  (ringbuf_t *rb);
 int  kRingbuf_getState  (ringbuf_t *rb);
 int  kRingbuf_getLength (ringbuf_t *rb);
-
-
-/******************** cli ***********************/
-void init_cli (void);
-void cli_main (void);
 
 
 /******************** init **********************/

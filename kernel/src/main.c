@@ -4,7 +4,6 @@
 #include "riscv.h"
 #include "defs.h"
 #include "list.h"
-#include "cli.h"
 
 
 
@@ -20,8 +19,7 @@ void main (void)
     init_timer();
     init_proc();
     init_vfs();
-
-    selfInspection();
+    init_selfdetect();
 
     idle_main();
 }

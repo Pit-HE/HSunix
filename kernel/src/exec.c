@@ -5,7 +5,6 @@
 #include "defs.h"
 #include "fs.h"
 #include "elf.h"
-#include "cli.h"
 #include "proc.h"
 #include "fcntl.h"
 #include "memlayout.h"
@@ -39,7 +38,7 @@ int elf_load_segment (pgtab_t *pgtab, uint64 vAddr,
     for (i=0; i < segsize; i += PGSIZE)
     {
         /* 获取页表虚拟地址所对应的物理地址 */
-        pAddr = kvm_pagephyaddr(pgtab, vAddr + i);
+        pAddr = kvm_pageaddr(pgtab, vAddr + i);
         if (pAddr == 0)
             return -1;
 
@@ -91,7 +90,7 @@ uint64 elf_stack_create (pgtab_t *pgtab, uint64 vAddr)
 int elf_para_create (pgtab_t *pgtab, uint64 *sptop, char *argv[])
 {
     int argc;
-    uint64 len, array[CLI_ARG_MAX];
+    uint64 len, array[8];
 
     if (argv == NULL)
         return 0;

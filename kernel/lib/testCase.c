@@ -15,7 +15,7 @@ void tc_virtualmemory (void)
     pgtab_t *pgtab, *Spgatab;
 
     pgtab = uvm_create();
-    buf = kallocPhyPage();
+    buf = alloc_page();
 
     kvm_map(pgtab, (uint64)0, (uint64)buf, PGSIZE, PTE_R | PTE_W | PTE_U);
 
@@ -25,8 +25,8 @@ void tc_virtualmemory (void)
 
     uvm_copy(Spgatab, pgtab, 20, TRUE);
 
-    extern uint64  kvm_pagephyaddr (pgtab_t *pagetable, uint64 va);
-    buf = (char *)kvm_pagephyaddr(Spgatab, 0);
+    extern uint64  kvm_pageaddr (pgtab_t *pagetable, uint64 va);
+    buf = (char *)kvm_pageaddr(Spgatab, 0);
 
     kprintf ("%s", buf);
 
@@ -214,7 +214,7 @@ void tc_timer (void)
 
 
 /* 系统上电自检接口 */
-void selfInspection (void)
+void init_selfdetect (void)
 {
     // tc_virtualmemory();
     // tc_kalloc();

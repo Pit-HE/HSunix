@@ -76,7 +76,7 @@ struct ProcCB *pcb_alloc (void)
         return NULL;
     
     /* 给进程申请存储 trap 上下文的虚拟地址空间 */
-    pcb->trapFrame = kallocPhyPage();
+    pcb->trapFrame = alloc_page();
     if (pcb->trapFrame == NULL)
     {
         kfree (pcb);
@@ -87,7 +87,7 @@ struct ProcCB *pcb_alloc (void)
     pcb->pgtab = proc_alloc_pgtab(pcb);
     if (pcb->pgtab == NULL)
     {
-        kfreePhyPage(pcb->trapFrame);
+        free_page(pcb->trapFrame);
         kfree (pcb);
         return NULL;
     }
@@ -125,7 +125,7 @@ int pcb_free (struct ProcCB *pcb)
     proc_free_pgtab(pcb->pgtab, pcb->memSize);
 
     /* 释放进程占用的 Trapframe 空间 */
-    kfreePhyPage((void *)pcb->trapFrame);
+    free_page((void *)pcb->trapFrame);
 
     /* 释放进程控制块的资源 */
     kfree(pcb);

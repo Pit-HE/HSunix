@@ -109,9 +109,9 @@ void virtio_disk_init(void)
     kError(eSVC_fs, E_STATUS);
 
   // allocate and zero queue memory.
-  disk.desc = kallocPhyPage();
-  disk.avail = kallocPhyPage();
-  disk.used = kallocPhyPage();
+  disk.desc = alloc_page();
+  disk.avail = alloc_page();
+  disk.used = alloc_page();
   if (!disk.desc || !disk.avail || !disk.used)
     kError(eSVC_fs, E_STATUS);
   kmemset(disk.desc, 0, PGSIZE);

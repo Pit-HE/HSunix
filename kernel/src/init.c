@@ -22,6 +22,7 @@ void init_main (void)
     vfs_mount("ramfs", "/home", O_RDWR | O_CREAT | O_DIRECTORY, NULL);
     mkfile("/home/a.a", O_CREAT|O_RDWR, S_IRWXU);
 
+    /* 将进程从内核切换到用户空间 */
     do_exec("/bin/init", argv);
     trap_userret();
 }

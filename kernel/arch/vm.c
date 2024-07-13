@@ -38,7 +38,7 @@ static pte_t *_mmu (pgtab_t *pgtab, uint64 vAddr, bool alloc)
         }
         else
         {
-            if (!alloc || (pgtab = (pde_t *)kallocPhyPage()) == 0)
+            if (!alloc || (pgtab = (pde_t *)alloc_page()) == 0)
                 return 0;
             kmemset(pgtab, 0, PGSIZE);
             *pte = PA2PTE(pgtab) | PTE_V;
@@ -99,7 +99,7 @@ static void freepages (pgtab_t *pgtab)
             return;
         }
     }
-    kfreePhyPage(pgtab);
+    free_page(pgtab);
 }
 
 
@@ -131,7 +131,7 @@ int kvm_clrflag (pgtab_t *pgtab, uint64 vAddr, int flag)
 }
 
 /* 获取虚拟地址所在的页表首地址 */
-uint64 kvm_pagephyaddr (pgtab_t *pgtab, uint64 vAddr)
+uint64 kvm_pageaddr (pgtab_t *pgtab, uint64 vAddr)
 {
     pte_t *pte;
 
@@ -157,7 +157,7 @@ uint64 kvm_phyaddr (pgtab_t *pgtab, uint64 vAddr)
 {
     uint64 pa;
 
-    pa = kvm_pagephyaddr(pgtab, vAddr);
+    pa = kvm_pageaddr(pgtab, vAddr);
     pa |= vAddr & 0xFFF;
 
     /* 将页表条目内存储的物理地址返回 */
@@ -192,7 +192,7 @@ void uvm_unmap (pgtab_t *pgtab, uint64 vAddr, uint64 npages, bool free)
             return;
 
         if (free == TRUE)
-            kfreePhyPage((void*)PTE2PA(*pte));
+            free_page((void*)PTE2PA(*pte));
 
         *pte = 0;
     }
@@ -201,7 +201,7 @@ void uvm_unmap (pgtab_t *pgtab, uint64 vAddr, uint64 npages, bool free)
 /* 创建新的页表 (与 uvm_destroy 成对使用) */
 pgtab_t *uvm_create (void)
 {
-    pgtab_t *pgtab = (pgtab_t *)kallocPhyPage();
+    pgtab_t *pgtab = (pgtab_t *)alloc_page();
 
     if (pgtab == NULL)
         return NULL;
@@ -233,7 +233,7 @@ uint64 uvm_alloc (pgtab_t *pgtab, uint64 start_addr, uint64 end_addr, int flag)
 
     for (addr=start_addr; addr < end_addr; addr += PGSIZE)
     {
-        mem = (char *)kallocPhyPage();
+        mem = (char *)alloc_page();
         if (mem == NULL)
             goto error_map;
         kmemset(mem, 0, PGSIZE);
@@ -242,7 +242,7 @@ uint64 uvm_alloc (pgtab_t *pgtab, uint64 start_addr, uint64 end_addr, int flag)
         if (mappages(pgtab, addr, (uint64)mem, PGSIZE, flag) != 0)
         {
             /* 释放已申请的内存页 */
-            kfreePhyPage(mem);
+            free_page(mem);
             goto error_map;
         }
     }
@@ -293,7 +293,7 @@ int uvm_copy (pgtab_t *destPage, pgtab_t *srcPage, uint64 sz, bool alloc)
         if (alloc)
         {
             /* 申请新的内存页给目标页表 */
-            d_pa = (uint64)kallocPhyPage();
+            d_pa = (uint64)alloc_page();
             if (d_pa == 0)
                 goto error_cpy;
 
@@ -302,7 +302,7 @@ int uvm_copy (pgtab_t *destPage, pgtab_t *srcPage, uint64 sz, bool alloc)
             /* 为目标页表建立新的映射关系 */
             if (mappages(destPage, i, d_pa, PGSIZE, s_flags) != 0)
             {
-                kfreePhyPage((void*)d_pa);
+                free_page((void*)d_pa);
                 goto error_cpy;
             }
         }
@@ -337,7 +337,7 @@ int uvm_copyout (pgtab_t *pgtab, uint64 dst_va, char *src, uint64 len)
     {
         va_base = PGROUNDDOWN(dst_va);
 
-        pa = kvm_pagephyaddr(pgtab, va_base);
+        pa = kvm_pageaddr(pgtab, va_base);
         if (pa <= 0)
             return -1;
 
@@ -366,7 +366,7 @@ int uvm_copyin (pgtab_t *pgtab, char *dst, uint64 src_va, uint64 len)
         va0 = PGROUNDDOWN(src_va);
 
         /* 获取该虚拟地址所对应的物理地址 */
-        pa0 = kvm_pagephyaddr(pgtab, va0);
+        pa0 = kvm_pageaddr(pgtab, va0);
         if (pa0 == 0)
             return -1;
 

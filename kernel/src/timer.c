@@ -6,7 +6,7 @@
 #include "time.h"
 
 
-#define TIMER_CODE  0x5AA5
+#define TIMER_MAGIC  0x5AA5
 static ListEntry_t kSleepList;
 
 
@@ -24,18 +24,21 @@ struct Timer *timer_add (struct ProcCB *pcb, int expires)
     if ((pcb == NULL) || (expires == 0))
         kError(eSVC_Timer, E_PARAM);
 
-    kDISABLE_INTERRUPT();
     timer = (struct Timer *)kalloc(sizeof(struct Timer));
     if (timer != NULL)
     {
-        timer->code = TIMER_CODE;
+        timer->magic = TIMER_MAGIC;
         timer->expires = expires;
         list_init(&timer->list);
         timer->pcb = pcb;
 
+        /* 将内核线程从进程管理模块移除 */
+        kDISABLE_INTERRUPT();
         pcb->state = SLEEPING;
         list_del_init(&pcb->list);
+        kENABLE_INTERRUPT();
 
+        /* 在软件定时器的管理链表中，查找当前定时器的添加位置 */
         list_for_each(plist, &kSleepList)
         {
             pTimer = list_container_of(plist, struct Timer, list);
@@ -47,9 +50,12 @@ struct Timer *timer_add (struct ProcCB *pcb, int expires)
             }
             timer->expires -= pTimer->expires;
         }
+        /* 将定时器添加到管理链表中 */
+        kDISABLE_INTERRUPT();
         list_add_before(plist, &timer->list);
+        kENABLE_INTERRUPT();
     }
-    kENABLE_INTERRUPT();
+    
     return timer;
 }
 
@@ -60,14 +66,14 @@ void timer_del (struct Timer *timer)
 
     if (timer == NULL)
         return;
-    if (timer->code != TIMER_CODE)
+    if (timer->magic != TIMER_MAGIC)
         return;
 
-    kDISABLE_INTERRUPT();
     if (!list_empty(&timer->list))
     {
         if (timer->expires != 0)
         {
+            /* 更新当前软件定时器所在链表中的下一个定时器对象的计数值 */
             if (timer->list.next != &kSleepList)
             {
                 pTimer = list_container_of(timer->list.next, 
@@ -75,13 +81,15 @@ void timer_del (struct Timer *timer)
                 pTimer->expires += timer->expires;
             }
         }
+        /* 将定时器从管理链表中移除 */
+        kDISABLE_INTERRUPT();
         list_del_init(&timer->list);
+        kENABLE_INTERRUPT();
     }
     kfree(timer);
-    kENABLE_INTERRUPT();
 }
 
-/* 由定时器中断调用，实时处理软件定时器链表 */
+/* 由定时器中断调用，实时处理软件定时器的管理链表 */
 void timer_run (void)
 {
     ListEntry_t *pList = NULL;
@@ -92,11 +100,12 @@ void timer_run (void)
 
     if (pList != &kSleepList)
     {
+        /* 获取软件定时器管理链表中的第一个定时器对象 */
         pTimer = list_container_of(pList, struct Timer, list);
-
         if (pTimer->expires > 0)
             pTimer->expires -= 1;
 
+        /* 处理多个软件定时器同时到期的情况 */
         while(pTimer->expires == 0)
         {
             pList = pList->next;
@@ -105,6 +114,7 @@ void timer_run (void)
             proc_wakeup(pcb);
             if (pTimer->expires != 0)
             {
+                /* 更新当前软件定时器所在链表中的下一个定时器对象的计数值 */
                 if (pTimer->list.next != &kSleepList)
                 {
                     pTimer = list_container_of(pTimer->list.next, 
@@ -116,9 +126,11 @@ void timer_run (void)
             list_del_init(&pTimer->list);
             kENABLE_INTERRUPT();
 
+            /* 是否已经完成管理链表的遍历 */
             if (pList == &kSleepList)
                 break;
 
+            /* 切换到下一个链表节点 */ 
             pTimer = list_container_of(pList, struct Timer, list);
         }
     }

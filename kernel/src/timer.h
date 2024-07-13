@@ -10,9 +10,13 @@
 
 struct Timer
 {
-    int             code;
+    /* 标记 */
+    int             magic;
+    /* 软件定时器的超时计数 */
     uint64          expires;
+    /* 链表节点 */
     ListEntry_t     list;
+    /* 软件定时器管理的进程控制块 */
     struct ProcCB  *pcb;
 };
 
