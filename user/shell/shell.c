@@ -30,6 +30,7 @@ void cmd_clear (void)
 void shell_logo (void)
 {
     cmd_clear();
+    printf("\r\n");
     printf("HSunix kernel is booting.\r\n");
     printf("\r\n");
     printf(" _    _    _____                   _         \r\n");
@@ -40,7 +41,7 @@ void shell_logo (void)
     printf("|_|  |_| |_____/   \\__ _| |_| |_| |_| /_/\\_\\ \r\n");
     printf("\r\n\r\n");
     printf("\033[1;33m HSunix running in riscv64 architecture.\033[0m \r\n");
-    printf("\033[1;33m Usr 'help' to list all command.\033[0m \r\n");
+    printf("\033[1;33m Enter 'help' to list all command.\033[0m \r\n");
 }
 
 /* 处理输入的是方向键的情况 */

@@ -57,7 +57,11 @@ int cmd_exec (char *cmd)
     /* 确认文件是否存在 */
     fd = open(path, O_RDONLY, S_IRWXU);
     if (fd < 0)
+    {
+        printf("%s: command not found\r\n", cmd);
+        printf("   Enter 'help' to view the command list\r\n");
         return -1;
+    }
     close(fd);
 
     pid = fork();

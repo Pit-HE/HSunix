@@ -163,8 +163,6 @@ void cli_main (void);
 /******************** init **********************/
 void init_main (void);
 void idle_main (void);
-void test_main (void);
-void user_main (void);
 
 
 /******************** timer *********************/
@@ -175,7 +173,7 @@ struct Timer *timer_add (struct ProcCB *pcb, int expires);
 
 
 /******************** exec **********************/
-int do_exec(struct ProcCB *obj, char *path, char *argv[]);
+int do_exec(char *path, char *argv[]);
 
 
 /******************** device ********************/

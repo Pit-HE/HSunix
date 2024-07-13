@@ -155,8 +155,8 @@ void do_switch (void)
     struct ProcCB *pcb = getProcCB();
 
     /* TODO: */
-    // if (cpu->intrOffNest != 0)
-    //     kErrPrintf("fail: do_switch isr nest!\r\n");
+    if (cpu->intrOffNest != 0)
+        kErrPrintf("fail: do_switch isr nest!\r\n");
     if (pcb->state == RUNNING)
         kErrPrintf("fail: do_switch process is running!\r\n");
     // if (intr_get())
@@ -417,8 +417,6 @@ void destroy_kthread (struct ProcCB *pcb)
 /* 初始化当前用于测试的指定进程 */
 void init_proc (void)
 {
-    struct ProcCB  *tempPCB = NULL;
-
     list_init(&kRegistList);
     list_init(&kReadyList);
     list_init(&kPendList);
@@ -433,11 +431,6 @@ void init_proc (void)
     kIdlePCB = create_kthread("idle", idle_main);
     vfs_pcbInit(kIdlePCB, "/");
     proc_wakeup(kIdlePCB);
-
-    /* 命令行交互进程 (仅用于内核开发阶段的测试进程) */
-    tempPCB = create_kthread("test", test_main);
-    vfs_pcbInit(tempPCB, "/");
-    proc_wakeup(tempPCB);
 
     /* 设置当前 CPU 的默认进程 */
     setCpuCB(kIdlePCB);

@@ -16,9 +16,9 @@ int fork (void)
     return syscall(SYS_fork);
 }
 
-void wait (int *code)
+int wait (int *code)
 {
-    syscall(SYS_wait, code);
+    return syscall(SYS_wait, code);
 }
 
 void yield (void)

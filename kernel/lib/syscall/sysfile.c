@@ -210,7 +210,7 @@ uint64 sys_exec (void)
             goto __err_sys_exec;
     }
     /* 执行核心代码 */
-    ret = do_exec(NULL, path, argv);
+    ret = do_exec(path, argv);
 
     /* 释放已经申请的内存空间 */
  __err_sys_exec:

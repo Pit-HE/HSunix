@@ -8,7 +8,7 @@ int main (int argc, char *argv[])
 {
     int fd;
 
-    if ((argc != 2) || (argv[0] == NULL))
+    if (argv[0] == NULL)
         return -1;
 
     /* 确认要删除的文件存在 */

@@ -296,11 +296,6 @@ int cmd_clear(int argc, char *argv[])
 
 int cmd_exec (int argc, char *argv[])
 {
-    struct ProcCB  *tempPCB = NULL;
-
-    tempPCB = create_kthread("user", user_main);
-    vfs_pcbInit(tempPCB, "/");
-    proc_wakeup(tempPCB);
     return 0;
 }
 

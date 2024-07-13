@@ -128,7 +128,7 @@ int elf_para_create (pgtab_t *pgtab, uint64 *sptop, char *argv[])
  *
  * 返回值：argv 中记录的参数数量
  */
-int do_exec(struct ProcCB *obj, char *path, char *argv[])
+int do_exec(char *path, char *argv[])
 {
     int fd, i;
     struct elf_ehdr elf;
@@ -136,7 +136,7 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
     uint64 size = 0, tmp;
     pgtab_t *pgtab = NULL;
     uint64 argc, off, sptop;
-    struct ProcCB *pcb = NULL;
+    struct ProcCB *pcb = getProcCB();
 
     fd = vfs_open(path, O_RDWR, S_IRWXU);
 
@@ -145,9 +145,6 @@ int do_exec(struct ProcCB *obj, char *path, char *argv[])
         goto _err_exec_open;
     if (elf.e_magic != ELF_MAGIC)
         goto _err_exec_open;
-
-    /* 判断要操作的进程对象 */
-    pcb = (obj == NULL) ? getProcCB():obj;
 
     /* 创建新的虚拟内存页 */
     pgtab = proc_alloc_pgtab(pcb);
