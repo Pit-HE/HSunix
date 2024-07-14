@@ -4,22 +4,19 @@
 #include "syscall.h"
 #include "dirent.h"
 
-/* TODO: 临时添加，确保目录操作能正常使用 */
-DIR global_dir;
 
 /* 仅打开指定路径的目录对象 */
 DIR *opendir(char *path)
 {
-    // DIR *dir = NULL;
-    DIR *dir = &global_dir;
+    DIR *dir = NULL;
 
     if (path == NULL)
         return NULL;
 
     /* 申请目录对象的内存空间 */
-    // dir = (DIR *)kalloc(sizeof(DIR));
-    // if (dir == NULL)
-    //     return NULL;   
+    dir = (DIR *)malloc(sizeof(DIR));
+    if (dir == NULL)
+        return NULL;   
 
     dir->fd = open(path, O_DIRECTORY | O_RDWR, S_IRWXU);
     if (dir->fd < 0)
@@ -35,7 +32,7 @@ int closedir(DIR *dir)
         return -1;
     
     close(dir->fd);
-    // kfree(dir);
+    free(dir);
 
     return 0;
 }

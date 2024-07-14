@@ -81,3 +81,21 @@ uint64 sys_sleep (void)
     arg_int(0, &num);
     return do_sleep(num);
 }
+
+uint64 sys_brk (void)
+{
+    uint64 vaddr;
+    struct ProcCB *pcb = getProcCB();
+
+    /* 在进程用户空间占用的页表之上，扩展可用的动态内存 */
+    vaddr = PGROUNDUP(pcb->memSize);
+    uvm_alloc(pcb->pgtab, vaddr,
+        vaddr + PGSIZE, PTE_R | PTE_W | PTE_U);
+
+    /* 记录经常页表的用于动态内存而扩张的大小 */
+    kDISABLE_INTERRUPT();
+    pcb->memSize += PGSIZE;
+    kENABLE_INTERRUPT();
+
+    return vaddr;
+}

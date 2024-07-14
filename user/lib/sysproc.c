@@ -66,7 +66,10 @@ void sleep (int ms)
     syscall(SYS_sleep, ms);
 }
 
-
+int brk (void)
+{
+    return syscall(SYS_brk);
+}
 
 
 

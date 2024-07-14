@@ -32,10 +32,10 @@ int     getdirent (int fd, void *buf, uint len);
 int     unlink  (char *path);
 int     chdir   (char *path);
 int     mount   (char *fsname, char *path);
-int     umount (char *path);
+int     umount  (char *path);
 int     getcwd  (char *buf, int len);
 int     rename  (char *oldname, char *newname);
-
+int     brk     (void);
 
 #include "uprintf.h"
 #define printf tfp_printf
@@ -50,5 +50,11 @@ void seekdir(DIR *dir, long offset);
 int  rmdir (char *path);
 struct dirent *readdir(DIR *dir);
 
+
+
+/**************** memory ****************/
+void *malloc (int size);
+void free (void *obj);
+void init_memory (void);
 
 #endif

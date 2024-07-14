@@ -1,32 +1,6 @@
-/*
- * 内存动态管理模块，
- * 1、可以动态分配 4k 的页内存.
- * 2、可以动态分配指定大小的内存块.
- */
-#include "param.h"
+
+#include "libc.h"
 #include "types.h"
-#include "memlayout.h"
-#include "riscv.h"
-#include "defs.h"
-
-extern char end[];
-#ifndef ALIGN
-#define ALIGN(addr, size) (((addr) + (size)-1) & (~((size)-1)))
-#endif
-
-/* 管理 4K 大小物理内存页的动态申请与释放 */
-typedef struct kernelPageMemoryNode
-{
-    uint64 blkNum;
-    struct kernelPageMemoryNode *next;
-}kpm_node;
-/* 
-指向以页大小为单位的内存链表
-    1、phyPageFreeHeader.blkNUM 表示当前页的数量
-    2、phyPageFreeHeader.next 表示页链表的第一个块
- */
-static kpm_node phyPageFreeHeader;
-
 
 /* 管理小内存块的动态申请与释放 */
 typedef struct kernelSmallMemoryNode
@@ -34,95 +8,32 @@ typedef struct kernelSmallMemoryNode
     uint16 magic;
     uint64 blkNum;
     struct kernelSmallMemoryNode *next;
-}ksm_node;
+}usm_node;
 /* 
 指向单向循环的空闲小内存块链表
     1、smallMemFreeHeader.blkNum 表示当前链表内的块数量
     2、smallMemFreeHeader.next 表示链表的第一个节点
     3、链表中每个节点的blkNum (node.blkNum) 表示当前节点块可用的内存大小
  */
-static ksm_node smallMemFreeHeader;
-#define KSMN_MAGIC 0x5AA5
+static usm_node smallMemFreeHeader;
+static uint8 smallMemoryInitFlag = 0;
+#define USMN_MAGIC  0x5AA5
+#define PGSIZE      4096
 
-
-
-/* 处理有效区间物理内存的申请功能 */
-void *alloc_page (void)
+void free (void *obj)
 {
-    kpm_node *p;
-
-    if (phyPageFreeHeader.next == NULL)
-        return NULL;
-
-    kDISABLE_INTERRUPT();
-    /* 从链表取出节点 */
-    p = phyPageFreeHeader.next;
-    phyPageFreeHeader.next = p->next;
-    phyPageFreeHeader.blkNum -= 1;
-    kENABLE_INTERRUPT();
-
-    kmemset((void*)p, 5, PGSIZE);
-    return p;
-}
-
-/* 处理有效区间物理内存的释放功能 */
-void free_page (void *pa)
-{
-    kpm_node *p;
-
-    /* 地址是否对齐 */
-    if (((uint64)pa % PGSIZE) != 0)
-        return;
-    /* 是否为可用内存 */
-    if ((PHYSTOP < (uint64)pa) || ((char*)pa < end))
-        return;
-
-    /* 格式化物理内存页 */
-    kmemset (pa, 1, PGSIZE);
-    p = (kpm_node*)pa;
-
-    kDISABLE_INTERRUPT();
-    /* 添加到空闲链表 */
-    p->next = phyPageFreeHeader.next;
-    phyPageFreeHeader.next = p;
-    phyPageFreeHeader.blkNum += 1;
-    kENABLE_INTERRUPT();
-}
-
-/* 将可用内存格式化为固定大小的页 */
-static void phyPageFormat (void *pa_start, void *pa_end)
-{
-    char *pa;
-
-    phyPageFreeHeader.blkNum = 0;
-    phyPageFreeHeader.next = NULL;
-
-    if ((pa_start == NULL) || (pa_end == NULL))
-        return;
-    /* 地址对齐 */
-    pa = (char *)PGROUNDUP((uint64)pa_start);
-
-    /* 将内存分页并链接到空闲链表中 */
-    for (; pa + PGSIZE <= (char *)pa_end; pa += PGSIZE)
-        free_page(pa);
-}
-
-
-void kfree (void *obj)
-{
-    ksm_node *objHear = (ksm_node *)obj;
-    ksm_node *curHear = NULL;
+    usm_node *objHear = (usm_node *)obj;
+    usm_node *curHear = NULL;
     char *ptr = NULL;
 
     if (obj == NULL)
         return;
     objHear -= 1;
-    if ((objHear->magic != KSMN_MAGIC) ||
+    if ((objHear->magic != USMN_MAGIC) ||
         (objHear->blkNum == 0U))
         return;
-    kmemset(obj, 5, objHear->blkNum - sizeof(ksm_node));
+    memset(obj, 5, objHear->blkNum - sizeof(usm_node));
 
-    kDISABLE_INTERRUPT();
     curHear = smallMemFreeHeader.next;
 
     /* 处理空闲管理链中只有一个内存块的情况 */
@@ -174,7 +85,7 @@ void kfree (void *obj)
                 smallMemFreeHeader.blkNum += 1;
             }
         }
-        goto exit_kfree;
+        return;
     }
 
     /********************************************
@@ -228,27 +139,29 @@ void kfree (void *obj)
     {
         curHear->next = objHear;
     }
-
-exit_kfree:
-    kENABLE_INTERRUPT();
 }
 
 /* 只能用于申请小于 4096 大小的内存块 */
-void *kalloc (int size)
+void *malloc (int size)
 {
     int  objsize = 0;
     char *ptr = NULL;
-    ksm_node *currNode = NULL;
-    ksm_node *tempNode = NULL;
-    ksm_node *nextNode = NULL;
+    usm_node *currNode = NULL;
+    usm_node *tempNode = NULL;
+    usm_node *nextNode = NULL;
 
+    /* 判断当前进程的内存管理是否已经初始化 */
+    if (smallMemoryInitFlag == 0)
+    {
+        init_memory();
+        smallMemoryInitFlag = 1;
+    }
     if ((0 >= size) || (size >= PGSIZE))
         return NULL;
     if (smallMemFreeHeader.next == NULL)
         return NULL;
 
-    kDISABLE_INTERRUPT();
-    objsize = size + sizeof(ksm_node);
+    objsize = size + sizeof(usm_node);
     for (currNode = &smallMemFreeHeader; ;)
     {
         /* 是否有足够大的空闲内存 */
@@ -261,7 +174,7 @@ void *kalloc (int size)
              * 若该内存剩余空间过小，则整块分配
              */
             if (nextNode->blkNum < 
-                (objsize + sizeof(ksm_node) + 1))
+                (objsize + sizeof(usm_node) + 1))
             {
                 currNode->next = nextNode->next;
                 smallMemFreeHeader.blkNum -= 1;
@@ -270,10 +183,10 @@ void *kalloc (int size)
             {
                 /* 分割该可用的空闲内存块 */
                 ptr  = (char *)nextNode;
-                tempNode = (ksm_node *)(ptr + objsize);
+                tempNode = (usm_node *)(ptr + objsize);
 
                 /* 更新被分割后的内存块的头信息 */
-                tempNode->magic  = KSMN_MAGIC;
+                tempNode->magic  = USMN_MAGIC;
                 tempNode->blkNum = nextNode->blkNum - objsize;
                 tempNode->next   = nextNode->next;
 
@@ -281,10 +194,10 @@ void *kalloc (int size)
                 nextNode->blkNum = objsize;
             }
             /* 初始化寻找到的可用空闲内存块 */
-            // nextNode->magic  = KSMN_MAGIC;
+            nextNode->magic  = USMN_MAGIC;
             nextNode->next   = NULL;
             nextNode        += 1;
-            kmemset(nextNode, 0, size);
+            memset(nextNode, 0, size);
             break;
         }
 
@@ -296,53 +209,43 @@ void *kalloc (int size)
         else
         {
             /* 没有可用的空闲内存块时，申请一页新的物理内存 */
-            ksm_node *obj = (ksm_node *)alloc_page();
+            usm_node *obj = (usm_node *)brk();
             if (obj == NULL)
             {
-                ErrPrint("kalloc: alloc_page fail !\r\n");
+                printf("kalloc: brk fail !\r\n");
                 return NULL;
             }
             /* 设置为当前空闲内存块的大小 */
-            obj->magic  = KSMN_MAGIC;
+            obj->magic  = USMN_MAGIC;
             obj->blkNum = PGSIZE;
             obj->next   = NULL;
             obj        += 1;
 
             /* 将新的空闲内存加入管理链表 */ 
-            kfree((char *)obj);
+            free((char *)obj);
 
             /* 重新遍历当前空闲的链表 */
             currNode = &smallMemFreeHeader;
         }
     }
-    kENABLE_INTERRUPT();
     return nextNode;
 }
 
-static void smallMemFormat (void)
+void init_memory (void)
 {
-    ksm_node* curHear;
+    usm_node* curHear = NULL;
 
     smallMemFreeHeader.blkNum = 0U;
     smallMemFreeHeader.next = &smallMemFreeHeader;
 
-    curHear = (ksm_node*)alloc_page();
+    curHear = (usm_node*)brk();
     if (curHear != NULL)
     {
-        curHear->magic  = KSMN_MAGIC;
+        curHear->magic  = USMN_MAGIC;
         curHear->blkNum = PGSIZE;
         curHear->next   = NULL;
         curHear        += 1;
 
-        kfree ((char *)curHear);
+        free ((char *)curHear);
     }
 }
-
-/* 初始化整个物理内存管理模块 */
-void init_kmem (void)
-{
-    phyPageFormat(end, (void*)PHYSTOP);
-    smallMemFormat();
-}
-
-
