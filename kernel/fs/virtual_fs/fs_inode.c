@@ -81,6 +81,32 @@ struct Inode *inode_getdev (struct Device *dev, uint flag,
     return inode;
 }
 
+/* 初始化 inode 为 pipe 的情况 */
+struct Inode *inode_getpipe (struct pipe_t *pipe, uint flag, 
+        uint mode)
+{
+    struct Inode *inode = NULL;
+
+    if (pipe == NULL)
+        return NULL;
+    
+    inode = inode_alloc();
+    if (inode == NULL)
+        return NULL;
+    
+    inode->flags = flag;
+    inode->data  = (void *)pipe;
+    inode->fops  = NULL;
+    inode->mode  = mode;
+    inode->dev   = NULL;
+    inode->fs    = NULL;
+    inode->ref  += 1;
+
+    inode->type  = INODE_PIPO;
+
+    return inode;
+}
+
 /* 释放已经存在的 inode 节点 */
 int inode_put (struct Inode *inode)
 {

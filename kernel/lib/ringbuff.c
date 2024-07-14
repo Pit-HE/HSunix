@@ -183,3 +183,14 @@ int kRingbuf_getLength (ringbuf_t *rb)
     return len;
 }
 
+/* 获取缓冲区内可以读取的数据长度 */
+int kRingbuf_rDataSize (ringbuf_t *rb)
+{
+    return (rb->baseSize - rb->idleSize);
+}
+
+/* 获取缓冲区内可以写入的数据长度 */
+int KRingbuf_wDataSize (ringbuf_t *rb)
+{
+    return (rb->idleSize);
+}

@@ -151,7 +151,8 @@ int  kRingbuf_delChar   (ringbuf_t *rb);
 int  kRingbuf_putState  (ringbuf_t *rb);
 int  kRingbuf_getState  (ringbuf_t *rb);
 int  kRingbuf_getLength (ringbuf_t *rb);
-
+int  kRingbuf_rDataSize (ringbuf_t *rb);
+int  KRingbuf_wDataSize (ringbuf_t *rb);
 
 /******************** init **********************/
 void init_main (void);
@@ -177,6 +178,14 @@ void dev_unregister (struct Device *dev);
 void dev_put (struct Device *dev);
 struct Device *dev_alloc (const char *name);
 struct Device *dev_get (const char *name);
+
+
+/******************** pipe **********************/
+#include "pipe.h"
+int pipealloc (struct Inode **rNode, struct Inode **wNode);
+int pipeclose (struct pipe_t *pipe, bool flag);
+int piperead  (struct pipe_t *pipe, uint64 buf, uint n);
+int pipewrite (struct pipe_t *pipe, uint64 buf, uint n);
 
 
 #endif

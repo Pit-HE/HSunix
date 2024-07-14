@@ -6,10 +6,10 @@
 #define __FILE_H__
 
 
-// #include "defs.h"
 #include "proc.h"
 #include "dirent.h"
 #include "device.h"
+#include "pipe.h"
 
 
 struct File;
@@ -187,6 +187,7 @@ struct File *fd_copy (struct File *file);
 /**********************************/
 struct Inode *inode_getdev (struct Device *dev, uint flag, uint mode);
 struct Inode *inode_getfs (struct FsDevice *fsdev, uint flag, uint mode);
+struct Inode *inode_getpipe (struct pipe_t *pipe, uint flag, uint mode);
 int inode_put (struct Inode *inode);
 
 /**********************************/
