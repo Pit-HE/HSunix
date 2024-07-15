@@ -16,7 +16,6 @@ typedef struct kernelSmallMemoryNode
     3、链表中每个节点的blkNum (node.blkNum) 表示当前节点块可用的内存大小
  */
 static usm_node smallMemFreeHeader;
-static uint8 smallMemoryInitFlag = 0;
 #define USMN_MAGIC  0x5AA5
 #define PGSIZE      4096
 
@@ -150,12 +149,6 @@ void *malloc (int size)
     usm_node *tempNode = NULL;
     usm_node *nextNode = NULL;
 
-    /* 判断当前进程的内存管理是否已经初始化 */
-    if (smallMemoryInitFlag == 0)
-    {
-        init_memory();
-        smallMemoryInitFlag = 1;
-    }
     if ((0 >= size) || (size >= PGSIZE))
         return NULL;
     if (smallMemFreeHeader.next == NULL)

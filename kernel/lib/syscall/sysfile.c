@@ -223,3 +223,27 @@ uint64 sys_exec (void)
 
     return ret;
 }
+uint64 sys_pipe (void)
+{
+    int rfd, wfd;
+    uint64 vaddr;
+    struct File *rfile = NULL;
+    struct File *wfile = NULL;
+    struct ProcCB *pcb = getProcCB();
+
+    rfd = fd_alloc();
+    rfile = fd_get(rfd);
+
+    wfd = fd_alloc();
+    wfile = fd_get(wfd);
+
+    if (0 > pipealloc(rfile, wfile))
+        return -1;
+    arg_addr(0, &vaddr);
+
+    uvm_copyout(pcb->pgtab, vaddr, (char *)&rfd, sizeof(rfd));
+    vaddr += sizeof(rfd);
+    uvm_copyout(pcb->pgtab, vaddr, (char *)&wfd, sizeof(wfd));
+
+    return 0;
+}

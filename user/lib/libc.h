@@ -4,7 +4,9 @@
 #ifndef __USER_LIB_H__
 #define __USER_LIB_H__
 
+
 #include "string.h"
+
 
 void    exit    (int code);
 int     fork    (void);
@@ -36,11 +38,15 @@ int     umount  (char *path);
 int     getcwd  (char *buf, int len);
 int     rename  (char *oldname, char *newname);
 int     brk     (void);
+int     pipe    (int fd[2]);
+
 
 #include "uprintf.h"
 #define printf tfp_printf
 
+
 #include "shell.h"
+
 
 #include "fcntl.h"
 #include "dirent.h"

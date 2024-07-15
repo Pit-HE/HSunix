@@ -5,7 +5,9 @@
 
 #include "ringbuff.h"
 
-#define PIPE_BUF_SIZE   64
+
+#define PIPE_BUF_SIZE   16
+
 
 struct pipe_t
 {

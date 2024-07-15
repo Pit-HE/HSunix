@@ -239,6 +239,10 @@ int file_close (struct File *file)
         dev_put(file->inode->dev);
         inode_put(file->inode);
     }
+    else if (file->inode->type == INODE_PIPO)
+    {
+        inode_put(file->inode);
+    }
     else
     {
         fsdev_put(file->ditem->fsdev);

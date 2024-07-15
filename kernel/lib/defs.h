@@ -2,6 +2,7 @@
 #ifndef __UCORE_DEFS_H__
 #define __UCORE_DEFS_H__
 
+
 #include "types.h"
 #include "riscv.h"
 #include "file.h"
@@ -151,7 +152,7 @@ int  kRingbuf_delChar   (ringbuf_t *rb);
 int  kRingbuf_putState  (ringbuf_t *rb);
 int  kRingbuf_getState  (ringbuf_t *rb);
 int  kRingbuf_getLength (ringbuf_t *rb);
-int  kRingbuf_rDataSize (ringbuf_t *rb);
+int  KRingbuf_rDataSize (ringbuf_t *rb);
 int  KRingbuf_wDataSize (ringbuf_t *rb);
 
 /******************** init **********************/
@@ -181,11 +182,7 @@ struct Device *dev_get (const char *name);
 
 
 /******************** pipe **********************/
-#include "pipe.h"
-int pipealloc (struct Inode **rNode, struct Inode **wNode);
-int pipeclose (struct pipe_t *pipe, bool flag);
-int piperead  (struct pipe_t *pipe, uint64 buf, uint n);
-int pipewrite (struct pipe_t *pipe, uint64 buf, uint n);
+int pipealloc (struct File *rfile, struct File *wfile);
 
 
 #endif

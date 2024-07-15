@@ -6,7 +6,7 @@ void _main (int argc, char *argv[])
 {
     int ret;
 
-    // init_memory();
+    init_memory();
 
 /** 以上代码适用于所有进程运行前的初始化 **/
     ret = main (argc, argv);

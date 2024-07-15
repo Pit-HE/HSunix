@@ -74,6 +74,9 @@ void exec (char *path, char *argv[])
 {
     syscall(SYS_exec, path, argv);
 }
-
+int pipe (int fd[2])
+{
+    return syscall(SYS_pipe, fd);
+}
 
 

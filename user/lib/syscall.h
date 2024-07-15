@@ -40,6 +40,7 @@ enum system_call_code
     SYS_getcwd,
     SYS_rename,
     SYS_brk,
+    SYS_pipe = 30,
 
 /************** 以下内容不可添加与修改****************/
     SYS_callmax,

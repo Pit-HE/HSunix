@@ -44,7 +44,7 @@ uint64 sys_umount(void);
 uint64 sys_getcwd(void);
 uint64 sys_rename (void);
 uint64 sys_exec (void);
-
+uint64 sys_pipe (void);
 
 
 #endif
