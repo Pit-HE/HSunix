@@ -63,4 +63,9 @@ void *malloc (int size);
 void free (void *obj);
 void init_memory (void);
 
+
+/**************** memory ****************/
+#include "pthread.h"
+
+
 #endif
