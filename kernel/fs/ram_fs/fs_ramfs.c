@@ -38,7 +38,7 @@ void _free_ramfs_node (struct ramfs_sb *sb, struct ramfs_node *node)
         return;
 
     kDISABLE_INTERRUPT();
-    list_del(&node->siblist);
+    list_del_init(&node->siblist);
     kENABLE_INTERRUPT();
 
     /* 释放文件存储的数据 */
@@ -470,7 +470,7 @@ int ramfs_unlink (struct DirItem *ditem)
 
     /* 从文件系统中移除该节点 */
     kDISABLE_INTERRUPT();
-    list_del (&node->siblist);
+    list_del_init (&node->siblist);
     kENABLE_INTERRUPT();
 
     if (node->type == RAMFS_DIR)

@@ -78,7 +78,7 @@ struct disk_buf *dbuf_alloc (uint blknum)
         
         /* 从空闲链表获取可用对象，并将其移除 */
         list = gBufIdleList.next;
-        list_del(list);
+        list_del_init(list);
         
         /* 初始化该缓冲区对象 */
         buf = list_container_of(list, struct disk_buf, list);
@@ -114,7 +114,7 @@ void dbuf_free (struct disk_buf *buf)
         return;
 
     /* 当缓冲区对象引用计数为空时，释放该对象 */
-    list_del(&buf->list);
+    list_del_init(&buf->list);
     buf->ref = 0;
     buf->blknum = 0;
     buf->valid = FALSE;

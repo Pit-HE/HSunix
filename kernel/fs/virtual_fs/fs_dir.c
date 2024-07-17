@@ -168,7 +168,7 @@ static void ditem_del (struct DirItem *ditem)
         return;
 
     kDISABLE_INTERRUPT();
-    list_del(&ditem->list);
+    list_del_init(&ditem->list);
     ditem->state = DITEM_ALLOC;
     kENABLE_INTERRUPT();
 }

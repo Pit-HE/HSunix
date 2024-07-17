@@ -155,7 +155,7 @@ static int remove_fsdev (struct FsDevice *fsdev)
     /* 该文件系统设备是否还有挂载有子设备 */
     if (list_empty(&fsdev->sublist))
     {
-        list_del(&fsdev->siblist);
+        list_del_init(&fsdev->siblist);
     }
     else
         return -1;

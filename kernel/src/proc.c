@@ -146,6 +146,13 @@ void do_scheduler (void)
             break;
         }
     }
+    /* 实现内核线程的时间片轮转调度功能 */
+    if (kReadyList.next != &kReadyList)
+    {
+        ptr = kReadyList.next;
+        list_del_init(ptr);
+        list_add_before(&kReadyList, ptr);
+    }
 }
 
 /* 死亡进程回收器 */

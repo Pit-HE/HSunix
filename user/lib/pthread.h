@@ -15,6 +15,7 @@ typedef unsigned int pthread_t;
 /* 线程的状态 */
 enum Threadstate
 {
+  FREE = 0,
   IDLE,     /* 空闲 */
   USED,     /* 刚被分配 */
   SUSPEND,  /* 挂起 */
@@ -74,14 +75,5 @@ typedef struct
     unsigned int         sleep;
     void                *stack;
 }ThreadCB;
-
-
-/* 外部接口 */
-int  pthread_exit   (void *retval);
-int  pthread_join   (pthread_t thread, void **retval);
-int  pthread_sleep  (int ms);
-int  pthread_create (pthread_t *thread, const pthread_attr_t *attr, 
-        void *(*start_routine)(void *), void *arg);
-
 
 #endif
