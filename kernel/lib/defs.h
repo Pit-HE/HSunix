@@ -185,4 +185,12 @@ struct Device *dev_get (const char *name);
 int pipealloc (struct File *rfile, struct File *wfile);
 
 
+/******************** msg **********************/
+void init_msg (void);
+int msgget (int key, int msgflg);
+int msgsnd (int msqid, void *msgp, uint msgsz, int msgflg);
+int msgrcv (int msqid, void *msgp, uint msgsz, int msgtyp, int msgflg);
+int msgctl (int msqid, int cmd, void *uptr);
+
+
 #endif

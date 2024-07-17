@@ -78,6 +78,10 @@ static uint64 (*_syscall[])(void) =
     [SYS_rename ]   sys_rename,
     [SYS_brk    ]   sys_brk,
     [SYS_pipe   ]   sys_pipe,
+    [SYS_msgget ]   sys_msgget,
+    [SYS_msgsnd ]   sys_msgsnd,
+    [SYS_msgrcv ]   sys_msgrcv,
+    [SYS_msgctl ]   sys_msgctl,
 };
 #define SYSCALL_NUM (sizeof(_syscall)/sizeof(_syscall[0]))
 

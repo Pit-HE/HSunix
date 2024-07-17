@@ -71,5 +71,24 @@ int brk (void)
     return syscall(SYS_brk);
 }
 
+int msgget(int key, int msgflg)
+{
+    return syscall(SYS_msgget, key, msgflg);
+}
 
+int msgsnd(int msqid, void *msgp, uint msgsz, int msgflg)
+{
+    return syscall(SYS_msgsnd, msqid, msgp, msgsz, msgflg);
+}
 
+int msgrcv(int msqid, void *msgp, uint msgsz,
+        int msgtyp, int msgflg)
+{
+    return syscall(SYS_msgrcv, msqid, msgp, msgsz,
+        msgtyp, msgflg);
+}
+
+int msgctl(int msqid, int cmd, void *uptr)
+{
+    return syscall(SYS_msgctl, msqid, cmd, uptr);
+}

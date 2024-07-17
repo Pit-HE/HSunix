@@ -94,10 +94,6 @@ struct help_info help_list[] =
         "clear",
         "Clear screen and move cursor to top-left corner\r\n"
     },
-    {/* cmd_exe */
-        "exec",
-        "sdafsddfs"
-    }
 };
 #define CMD_LIST_LEN sizeof(help_list)/sizeof(help_list[0])
 

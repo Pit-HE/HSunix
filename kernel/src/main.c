@@ -18,6 +18,7 @@ void main (void)
     init_timer();
     init_proc();
     init_vfs();
+    init_msg();
     init_selfdetect();
 
     idle_main();

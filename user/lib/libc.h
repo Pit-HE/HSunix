@@ -39,7 +39,10 @@ int     getcwd  (char *buf, int len);
 int     rename  (char *oldname, char *newname);
 int     brk     (void);
 int     pipe    (int fd[2]);
-
+int     msgget  (int key, int msgflg);
+int     msgsnd  (int msqid, void *msgp, uint msgsz, int msgflg);
+int     msgrcv  (int msqid, void *msgp, uint msgsz, int msgtyp, int msgflg);
+int     msgctl  (int msqid, int cmd, void *uptr);
 
 #include "uprintf.h"
 #define printf tfp_printf

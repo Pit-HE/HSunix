@@ -24,7 +24,11 @@ uint64 sys_suspend (void);
 uint64 sys_resume (void);
 uint64 sys_gettime (void);
 uint64 sys_sleep (void);
-uint64 sys_brk (void);
+uint64 sys_brk   (void);
+uint64 sys_msgget(void);
+uint64 sys_msgsnd(void);
+uint64 sys_msgrcv(void);
+uint64 sys_msgctl(void);
 
 /******************* sysfile **********************/
 uint64 sys_open (void);

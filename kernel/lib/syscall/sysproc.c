@@ -81,7 +81,6 @@ uint64 sys_sleep (void)
     arg_int(0, &num);
     return do_sleep(num);
 }
-
 uint64 sys_brk (void)
 {
     uint64 vaddr;
@@ -98,4 +97,55 @@ uint64 sys_brk (void)
     kENABLE_INTERRUPT();
 
     return vaddr;
+}
+uint64 sys_msgget(void)
+{
+    int key, flag;
+
+    arg_int(0, &key);
+    arg_int(1, &flag);
+
+    return msgget(key, flag);
+}
+uint64 sys_msgsnd(void)
+{
+    uint64 addr;
+    int id, size, flag;
+
+    arg_int (0, &id);
+    arg_addr(1, &addr);
+    arg_int (2, &size);
+    arg_int (3, &flag);
+
+    addr = kvm_phyaddr(getProcCB()->pgtab, addr);
+
+    return msgsnd(id, (void*)addr, size, flag);
+}
+uint64 sys_msgrcv(void)
+{
+    uint64 addr;
+    int id, size, type, flag;
+
+    arg_int (0, &id);
+    arg_addr(1, &addr);
+    arg_int (2, &size);
+    arg_int (3, &type);
+    arg_int (4, &flag);
+
+    addr = kvm_phyaddr(getProcCB()->pgtab, addr);
+
+    return msgrcv(id, (void*)addr, size, type, flag);
+}
+uint64 sys_msgctl(void)
+{
+    uint64 addr;
+    int id, cmd;
+
+    arg_int (0, &id);
+    arg_int (1, &cmd);
+    arg_addr(2, &addr);
+
+    addr = kvm_phyaddr(getProcCB()->pgtab, addr);
+
+    return msgctl(id, cmd, (void*)addr);
 }
