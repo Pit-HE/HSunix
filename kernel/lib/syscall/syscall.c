@@ -39,8 +39,7 @@ void arg_addr (int num, uint64 *addr)
 /* 从指定的入参中读取字符串类型的数据 */
 int arg_str (int num, char *buf, int len)
 {
-    struct ProcCB *pcb = getProcCB();
-    return (uvm_copyin(pcb->pgtab, buf, arg_raw(num), len));
+    return copy_from_user(buf, arg_raw(num), len);
 }
 
 

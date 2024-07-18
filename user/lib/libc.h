@@ -49,6 +49,7 @@ int     msgctl  (int msqid, int cmd, void *uptr);
 
 
 #include "shell.h"
+#include "ipc.h"
 
 
 #include "fcntl.h"

@@ -34,9 +34,11 @@ export CPUS ROOT_DIR
 # 默认清空工程重新编译并运行 HSunix
 all: remove build app
 
-# 重新构建整个系统内核
+# 重新构建内核与用户代码
 build:
 	make -C kernel
+	make -C user
+	cd user && make fs_img
 
 # 生成创建可挂载的磁盘文件 fs.img 的工具
 mkfs:
@@ -45,6 +47,10 @@ mkfs:
 # 生成可以挂载到 qemu 上的磁盘文件
 fs.img:mkfs
 	cd user && make fs_img
+
+# 仅重新构建系统内核
+kernel:
+	make -C kernel
 
 # 仅编译 user/app 中写的执行在用户空间的代码
 app:mkfs

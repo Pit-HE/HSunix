@@ -105,36 +105,34 @@ uint64 sys_msgget(void)
     arg_int(0, &key);
     arg_int(1, &flag);
 
-    return msgget(key, flag);
+    return k_msgget(key, flag);
 }
 uint64 sys_msgsnd(void)
 {
     uint64 addr;
-    int id, size, flag;
+    int id, size;
 
     arg_int (0, &id);
     arg_addr(1, &addr);
     arg_int (2, &size);
-    arg_int (3, &flag);
 
     addr = kvm_phyaddr(getProcCB()->pgtab, addr);
 
-    return msgsnd(id, (void*)addr, size, flag);
+    return k_msgsnd(id, (void*)addr, size, 0);
 }
 uint64 sys_msgrcv(void)
 {
     uint64 addr;
-    int id, size, type, flag;
+    int id, size, type;
 
     arg_int (0, &id);
     arg_addr(1, &addr);
     arg_int (2, &size);
     arg_int (3, &type);
-    arg_int (4, &flag);
 
     addr = kvm_phyaddr(getProcCB()->pgtab, addr);
 
-    return msgrcv(id, (void*)addr, size, type, flag);
+    return k_msgrcv(id, (void*)addr, size, type, 0);
 }
 uint64 sys_msgctl(void)
 {
@@ -147,5 +145,5 @@ uint64 sys_msgctl(void)
 
     addr = kvm_phyaddr(getProcCB()->pgtab, addr);
 
-    return msgctl(id, cmd, (void*)addr);
+    return k_msgctl(id, cmd, (void*)addr);
 }

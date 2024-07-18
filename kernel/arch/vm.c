@@ -390,6 +390,18 @@ int uvm_copyin (pgtab_t *pgtab, char *dst, uint64 src_va, uint64 len)
     return ret;
 }
 
+/* 从内核拷贝数据到用户空间 */
+int copy_to_user (uint64 dst_va, char *src, uint64 len)
+{
+    return uvm_copyout(getProcCB()->pgtab, dst_va, src, len);
+}
+
+/* 从用户空间拷贝数据到内核 */
+int copy_from_user (char *dst, uint64 src_va, uint64 len)
+{
+    return uvm_copyin(getProcCB()->pgtab, dst, src_va, len);
+}
+
 
 
 /* 初始化虚拟内存管理模块 */

@@ -98,9 +98,63 @@ void test_threadscheduler (void)
     }
 }
 
+/* 测试消息队列在两个进程间传递数据 */
+void test_msgDataTransfer (void)
+{
+    msg_info info;
+    int pid, mid, i = 0;
+    
+    pid = fork();
+    if (pid == 0)
+    {
+        mid = msgget(1234, IPC_CREAT | 0x666);
+
+        info.mtext = malloc(32);
+        for (i=0; i<6; i++)
+        {
+            info.type = i;
+            memset(info.mtext, 0, 32);
+            switch(i)
+            {
+                case 0:strcpy(info.mtext, "1111111");
+                    break;
+                case 1:strcpy(info.mtext, "2222222");
+                    break;
+                case 2:strcpy(info.mtext, "3333333");
+                    break;
+                case 3:strcpy(info.mtext, "4444444");
+                    break;
+                case 4:strcpy(info.mtext, "5555555");
+                    break;
+                default:strcpy(info.mtext, "6666666");
+                    break;
+            }
+            msgsnd(mid, (void *)&info, 32, 0);
+        }
+    }
+    else
+    {
+        mid = msgget(1234, IPC_CREAT | 0x666);
+
+        info.mtext = malloc(32);
+        for (i=0; i<6; i++)
+        {
+            if (msgrcv(mid, (void *)&info, 32, i, 0) > 0)
+            {
+                printf ("msgrcv: type=%ld, text=%s\r\n",
+                    info.type, (char *)info.mtext);
+            }
+        }
+    }
+}
+
 /* 进程在用户空间(模式)中执行的函数 */ 
 int main (int argc, char *argv[])
 {
+    /* 创建子进程去执行对应的测试用例 */
+    if (fork() > 0)
+        return 0;
+
     if (strncmp(argv[0], "param", 5) == 0)
     {
         printf ("test: test_parameter\r\n");
@@ -120,6 +174,11 @@ int main (int argc, char *argv[])
     {
         printf ("test: test_threadscheduler\r\n");
         test_threadscheduler();
+    }
+    else if (strncmp(argv[0], "msg", 3) == 0)
+    {
+        printf ("test: test_msgDataTransfer\r\n");
+        test_msgDataTransfer();
     }
 
     return 0;

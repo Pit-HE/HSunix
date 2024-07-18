@@ -30,6 +30,10 @@
 #define STD_OUTPUT  1
 #define STD_ERROR   2
 
+/* IPC 相关的标志位 */
+#define IPC_CREAT  0x00001000   /* create if key is nonexistent */
+#define IPC_EXCL   0x00002000   /* fail if key exists */
+#define IPC_NOWAIT 0x00004000   /* return error on wait */
 
 
 #endif

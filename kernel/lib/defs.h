@@ -70,6 +70,8 @@ void     uvm_destroy (pgtab_t *pgtab, uint64 size);
 int      uvm_copyout (pgtab_t *pgtab, uint64 dst_va, char *src, uint64 len);
 int      uvm_copyin  (pgtab_t *pgtab, char *dst, uint64 src_va, uint64 len);
 int      uvm_copy    (pgtab_t *destPage, pgtab_t *srcPage, uint64 sz, bool alloc);
+int      copy_to_user   (uint64 dst_va, char *src, uint64 len);
+int      copy_from_user (char *dst, uint64 src_va, uint64 len);
 
 /******************** trap ********************/
 void init_trap     (void);
@@ -187,10 +189,10 @@ int pipealloc (struct File *rfile, struct File *wfile);
 
 /******************** msg **********************/
 void init_msg (void);
-int msgget (int key, int msgflg);
-int msgsnd (int msqid, void *msgp, uint msgsz, int msgflg);
-int msgrcv (int msqid, void *msgp, uint msgsz, int msgtyp, int msgflg);
-int msgctl (int msqid, int cmd, void *uptr);
+int k_msgget (int key, int msgflg);
+int k_msgsnd (int msqid, void *msgp, uint msgsz, int msgflg);
+int k_msgrcv (int msqid, void *msgp, uint msgsz, int msgtyp, int msgflg);
+int k_msgctl (int msqid, int cmd, void *uptr);
 
 
 #endif

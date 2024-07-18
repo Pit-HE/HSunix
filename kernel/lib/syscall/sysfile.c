@@ -183,7 +183,6 @@ uint64 sys_exec (void)
     int i, ret = -1;
     char path[32], *argv[6];
     uint64 addr, uargv, tmp;
-    struct ProcCB *pcb = getProcCB();
 
     arg_str (0, path, 32);
     arg_addr(1, &uargv);
@@ -192,7 +191,7 @@ uint64 sys_exec (void)
     {
         /* 获取用户空间存放数据的缓冲区地址 */
         tmp = uargv + (sizeof(uint64) * i);
-        uvm_copyin(pcb->pgtab, (char *)&addr, tmp, sizeof(addr));
+        copy_from_user((char *)&addr, tmp, sizeof(addr));
 
         /* 初始化 argv, 并确认是否有数据需要传递 */
         argv[i] = NULL;
@@ -205,8 +204,7 @@ uint64 sys_exec (void)
             goto __err_sys_exec;
 
         /* 将用户层传递的数据写入内核数据缓冲区 */
-        ret = uvm_copyin(pcb->pgtab, argv[i], addr, 64);
-        if (ret < 0)
+        if (copy_from_user(argv[i], addr, 64) < 0)
             goto __err_sys_exec;
     }
     /* 执行核心代码 */
@@ -229,7 +227,6 @@ uint64 sys_pipe (void)
     uint64 vaddr;
     struct File *rfile = NULL;
     struct File *wfile = NULL;
-    struct ProcCB *pcb = getProcCB();
 
     rfd = fd_alloc();
     rfile = fd_get(rfd);
@@ -241,9 +238,9 @@ uint64 sys_pipe (void)
         return -1;
     arg_addr(0, &vaddr);
 
-    uvm_copyout(pcb->pgtab, vaddr, (char *)&rfd, sizeof(rfd));
+    copy_to_user(vaddr, (char *)&rfd, sizeof(rfd));
     vaddr += sizeof(rfd);
-    uvm_copyout(pcb->pgtab, vaddr, (char *)&wfd, sizeof(wfd));
+    copy_to_user(vaddr, (char *)&wfd, sizeof(wfd));
 
     return 0;
 }

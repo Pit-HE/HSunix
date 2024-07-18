@@ -23,7 +23,8 @@
 
 
 MAKE 命令使用说明：
-    make build   编译 HSunix 系统内核
+    make build   编译系统内核与用户空间代码，重新创建 fs.img 文件
+    make kernel  编译系统内核代码
     make app     编译用户空间代码
     make         执行整个项目代码的清理、编译、链接流程
     make qemu    调用 qemu 直接运行生成的 HSunix 系统文件
