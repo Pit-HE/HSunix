@@ -57,6 +57,7 @@ static int pipewrite (struct File *file, void *buf, uint n)
 
     if ((file == NULL) || (buf == NULL) || (n == 0))
         return -1;
+    /* 获取该文件描述符携带的管道对象 */
     pipe = (struct pipe_t *)file->inode->data;
 
     /* 确保数据全部写入缓冲区 */
@@ -93,6 +94,7 @@ static int pipeclose (struct File *file)
 
     if (file == NULL)
         return -1;
+    /* 获取该文件描述符携带的管道对象 */
     pipe = (struct pipe_t *)file->inode->data;
 
     if (file->flags == O_WRONLY)
@@ -118,7 +120,9 @@ static int pipeclose (struct File *file)
     return 0;
 }
 
-/* 将管道功能注册成内核文件设备 */
+/* 将管道功能注册成内核文件设备 
+ * ( 贯彻 unix 一切皆文件的思想 )
+ */
 struct FileOperation pipe_opt = 
 {
     .read  = piperead,

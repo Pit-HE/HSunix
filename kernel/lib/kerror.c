@@ -11,10 +11,12 @@ void ErrPrint (char *fmt, ...)
 
     kprintf ("Fail: ");
 
+    /* 打印要处理的不定长参数 */
     va_start(va, fmt);
     tfp_format(NULL, console_wChar, fmt, va);
     va_end(va);
 
+    /* 打印故障进程的信息 */
     kprintf ("Current PCB = %s, PID = %d\r\n", 
             pcb->name, pcb->pid);
     kprintf ("----------------------------\r\n");

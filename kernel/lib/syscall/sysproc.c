@@ -1,8 +1,11 @@
-
+/* 
+ * 记录所有与进程相关的系统调用
+ */
 #include "syspriv.h"
 #include "syscall.h"
 #include "defs.h"
 #include "proc.h"
+
 
 uint64 sys_exit (void)
 {

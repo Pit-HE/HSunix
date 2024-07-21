@@ -4,7 +4,7 @@
 #include "defs.h"
 #include "fcntl.h"
 
-
+/* init 的内核线程 */
 void init_main (void)
 {
     /* 告诉 init 进程要加载的 shell 程序 */
@@ -22,19 +22,22 @@ void init_main (void)
     vfs_mount("ramfs", "/home", O_RDWR | O_CREAT | O_DIRECTORY, NULL);
     mkfile("/home/a.a", O_CREAT|O_RDWR, S_IRWXU);
 
-    /* 将进程从内核切换到用户空间 */
+    /* 加载用户空间中的 init 进程代码 */
     do_exec("/bin/init", argv);
     trap_userret();
 }
 
-
+/* 内核空闲进程 */
 void idle_main (void)
 {
+    /* 开启中断管理模块 */
     k_enable_all_interrupt();
 
     while(1)
     {
+        /* 调度新的进程 */
         do_scheduler();
+        /* 处理死亡的进程 */
         do_defuncter();
     }
 }

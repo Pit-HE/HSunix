@@ -49,6 +49,7 @@ int dev_interrupt (void)
             default:
                 break;
         }
+        /* 清除中断标志 */
         if (irq)
             plic_complete(irq);
         ret = 1;
@@ -59,9 +60,11 @@ int dev_interrupt (void)
         if (getCpuID() == 0)
         {
             Systicks++;
+            /* 更新定时器模块 */
             timer_run();
         }
 
+        /* 清除中断标志 */
         w_sip(r_sip() & ~2);
         ret = 2;
     }

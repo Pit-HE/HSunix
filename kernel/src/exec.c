@@ -19,10 +19,13 @@ int elf_flag_perm (int flag)
 {
     int ret = 0;
 
+    /* 解析 ELF 文件中的标志位 */
     if (flag & 0x01)
         ret |= PTE_X;
     if (flag & 0x02)
         ret |= PTE_W;
+    
+    /* 设置默认的标志位 */
     ret |= PTE_R | PTE_U;
 
     return ret;

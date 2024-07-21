@@ -1,4 +1,6 @@
-
+/* 
+ * 记录所有与文件系统相关的系统调用
+ */
 #include "syspriv.h"
 #include "syscall.h"
 #include "fcntl.h"

@@ -241,11 +241,14 @@ void do_resume (void *obj)
     if (obj == NULL)
         return;
 
+    /* 变量所有被挂起的进程 */
     list_for_each_safe(ptr, qtr, &kPendList)
     {
+        /* 查找等待指定事件的进程 */
         pcb = list_container_of(ptr, struct ProcCB, list);
         if (pcb->pendObj == obj)
         {
+            /* 若该进程存在，则将其添加到就绪链表 */
             kDISABLE_INTERRUPT();
             pcb->state = READY;
             list_del_init(&pcb->list);
@@ -297,6 +300,7 @@ int do_fork (void)
     newPcb->parent = curPcb;
     kENABLE_INTERRUPT();
 
+    /* 唤醒新进程，将其添加到就绪队列等待调度 */
     proc_wakeup(newPcb);
 
     return newPcb->pid;
@@ -328,6 +332,7 @@ int do_wait (int *code)
                     *code = childPcb->exitState;
                 pid = childPcb->pid;
 
+                /* 释放该进程占用的资源 */
                 destroy_kthread(childPcb);
                 goto _exit_wait;
             }
@@ -355,6 +360,7 @@ void do_exit (int state)
     /* 将目标的所有子进程挂到 init 进程上 */
     proc_freechild(pcb);
 
+    /* 修改进程的状态 */
     kDISABLE_INTERRUPT();
     pcb->exitState = state;
     pcb->state = EXITING;
@@ -370,15 +376,18 @@ int do_kill (int pid)
 {
     struct ProcCB *pcb = NULL;
 
+    /* 获取要操作的进程对象 */
     pcb = pcb_lookup(pid);
     if ((pcb != NULL) && (pcb->state != EXITING))
     {
+        /* 将进程添加到注销链表 */
         kDISABLE_INTERRUPT();
         pcb->killState = 1;
         list_del_init(&pcb->regist);
         list_add(&kUnregistList, &pcb->regist);
         kENABLE_INTERRUPT();
 
+        /* 唤醒该进程，让其执行完最后的操作 */
         proc_wakeup(pcb);
         return 0;
     }
@@ -395,12 +404,17 @@ int do_sleep (int ms)
     {
         pcb = getProcCB();
 
+        /* 创建新定时器，
+        用于指定时长后唤醒当前进程 */
         kDISABLE_INTERRUPT();
         timer = timer_add(pcb, ms);
         kENABLE_INTERRUPT();
 
+        /* 进程进入休眠，放弃 CPU 使用权 */
         do_switch();
 
+        /* 进程从休眠中唤醒，
+        删除软件定时器，释放其占用的资源 */
         kDISABLE_INTERRUPT();
         timer_del(timer);
         kENABLE_INTERRUPT();
@@ -454,12 +468,12 @@ void init_proc (void)
     list_init(&kPendList);
     list_init(&kUnregistList);
 
-    /* Init processs */
+    /* Init 进程，用户空间的第一个进程 */
     kInitPCB = create_kthread("init", init_main);
     vfs_pcbInit(kInitPCB, "/");
     proc_wakeup(kInitPCB);
 
-    /* Idle processs */
+    /* Idle 进程 */
     kIdlePCB = create_kthread("idle", idle_main);
     vfs_pcbInit(kIdlePCB, "/");
     proc_wakeup(kIdlePCB);

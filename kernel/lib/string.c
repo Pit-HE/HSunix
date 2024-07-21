@@ -4,6 +4,7 @@
 #include "defs.h"
 
 
+/* 设置内存的值 */
 void *kmemset(void *s, int c, uint n)
 {
     char *xs = s;
@@ -12,6 +13,7 @@ void *kmemset(void *s, int c, uint n)
     return s;
 }
 
+/* 搬运内存的数据 */
 void *kmemmove(void *dst, const void *src, uint n)
 {
     char *tmp = (char *)dst, *s = (char *)src;
@@ -33,6 +35,7 @@ void *kmemmove(void *dst, const void *src, uint n)
     return dst;
 }
 
+/* 拷贝指定大小的内存数据 */
 void *kmemcpy (void *dst, const void *src, uint n)
 {
     char *tmp = (char *)dst, *s = (char *)src;
@@ -52,6 +55,7 @@ void *kmemcpy (void *dst, const void *src, uint n)
     return dst;
 }
 
+/* 计算字符串的长度 */
 int kstrlen (const char *st)
 {
     int i;
@@ -60,6 +64,7 @@ int kstrlen (const char *st)
     return i;
 }
 
+/* 字符串拷贝 */
 char *kstrcpy (char *dest, const char *src)
 {
     char *ret = dest;
@@ -89,6 +94,7 @@ int kstrcmp (const char *p1, const char *p2)
     return c1 - c2;
 }
 
+/* 比较指定长度的字符串 */
 int kstrncmp(const char *p, const char *q, uint n)
 {
   while (n > 0 && *p && *p == *q)

@@ -38,7 +38,7 @@ struct Timer *timer_add (struct ProcCB *pcb, int expires)
         list_del_init(&pcb->list);
         kENABLE_INTERRUPT();
 
-        /* 在软件定时器的管理链表中，查找当前定时器的添加位置 */
+        /* 遍历定时器的管理链表，查找当前定时器对象加入链表的位置 */
         list_for_each(plist, &kSleepList)
         {
             pTimer = list_container_of(plist, struct Timer, list);
@@ -50,7 +50,7 @@ struct Timer *timer_add (struct ProcCB *pcb, int expires)
             }
             timer->expires -= pTimer->expires;
         }
-        /* 将定时器添加到管理链表中 */
+        /* 将定时器对象添加到管理链表中 */
         kDISABLE_INTERRUPT();
         list_add_before(plist, &timer->list);
         kENABLE_INTERRUPT();

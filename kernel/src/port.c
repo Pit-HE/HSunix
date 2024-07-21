@@ -50,8 +50,11 @@ void kPortDisableInterrupt (void)
 {
     struct CpuCB *cpu = getCpuCB();
 
+    /* 判断是否开启中断管理功 */
     if (Os_interrupt == 0)
         return;
+    
+    /* 关中断可以重复执行，不必担心嵌套 */
     intr_off();
     cpu->intrOffNest++;
 }
@@ -61,9 +64,11 @@ void kPortEnableInterrupt (void)
 {
     struct CpuCB *cpu = getCpuCB();
 
+    /* 判断是否开启中断管理功 */
     if (Os_interrupt == 0)
         return;
 
+    /* 开启中断时需要判断嵌套的情况 */
     if (cpu->intrOffNest > 0)
     {
         if ((--cpu->intrOffNest) == 0)

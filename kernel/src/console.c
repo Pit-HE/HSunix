@@ -63,6 +63,9 @@ int console_rCmd (char *src, int len)
 
     while (len > 0)
     {
+        /* 从循环队列中获取串口数据，
+         * 当队列为空时，挂起当前进程等待新的数据
+         */
         if (0 == kRingbuf_getState(&consState.rb))
             do_suspend(&consState.rb);
         kRingbuf_getChar(&consState.rb, &ch);
@@ -78,6 +81,7 @@ int console_rChar (void)
 {
     int ch;
 
+    /* 从控制台专属的循环队列中读取单个字节 */
     if (0 == kRingbuf_getState(&consState.rb))
         do_suspend(&consState.rb);
     kRingbuf_getChar(&consState.rb, (char*)&ch);
@@ -98,6 +102,9 @@ static int console_dev_read (struct File *file,
 {
     return console_rCmd(buf, count);
 }
+/* 将控制台注册到内核的虚拟文件系统
+ * ( 贯彻 unix 一切皆文件的思想 )
+ */
 static struct FileOperation console_dev_opt = 
 {
     .write = console_dev_write,
@@ -108,6 +115,9 @@ static struct FileOperation console_dev_opt =
 /* 控制台的中断服务函数 */
 void console_isr (int c)
 {
+    /* 将数据写入控制台专属的循环队列，
+     * 并唤醒等待在当前队列上的进程
+     */
     kRingbuf_putChar(&consState.rb, (char)c);
     do_resume(&consState.rb);
 }

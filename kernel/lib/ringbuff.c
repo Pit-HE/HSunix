@@ -176,6 +176,7 @@ int kRingbuf_getLength (ringbuf_t *rb)
 {
     int len;
 
+    /* 计算当前缓冲区已经使用的数据长度 */
     kDISABLE_INTERRUPT();
     len = rb->baseSize - rb->idleSize;
     kENABLE_INTERRUPT();

@@ -37,7 +37,7 @@ all: remove build app
 # 重新构建内核与用户代码
 build:
 	make -C kernel
-	make -C user
+	make app
 	cd user && make fs_img
 
 # 生成创建可挂载的磁盘文件 fs.img 的工具
@@ -81,7 +81,7 @@ remove: clean
 	cd mkfs && make remove
 	cd user && make remove
 
-# 自动安装 HSunix 系统的编译环境与开发环境
+# 自动安装 HSunix 系统的编译、运行的环境
 install:
 	sudo apt install libc6-riscv64-cross
 	sudo apt install binutils-riscv64-linux-gnu
@@ -89,6 +89,11 @@ install:
 	sudo apt install binutils-riscv64-unknown-elf
 	sudo apt install gcc-riscv64-unknown-elf
 	sudo apt install qemu-system qemu-user
+
+# 统计当前项目有效代码的总行数
+statis:
+	find . "(" -name "*.c" -or -name "*.h" -or -name "*.S" ")" -print | xargs wc -l
+
 
 .PHONY: all clean debug qemu build remove fs.img app mkfs
 
