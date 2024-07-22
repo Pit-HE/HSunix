@@ -6,11 +6,17 @@
 
 int main (int argc, char *argv[])
 {
-    if (argc != 2)
+    if (argc != 3)
+    {
+        printf ("rename: Incorrect number of entries !\r\n");
         return - 1;
-    if ((argv[0] == NULL) || (argv[1] == NULL))
+    }
+    if ((argv[1] == NULL) || (argv[2] == NULL))
+    {
+        printf ("rename: Input in an illegal file name\r\n");
         return -1;
+    }
 
     /* 调用接口直接修改文件对象的名字 */
-    return rename(argv[0], argv[1]);
+    return rename(argv[1], argv[2]);
 }

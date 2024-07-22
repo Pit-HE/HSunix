@@ -17,22 +17,22 @@ struct help_info help_list[] =
     {/* mkdir */
         "mkdir",
         "To create a new document clip\r\n    \
-            example: mkdir sys | mkdir /usr/sys"
+            example: mkdir /home/book"
     },
     {/* cd */
         "cd",
         "Modify the process work path\r\n    \
-            example: cd / | cd /home | cd /home/.."
+            example: cd /home | cd /home/.. | cd /"
     },
     {/* ls */
         "ls",
         "List all the objects under the folder\r\n    \
-            example: ls | ls /home | ls /home/book/.."
+            example: ls | ls /bin"
     },
     {/* mkfile */
         "mkfile",
         "Create the specified file\r\n    \
-            example: mkfile aa.a | mkfile /usr/aa.a"
+            example: mkfile b.txt | mkfile /home/b.txt"
     },
     {/* pwd */
         "pwd",
@@ -47,48 +47,48 @@ struct help_info help_list[] =
     {/* cat */
         "cat",
         "Display the file content or write the data to the file\r\n    \
-            example: cat a.a  (Display the file content) \r\n    \
-                     cat a.a abc123  (Write the data to the file)"
+            example: cat /home/a.a  (Display the file content) \r\n    \
+                     cat /home/a.a abc123  (Write the ('abc123')data to the file)"
     },
     {/* rm */
         "rm",
         "Deletes the specified file or directory\r\n    \
-            example: rm a.a | rm /bin/a.a"
+            example: rm /home/a.a"
     },
     {/* rmdir */
         "rmdir",
         "Deletes the specified directory\r\n    \
-            example: rmdir usr | rmdir /usr/tmp1"
+            example: rmdir /home/tmp1"
     },
     {/* fsync */
         "fsync",
         "Refresh the cache to disk for the specified file\r\n    \
-            example: fsync a.a | fsync /bin/a.a"
+            example: fsync /home/a.a"
     },
     {/* fstatfs */
         "fstatfs",
         "Obtain the file system information of the file\r\n    \
-            example: fstatfs a.a | fstatfs /bin/a.a"
+            example: fstatfs /home/a.a"
     },
     {/* stat */
         "stat",
         "Displays the information of the specified file\r\n    \
-            example: stat a.a | stat /bin/a.a"
+            example: stat /home/a.a"
     },
     {/* rename */
         "rename",
         "Modify the name of the existing file\r\n    \
-            example: rename a.a b.b"
+            example: rename /home/a.a /home/b.b"
     },
     {/* mount */
         "mount",
         "Hang the message system to the specified path\r\n    \
-            example: mount tmpfs /fs | mount diskfs /fs"
+            example: mount tmpfs /tmp"
     },
     {/* unmount */
         "unmount",
         "Uninstall the file system of the specified path\r\n    \
-            example: unmount /fs"
+            example: unmount /tmp"
     },
     {/* clear */
         "clear",

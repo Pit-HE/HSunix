@@ -10,18 +10,21 @@ int main (int argc, char *argv[])
     uint count = 0;
     struct dirent *dirent = NULL;
 
-    if (argc > 2)
+    if (argc > 3)
         return -1;
 
     switch (argc)
     {
-        case 0: /* 列举当前目录 */
+        case 1: /* 列举当前目录 */
             dir = opendir(".");
             break;
-        case 1: /* 列举指定路径 */
-            if (argv[0] == NULL)
+        case 2: /* 列举指定路径 */
+            if (argv[1] == NULL)
+            {
+                printf("ls: fail, Null parameter !\r\n");
                 return -1;
-            dir = opendir(argv[0]);
+            }
+            dir = opendir(argv[1]);
             break;
         default:/* 暂不认可其他参数 */
             break;

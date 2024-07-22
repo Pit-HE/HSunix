@@ -155,27 +155,27 @@ int main (int argc, char *argv[])
     if (fork() > 0)
         return 0;
 
-    if (strncmp(argv[0], "param", 5) == 0)
+    if (strncmp(argv[1], "param", 5) == 0)
     {
         printf ("test: test_parameter\r\n");
         test_parameter(argc, argv);
     }
-    else if (strncmp(argv[0], "init", 4) == 0)
+    else if (strncmp(argv[1], "init", 4) == 0)
     {
         printf ("test: test_freeChildProcess\r\n");
         test_freeChildProcess();
     }
-    else if (strncmp(argv[0], "pipe", 5) == 0)
+    else if (strncmp(argv[1], "pipe", 5) == 0)
     {
         printf ("test: test_pipeDataTransfer\r\n");
         test_pipeDataTransfer();
     }
-    else if (strncmp(argv[0], "thread", 6) == 0)
+    else if (strncmp(argv[1], "thread", 6) == 0)
     {
         printf ("test: test_threadscheduler\r\n");
         test_threadscheduler();
     }
-    else if (strncmp(argv[0], "msg", 3) == 0)
+    else if (strncmp(argv[1], "msg", 3) == 0)
     {
         printf ("test: test_msgDataTransfer\r\n");
         test_msgDataTransfer();

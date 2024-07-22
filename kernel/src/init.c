@@ -21,6 +21,8 @@ void init_main (void)
     /* 挂载用于测试的内存文件系统 */
     vfs_mount("ramfs", "/home", O_RDWR | O_CREAT | O_DIRECTORY, NULL);
     mkfile("/home/a.a", O_CREAT|O_RDWR, S_IRWXU);
+    mkdir("/home/tmp1", S_IRWXU);
+    mkdir("/home/tmp2", S_IRWXU);
 
     /* 加载用户空间中的 init 进程代码 */
     do_exec("/bin/init", argv);

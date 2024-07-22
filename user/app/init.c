@@ -22,6 +22,7 @@ int main (int argc, char *argv[])
         {
             strcpy(sh_path, "/bin/");
             strcat(sh_path, argv[0]);
+            printf ("init: sh_path = %s\r\n", sh_path);
 
             exec(sh_path, sh_argv);
             printf ("init: exec shell fail !\r\n");

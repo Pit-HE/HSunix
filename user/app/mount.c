@@ -8,10 +8,17 @@ int main (int argc, char *argv[])
 {
     int ret;
 
-    if ((argc != 2) || 
-        (argv[0] == NULL) || (argv[1] == NULL))
+    if (argc != 3)
+    {
+        printf ("mount: Incorrect number of entries !\r\n");
         return -1;
+    }
+    if ((argv[1] == NULL) || (argv[2] == NULL))
+    {
+        printf ("mount: Input in an illegal file name\r\n");
+        return -1;
+    }
 
-    ret = mount(argv[0], argv[1]);
+    ret = mount(argv[1], argv[2]);
     return ret;
 }

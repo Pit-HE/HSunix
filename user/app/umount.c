@@ -6,8 +6,11 @@
 
 int main (int argc, char *argv[])
 {
-    if (argv[0] == NULL)
+    if (argv[1] == NULL)
+    {
+        printf ("umount: Incorrect number of entries !\r\n");
         return -1;
+    }
 
-    return umount(argv[0]);
+    return umount(argv[1]);
 }

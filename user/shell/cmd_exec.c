@@ -16,12 +16,17 @@ int cmd_classify (char *cmd, int argc, char *argv[])
 
     if (strncmp(cmd, "cd", 2) == 0)
     {
-        chdir(argv[0]);
+        chdir(argv[1]);
+        ret = 1;
+    }
+    else if (strncmp(cmd, "clear", 5) == 0)
+    {
+        printf("\x1b[2J\x1b[H");
         ret = 1;
     }
     else if (strncmp(cmd, "stat", 4) == 0)
     {
-        stat(argv[0]);
+        stat(argv[1]);
         ret = 1;
     }
     return ret;
@@ -33,7 +38,7 @@ int cmd_classify (char *cmd, int argc, char *argv[])
 int cmd_exec (char *cmd)
 {
     int fd;
-    int argc = 0, pid;
+    int argc, pid;
     char *param = NULL;
     char *argv[CLI_ARG_MAX];
     char  path[32];
@@ -44,7 +49,9 @@ int cmd_exec (char *cmd)
 
     /* 解析要处理的命令字符串 */
     param = cli_parse_cmd(cmd);
-    argc += cli_parse_parameter(param, argv);
+    argc    = 1;
+    argv[0] = cmd;
+    argc += cli_parse_parameter(param, &argv[1]);
 
     /* 将命令划分为 shell 处理与创建新进程处理两种 */
     if (0 != cmd_classify(cmd, argc, argv))

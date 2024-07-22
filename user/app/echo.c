@@ -6,6 +6,6 @@
 
 int main (int argc, char *argv[])
 {
-    printf ("%s\r\n", argv[0]);
+    printf ("%s\r\n", argv[1]);
     return 0;
 }
