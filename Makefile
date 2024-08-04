@@ -88,7 +88,8 @@ install:
 	sudo apt install gcc-riscv64-linux-gnu
 	sudo apt install binutils-riscv64-unknown-elf
 	sudo apt install gcc-riscv64-unknown-elf
-	sudo apt install qemu-system qemu-user
+	sudo apt install qemu
+	sudo apt install qemu-system-riscv64
 
 # 统计当前项目有效代码的总行数
 statis:

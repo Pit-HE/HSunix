@@ -14,6 +14,10 @@
 #include "tinyprintf.h"
 
 
+/* 通过结构体成员获取结构体首地址 */
+#define container_of(ptr, type, member) \
+    ((type *)((char *)(ptr) - (unsigned long)(&((type *)0)->member)))
+
 
 /******************** uart ********************/
 void uart_init      (void);
