@@ -35,8 +35,6 @@ struct kobject
  */
 struct kset
 {
-    /* 所属的父对象 */
-    struct kset             *parent;
     /* 记录挂载到 kset 的所有 kobject */
     ListEntry_t              list;
     /* 内嵌的 kobject 属性 */
@@ -80,7 +78,6 @@ enum kobj_action
 
 
 
-struct kobject *kobject_get (struct kobject *obj);
 void kobject_put (struct kobject *obj);
 void kobject_init (struct kobject *obj);
 void kobject_cleanup (struct kobject *obj);
@@ -92,13 +89,15 @@ int  kobject_add (struct kobject *obj);
 void kobject_del (struct kobject *obj);
 int  kobject_register (struct kobject *obj);
 void kobject_unregister (struct kobject *obj);
-
+struct kobject *kobject_get (struct kobject *obj);
+struct kset *kset_create (char *name,
+                struct kset_uevent_ops *uevent_ops,
+                struct kobject *parent_kobj);
 
 struct kobject *kset_find_kobj(struct kset *k, char *name);
 struct kset *kset_get (struct kset *k);
 void kset_put (struct kset *k);
 void kset_init (struct kset *k);
-int  kset_add (struct kset *k);
 int  kset_register (struct kset *k);
 void kset_unregister (struct kset *k);
 

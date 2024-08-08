@@ -5,7 +5,11 @@
 #include "kobject.h"
 #include <stdarg.h>
 
-
+/*
+ ***********************************************************
+ *              Kobject
+ ***********************************************************
+ */
 /* 获取指定的内核对象 (可嵌套) */
 struct kobject *kobject_get (struct kobject *obj)
 {
@@ -26,11 +30,10 @@ void kobject_init (struct kobject *obj)
 {
     if (obj == NULL)
         return;
-    kmemset(obj, 0, sizeof(struct kobject));
 
     kref_init(&obj->kref);
     list_init(&obj->entry);
-    kset_get(obj->kset);
+    obj->kset = kset_get(obj->kset);
 }
 
 /* 清除内核对象占用的资源 
@@ -164,6 +167,7 @@ int kobject_add (struct kobject *obj)
     /* 获取父节点 */
     parent = kobject_get(obj->parent);
 
+    /* 确认该内核对象是否有所属的对象集 */
     if (obj->kset)
     {
         kDISABLE_INTERRUPT();
@@ -194,27 +198,51 @@ void kobject_del (struct kobject *obj)
     kobject_put(obj);
 }
 
-/* 将 kobject 注册到系统内核 */
+/* 将内核对象注册到其所属的：kset */
 int kobject_register (struct kobject *obj)
 {
+    if (obj == NULL)
+        return -1;
+
     kobject_init(obj);
     return kobject_add(obj);
 }
 
-/* 将 kobject 从系统内核注销 */
+/* 将内核对象从所属的 kset 内注销 */
 void kobject_unregister (struct kobject *obj)
 {
+    if (obj == NULL)
+        return;
+
     kobject_del(obj);
     kobject_put(obj);
 }
 
 
 
+/*
+ ***********************************************************
+ *              Kobject
+ ***********************************************************
+ */
+void kset_release (struct kobject *obj)
+{
+    struct kset *kset;
+    kset = container_of(obj, struct kset, kobj);
+
+    kfree(kset);
+}
+
+struct kobj_type kset_ktype = 
+{
+    .release = kset_release,
+};
+
 /* 获取内核对象集 */
 struct kset *kset_get (struct kset *k)
 {
     if (k)
-        kobject_put(&k->kobj);
+        kobject_get(&k->kobj);
     return k;
 }
 
@@ -225,29 +253,43 @@ void kset_put (struct kset *k)
         kobject_put(&k->kobj);
 }
 
+/* 创建新的 kset 对象 */
+struct kset *kset_create (char *name,
+                struct kset_uevent_ops *uevent_ops,
+                struct kobject *parent_kobj)
+{
+    struct kset *kset;
+
+    kset = (struct kset *)kalloc(sizeof(*kset));
+    if (kset == NULL)
+        return NULL;
+
+    if (0 > kobject_setname(&kset->kobj, "%s", name))
+    {
+        kfree(kset);
+        return NULL;
+    }
+
+    kset->kobj.parent = parent_kobj;
+    kset->kobj.kset = NULL;
+    kset->kobj.ktype = &kset_ktype;
+    list_init(&kset->kobj.entry);
+
+    /* 初始化 kset 特有的属性 */
+    list_init(&kset->list);
+    kset->uevent_ops = uevent_ops;
+
+    return kset;
+}
+
 /* 初始化内核对象集 */
 void kset_init (struct kset *k)
 {
+    if (k == NULL)
+        return;
+
     kobject_init(&k->kobj);
     list_init(&k->list);
-}
-
-/* 将内核对象集添加到系统内核
- * 1、将对象集的 kobj 属性添加到父 kset 的管理链表
- * 2、kset 主要用于管理 kobject 对象的链接与删除
- * 3、kset 允许挂载到其他 kset 之下
- */
-int kset_add (struct kset *k)
-{
-    if (k == NULL)
-        return -1;
-
-    /* 设置对象集的父对象 */
-    if (!k->kobj.parent && !k->kobj.kset && k->parent)
-        k->kobj.parent = &k->parent->kobj;
-
-    /* 将内核对象集的 kobject 属性添加到内核 */
-    return kobject_add(&k->kobj);
 }
 
 /* 通过名字在内核对象集中查找指定的内核对象 */
@@ -269,15 +311,26 @@ struct kobject *kset_find_kobj(struct kset *k, char *name)
     return kobj;
 }
 
-/* 注册内核对象集 */
+/* 将内核对象集注册到系统内核
+ * 1、将对象集的 kobj 属性添加到父 kset 的管理链表
+ * 2、kset 主要用于管理 kobject 对象的链接与删除
+ * 3、kset 允许挂载到其他 kset 之下
+ */
 int kset_register (struct kset *k)
 {
+    if (k == NULL)
+        return -1;
+
     kset_init(k);
-    return kset_add(k);
+    return kobject_add(&k->kobj);
 }
 
 /* 注销已存在的内核对象集 */
 void kset_unregister (struct kset *k)
 {
-    kobject_unregister(&k->kobj);
+    if (k == NULL)
+        return;
+
+    kobject_del(&k->kobj);
+    kobject_put(&k->kobj);
 }
