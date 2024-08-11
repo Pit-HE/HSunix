@@ -277,7 +277,7 @@ struct kset *kset_create (char *name,
 
     /* 初始化 kset 特有的属性 */
     list_init(&kset->list);
-    kset->uevent_ops = uevent_ops;
+    kset->uevent_opt = uevent_ops;
 
     return kset;
 }

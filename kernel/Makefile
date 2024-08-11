@@ -12,6 +12,7 @@ INCLUDE_DIR += -I$(CURRENT_DIR)/cli
 INCLUDE_DIR += -I$(CURRENT_DIR)/lib
 INCLUDE_DIR += -I$(CURRENT_DIR)/lib/syscall
 INCLUDE_DIR += -I$(CURRENT_DIR)/src
+INCLUDE_DIR += -I$(CURRENT_DIR)/drv
 INCLUDE_DIR += -I$(CURRENT_DIR)/fs
 INCLUDE_DIR += -I$(CURRENT_DIR)/fs/disk_fs
 INCLUDE_DIR += -I$(CURRENT_DIR)/fs/ram_fs
@@ -21,6 +22,7 @@ INCLUDE_DIR += -I$(CURRENT_DIR)/fs/virtual_fs
 C_FILE += $(call all-c-files, arch)
 C_FILE += $(call all-c-files, boot)
 C_FILE += $(call all-c-files, src)
+C_FILE += $(call all-c-files, drv)
 C_FILE += $(call all-c-files-in, ./fs)
 C_FILE += $(call all-c-files-in, ./lib)
 
@@ -77,6 +79,7 @@ clean:
 	rm -rf ./lib/*.o ./lib/*.d
 	rm -rf ./lib/syscall/*.o ./lib/syscall/*.d
 	rm -rf ./src/*.o ./src/*.d
+	rm -rf ./drv/*.o ./drv/*.d
 	rm -rf ./fs/*.o ./fs/*.d
 	rm -rf ./fs/ram_fs/*.o ./fs/ram_fs/*.d
 	rm -rf ./fs/disk_fs/*.o ./fs/disk_fs/*.d

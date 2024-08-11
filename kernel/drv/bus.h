@@ -22,7 +22,7 @@ struct bus_type
     /* 记录挂载在总线上的所有驱动 */
     struct kset     *driver;
     /* 处理总线上的设备与驱动的匹配 */
-    int (*match)(struct deviec *dev, struct device_driver *drv);
+    int (*match)(struct device *dev, struct device_driver *drv);
 };
 
 
@@ -42,7 +42,7 @@ struct device
     /* 记录设备所属对象的信息 */
     struct device               *parent;
     struct bus_type             *bus;
-    struct device_driver        *drv_list;
+    struct device_driver        *drv;
     /* 私有数据域 */
     void                        *driver_data;
     /* 提供给继承该结构体的子类，注册其资源释放的接口 */
@@ -69,8 +69,8 @@ int  bus_register (struct bus_type *bus);
 int  bus_unregister (struct bus_type *bus);
 int  bus_add_device (struct device *dev);
 int  bus_add_driver (struct device_driver *drv);
-int  bus_remove_device (struct device *dev);
-int  bus_remove_driver (struct device_driver *drv);
+void bus_remove_device (struct device *dev);
+void bus_remove_driver (struct device_driver *drv);
 void put_bus (struct bus_type *bus);
 struct bus_type *get_bus (struct bus_type *bus);
 int bus_for_each_drv (struct bus_type *bus, struct device_driver *start,
@@ -79,15 +79,15 @@ int bus_for_each_dev (struct bus_type *bus, struct device *start,
             void *data, int (*fn)(struct device *, void *));
 
 /* 同时操作设备与驱动的接口 */
-int  driver_prode_device (struct device_driver *drv, struct device *dev);
 void device_bind_driver (struct device *dev);
+int  driver_prode_device (struct device_driver *drv, struct device *dev);
 void device_release_driver (struct device *dev);
 
 /* 操作驱动的接口 */
-void driver_attach (truct device_driver *drv);
+void driver_attach (struct device_driver *drv);
 
 /* 操作设备的接口 */
-void device_attach (truct device *dev);
+int  device_attach (struct device *dev);
 
 /* 模块初始化的总接口 */
 int init_bus (void);
