@@ -7,7 +7,7 @@ int driver_register (struct device_driver *drv)
 {
     struct device_driver *other;
 
-    if (dev == NULL)
+    if (drv == NULL)
         return -1;
 
     /* 确认驱动还未注册 */
@@ -20,7 +20,7 @@ int driver_register (struct device_driver *drv)
 }
 
 /* 注销驱动 */
-int driver_unregister (struct device_driver *drv)
+void driver_unregister (struct device_driver *drv)
 {
     if (drv)
         bus_remove_driver(drv);
@@ -72,7 +72,7 @@ struct device *driver_find_device (struct device_driver *drv,
 }
 
 /* 遍历驱动管理的所有子设备 */
-struct device *driver_find_each_device (struct device_driver *drv,
+int driver_find_each_device (struct device_driver *drv,
             struct device *start, void *data,
             int (*fn)(struct device *, void *))
 {
@@ -81,7 +81,7 @@ struct device *driver_find_each_device (struct device_driver *drv,
     ListEntry_t *ptr, *tmp;
 
     if (drv == NULL)
-        return NULL;
+        return -1;
 
     /* 遍历驱动管理设备的链表 */
     list_for_each_safe(ptr, tmp, &drv->device)

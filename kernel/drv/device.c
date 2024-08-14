@@ -32,10 +32,10 @@ void device_init (struct device *dev)
 
     kobject_init(&dev->kobj);
 
-    list_init(&kobj->bus_list);
-    list_init(&kobj->drv_list);
-    list_init(&kobj->child_list);
-    list_init(&kobj->broth_list);
+    list_init(&dev->bus_list);
+    list_init(&dev->drv_list);
+    list_init(&dev->child_list);
+    list_init(&dev->broth_list);
 }
 
 /* 将设备对象添加到操作系统内核 */
@@ -50,7 +50,7 @@ int  device_add  (struct device *dev)
 
     /* 获取设备所属的父设备对象 */
     parent = get_device(dev->parent);
-    dev->kobj.parent = parent;
+    dev->kobj.parent = &parent->kobj;
 
     /* 将设备对象添加到所属的 kset */
     if (0 > kobject_add(&dev->kobj))
@@ -110,7 +110,7 @@ int  device_register (struct device *dev)
 }
 
 /* 注销设备对象 */
-int  device_unregister (struct device *dev)
+void  device_unregister (struct device *dev)
 {
     device_del(dev);
     put_device(dev);
@@ -120,14 +120,14 @@ int  device_unregister (struct device *dev)
 void put_device (struct device *dev)
 {
     if (dev)
-        kobject_put(&dev->kobject);
+        kobject_put(&dev->kobj);
 }
 
 /* 获取设备对象 */ 
 struct device *get_device (struct device *dev)
 {
     if (dev)
-        dev = kobject_get(&dev->kobj);
+        kobject_get(&dev->kobj);
     return dev;
 }
 
@@ -150,16 +150,21 @@ struct device *device_create (struct device *parent,
     if (name == NULL)
         return NULL;
 
+    /* 获取内存空间存放设备对象 */
     dev = (struct device *)kalloc(sizeof(*dev));
     if (dev == NULL)
         return NULL;
 
+    /* 初始化设备对象的信息 */
     device_init(dev);
 
+    /* 设置设备对象的属性 */
     dev->parent = parent;
     dev->driver_data = drvdata;
     dev->release = device_create_release;
     kobject_setname(&dev->kobj, name);
+
+    return dev;
 }
 
 /* 从设备管理链表中查找指定的子设备 */
@@ -188,7 +193,7 @@ struct device *device_find_child (struct device *parent, void *data,
 
 /* 从设备管理链表中查找指定名字的子设备 */
 struct device *device_find_child_by_name (struct device *parent, 
-                char *name);
+                char *name)
 {
     struct device *dev = NULL;
     ListEntry_t *ptr, *tmp;
@@ -214,15 +219,15 @@ struct device *device_find_child_by_name (struct device *parent,
 }
 
 /* 遍历父设备管理链表中的所有子设备 */
-int   device_for_each_child (struct device *parent, void *data,
-                int (*fn)(struct device *dev, void *data));
+int device_for_each_child (struct device *parent, void *data,
+                int (*fn)(struct device *dev, void *data))
 {
     int error;
     struct device *dev = NULL;
     ListEntry_t *ptr, *tmp;
 
     if ((parent == NULL) || (fn == NULL))
-        return NULL;
+        return -1;
     
     /* 遍历父设备的设备管理链表 */
     list_for_each_safe(ptr, tmp, &parent->child_list)
@@ -231,12 +236,12 @@ int   device_for_each_child (struct device *parent, void *data,
         dev = container_of(ptr, struct device, broth_list);
 
         /* 检查构造函数是否符合要求 */
-        error = fd(dev, data);
+        error = fn(dev, data);
         if (error <= 0)
             break;
     }
 
-    return dev;
+    return error;
 }
 
 

@@ -13,7 +13,7 @@ void device_init (struct device *dev);
 int  device_add  (struct device *dev);
 void device_del  (struct device *dev);
 int  device_register (struct device *dev);
-int  device_unregister (struct device *dev);
+void device_unregister (struct device *dev);
 void put_device (struct device *dev);
 struct device *get_device (struct device *dev);
 void device_destroy (struct device *dev);

@@ -46,7 +46,7 @@ struct device
     /* 私有数据域 */
     void                        *driver_data;
     /* 提供给继承该结构体的子类，注册其资源释放的接口 */
-    int (*release) (struct device *dev);
+    void (*release) (struct device *dev);
 };
 
 struct device_driver
