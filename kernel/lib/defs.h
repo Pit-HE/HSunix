@@ -9,7 +9,7 @@
 #include "proc.h"
 #include "fs.h"
 #include "timer.h"
-#include "device.h"
+#include "kdev.h"
 #include "ringbuff.h"
 #include "tinyprintf.h"
 

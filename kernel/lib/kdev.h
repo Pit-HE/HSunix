@@ -1,6 +1,6 @@
 
-#ifndef __DEVICE_H__
-#define __DEVICE_H__
+#ifndef __KDEV_H__
+#define __KDEV_H__
 
 
 #include "list.h"

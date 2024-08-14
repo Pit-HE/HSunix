@@ -4,7 +4,7 @@
  *   但是目前为了减少难度，就将设备独立出来单独操作 )
  */
 #include "defs.h"
-#include "device.h"
+#include "kdev.h"
 
 
 /* 以链表的形式记录登记到系统中的所有设备 */

@@ -8,7 +8,7 @@
 
 #include "proc.h"
 #include "dirent.h"
-#include "device.h"
+#include "kdev.h"
 #include "pipe.h"
 
 
