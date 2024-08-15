@@ -39,8 +39,8 @@ void platform_device_put (struct platform_device *pdev);
 struct platform_device *platform_device_alloc (char *name);
 
 /* 平台驱动的操作接口 */
-int  platform_driver_register (struct platform_device *pdev);
-void platform_driver_unregister (struct platform_device *pdev);
+int  platform_driver_register (struct platform_driver *pdrv);
+void platform_driver_unregister (struct platform_driver *pdrv);
 
 
 #endif

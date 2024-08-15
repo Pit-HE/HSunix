@@ -30,6 +30,7 @@ struct bus_type
 /* 设备描述符 */
 struct device
 {
+	char						*name;
     /* 用于添加到设备子系统 */
     struct kobject              kobj;
     /* 用于挂载到所属总线的管理链表 */

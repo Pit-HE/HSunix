@@ -75,7 +75,7 @@ static int platform_match (struct device *dev, struct device_driver *drv)
 struct device platform_bus = 
 {
     .name = "platform",
-}
+};
 
 /* 平台总线 */
 struct bus_type platform_bus_type = 
@@ -128,7 +128,7 @@ int  platform_device_add (struct platform_device *pdev)
     /* 设置平台设备对象默认的信息 */
     if (pdev->dev.parent == NULL)
         pdev->dev.parent = &platform_bus;
-    pdev->dev.bus = platform_bus_type;
+    pdev->dev.bus = &platform_bus_type;
 
     /* 设置平台设备对象注册到内核的名字 */
     kobject_setname(&pdev->dev.kobj, pdev->name);
@@ -180,11 +180,11 @@ struct platform_device *platform_device_alloc (char *name)
 /* 平台驱动的注册 */
 int platform_driver_register (struct platform_driver *pdrv)
 {
-    if (pdev == NULL)
+    if (pdrv == NULL)
         return -1;
 
     /* 初始化平台驱动的属性 */
-    pdrv->drv.bus = platform_bus_type;
+    pdrv->drv.bus = &platform_bus_type;
     pdrv->drv.probe = platform_drv_probe;
     pdrv->drv.remove = platform_drv_remove;
 
