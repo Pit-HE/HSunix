@@ -1,6 +1,10 @@
-
+/*
+ * 模拟 linux 的总线设备驱动模型的驱动模块
+ * 
+ * 1、参考了 Linux 的 2.6.11.12 和 5.10.120 的源码
+ * 2、实现了总线模块最核心的基本功能，管理设备与驱动的增删查改
+ */
 #include "bus.h"
-
 
 
 static void bus_release (struct kobject *kobj)
@@ -387,8 +391,6 @@ int device_attach (struct device *dev)
     }
     return 0;
 }
-
-
 
 
 
