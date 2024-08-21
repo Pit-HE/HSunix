@@ -79,7 +79,7 @@ enum kobj_action
 
 
 void kobject_put (struct kobject *obj);
-void kobject_init (struct kobject *obj);
+void kobject_init (struct kobject *kobj, struct kobj_type *ktype);
 void kobject_cleanup (struct kobject *obj);
 void kobject_release (struct kref *kref);
 int  kobject_setname (struct kobject *obj, const char *fmt, ...);

@@ -5,7 +5,7 @@
 #ifndef __FILE_H__
 #define __FILE_H__
 
-
+#include "types.h"
 #include "proc.h"
 #include "dirent.h"
 #include "kdev.h"
@@ -20,6 +20,7 @@ struct DirItem;
 struct FsDevice;
 struct FileSystem;
 
+struct cdev;
 
 
 #define INODE_MAGIC     0xDEA5
@@ -38,6 +39,7 @@ enum InodeType
     INODE_DIR,         /* 目录 */
     INODE_PIPO,        /* 管道 */
     INODE_DEVICE,      /* 设备 */
+    INODE_CHRDEV,      /* 字符设备 */
 };
 
 
@@ -135,6 +137,10 @@ struct Inode
     uint                        ref;        /* 引用计数 */
     struct FileOperation       *fops;       /* 文件对象的操作接口 */
     struct FileSystem          *fs;         /* 所属的文件系统 */
+    struct cdev                *i_cdev;     /* 字符设备对象 */
+    dev_t                       i_rdev;     /* 设备号 */
+    ListEntry_t                 i_devices;  /* 设备对象管理链表 */
+    int                         i_cindex;   /* 字符设备索引号 */
     void                       *data;       /* 私有数据域 */
 };
 
@@ -188,6 +194,7 @@ struct File *fd_copy (struct File *file);
 struct Inode *inode_getdev (struct Device *dev, uint flag, uint mode);
 struct Inode *inode_getfs (struct FsDevice *fsdev, uint flag, uint mode);
 struct Inode *inode_getpipe (struct pipe_t *pipe, uint flag, uint mode);
+struct Inode *inode_getcdev (struct cdev *cdev, uint flag, uint mode);
 int inode_put (struct Inode *inode);
 
 /**********************************/

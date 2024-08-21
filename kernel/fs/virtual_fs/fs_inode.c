@@ -4,6 +4,9 @@
 #include "fcntl.h"
 
 
+/*
+ * 内部接口，申请与释放 inode 对象的内存空间
+ */
 static struct Inode *inode_alloc (void)
 {
     struct Inode *inode = NULL;
@@ -29,8 +32,7 @@ static void inode_free (struct Inode *inode)
 
 
 /* 初始化 inode 为文件系统的情况 */
-struct Inode *inode_getfs (struct FsDevice *fsdev, uint flag, 
-        uint mode)
+struct Inode *inode_getfs (struct FsDevice *fsdev, uint flag, uint mode)
 {
     struct Inode *inode = NULL;
 
@@ -57,8 +59,7 @@ struct Inode *inode_getfs (struct FsDevice *fsdev, uint flag,
 }
 
 /* 初始化 inode 为内核设备的情况 */
-struct Inode *inode_getdev (struct Device *dev, uint flag, 
-        uint mode)
+struct Inode *inode_getdev (struct Device *dev, uint flag, uint mode)
 {
     struct Inode *inode = NULL;
 
@@ -82,8 +83,7 @@ struct Inode *inode_getdev (struct Device *dev, uint flag,
 }
 
 /* 初始化 inode 为 pipe 的情况 */
-struct Inode *inode_getpipe (struct pipe_t *pipe, uint flag, 
-        uint mode)
+struct Inode *inode_getpipe (struct pipe_t *pipe, uint flag, uint mode)
 {
     struct Inode *inode = NULL;
 
@@ -103,6 +103,36 @@ struct Inode *inode_getpipe (struct pipe_t *pipe, uint flag,
     inode->ref  += 1;
 
     inode->type  = INODE_PIPO;
+
+    return inode;
+}
+
+/* 初始化 inode 为字符设备的情况 */
+struct Inode *inode_getcdev (struct cdev *cdev, uint flag, uint mode)
+{
+    struct Inode *inode = NULL;
+
+    if (pipe == NULL)
+        return NULL;
+    
+    inode = inode_alloc();
+    if (inode == NULL)
+        return NULL;
+    
+    inode->flags = flag;
+    inode->data  = (void *)cdev;
+    inode->fops  = NULL;
+    inode->mode  = mode;
+    inode->dev   = NULL;
+    inode->fs    = NULL;
+    inode->ref  += 1;
+
+    extern struct FileOperation def_cdev_fops;
+    inode->i_cdev = cdev;
+    inode->fops  = &def_cdev_fops;
+    list_add_after(&inode->i_device, &cdev->list);
+
+    inode->type  = INODE_CHRDEV;
 
     return inode;
 }

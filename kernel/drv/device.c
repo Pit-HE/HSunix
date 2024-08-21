@@ -35,7 +35,7 @@ void device_init (struct device *dev)
 {
     dev->kobj.kset = device_subsys;
 
-    kobject_init(&dev->kobj);
+    kobject_init(&dev->kobj, &device_ktype);
 
     list_init(&dev->bus_list);
     list_init(&dev->drv_list);

@@ -26,14 +26,15 @@ void kobject_put (struct kobject *obj)
 }
 
 /* 初始化传入的内核对象 */
-void kobject_init (struct kobject *obj)
+void kobject_init (struct kobject *kobj, struct kobj_type *ktype)
 {
-    if (obj == NULL)
+    if (kobj == NULL)
         return;
 
-    kref_init(&obj->kref);
-    list_init(&obj->entry);
-    obj->kset = kset_get(obj->kset);
+    kref_init(&kobj->kref);
+    list_init(&kobj->entry);
+    kobj->kset = kset_get(kobj->kset);
+    kobj->ktype = ktype;
 }
 
 /* 清除内核对象占用的资源 
@@ -204,7 +205,7 @@ int kobject_register (struct kobject *obj)
     if (obj == NULL)
         return -1;
 
-    kobject_init(obj);
+    kobject_init(obj, obj->ktype);
     return kobject_add(obj);
 }
 
@@ -288,7 +289,7 @@ void kset_init (struct kset *k)
     if (k == NULL)
         return;
 
-    kobject_init(&k->kobj);
+    kobject_init(&k->kobj, NULL);
     list_init(&k->list);
 }
 
