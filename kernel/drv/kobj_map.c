@@ -1,6 +1,7 @@
 /*
  * 内核对象哈希散列表管理模块
  */
+#include "defs.h"
 #include "kobj_map.h"
 
 
@@ -44,7 +45,7 @@ int kobj_map(struct kobj_map *domain, dev_t dev, unsigned long range,
         return -1;
 
     /* 初始化分配的所有 probe 对象 */
-    for (i=0; i<n; i++, pb++)
+    for (i=0; i<major_num; i++, pb++)
     {
         pb->next    = NULL;
         pb->dev     = dev;
@@ -55,7 +56,7 @@ int kobj_map(struct kobj_map *domain, dev_t dev, unsigned long range,
     }
 
     /* 将每个 probe 插入到其所属的管理链表中 */
-    for (i=0, p -= n; i<n; i++, pb++, index++)
+    for (i=0, pb -= major_num; i<major_num; i++, pb++, index++)
     {
         /* 获取要操作的数组成员 */
         ptr = domain->probes[index % 255];
@@ -88,7 +89,7 @@ void kobj_unmap (struct kobj_map *domain, dev_t dev, unsigned long range)
         major_num = 255;
 
     /* 寻找主设备号对应的所有哈希散列表数组成员 */
-    for (i=0; i<n; i++, index++)
+    for (i=0; i<major_num; i++, index++)
     {
         /* 遍历数组成员管理的链表 */
         for(pb = domain->probes[index % 255]; pb->next; pb = pb->next)
@@ -118,7 +119,7 @@ struct kobject *kobj_lookup (struct kobj_map *domain, dev_t dev, int *index)
     unsigned long range = DEF_RANGE_VALUE;
 
     /* 遍历哈希散列表数组成员管理的链表 */
-    for (pb = domain->probse[MAJOR(dev) % 255]; pb; pb = pb->next)
+    for (pb = domain->probes[MAJOR(dev) % 255]; pb; pb = pb->next)
     {
         /* 确认遍历到的目标是否为所寻找的对象 */
         if ((pb->dev > dev) || (pb->dev + pb->range - 1 < dev))
@@ -127,16 +128,17 @@ struct kobject *kobj_lookup (struct kobj_map *domain, dev_t dev, int *index)
             break;
 
         /* 更新数据 */
-        range = pb->range - 1;
+        range  = pb->range - 1;
+        *index = dev - (pb->dev);
 
         /* 执行 lock，给目标对象上锁 */
         if (pb->lock && (pb->lock(pb->dev, pb->data) < 0))
             continue;
 
         /* 执行 probe 函数获取目标对象的 kobject */
-        if (pb->probe == NULL)
+        if (pb->get == NULL)
             return NULL;
-        kobj = pb->probe(dev, dev-pb->dev, data)
+        kobj = pb->get(dev, index, pb->data);
         if (kobj == NULL)
             break;
         return kobj;
@@ -161,7 +163,7 @@ struct kobj_map *kobj_map_init (kobj_probe_t *base_probe)
     {
         kfree(pb);
         kfree(map);
-        return -1;
+        return NULL;
     }
 
     /* 初始化 probe 参数 */

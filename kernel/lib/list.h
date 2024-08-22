@@ -6,8 +6,6 @@
 
 #ifndef __ASSEMBLER__
 
-#include "types.h"
-
 /* *
  * Simple doubly linked list implementation.
  *

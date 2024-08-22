@@ -4,9 +4,7 @@
 
 
 #include "types.h"
-#include "file.h"
 #include "list.h"
-#include "kobject.h"
 
 
 struct cdev
@@ -25,10 +23,10 @@ int  alloc_chrdev_region (dev_t *dev, unsigned baseminor, unsigned count, char *
 void unregister_chrdev_region (dev_t from, unsigned count);
 
 /* 字符设备对外的总接口 */
-int  init_chrdev (void);
-int  chrdev_open (struct inode *inode, struct File *filp);
+void init_chrdev (void);
+int  chrdev_open (struct File *filp);
 int  register_chrdev (unsigned int major, char *name, struct FileOperation *fops);
-void register_chrdev (unsigned int major, char *name);
+void unregister_chrdev (unsigned int major, char *name);
 
 /* 字符设备管理接口 */
 void cdev_init (struct cdev *cdev, struct FileOperation *fops);
@@ -37,7 +35,7 @@ int  cdev_add (struct cdev *p, dev_t dev, unsigned count);
 void cdev_del (struct cdev *p);
 struct kobject *cdev_get (struct cdev *p);
 void cdev_put (struct cdev *p);
-void cdev_set_parent (struct cdev *p, struct device *parent);
+void cdev_set_parent (struct cdev *p, struct kobject *kobj);
 int  cdev_device_add (struct cdev *cdev, struct device *dev);
 void cdev_device_del (struct cdev *cdev, struct device *dev);
 

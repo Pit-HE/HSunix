@@ -3,8 +3,6 @@
 #define __MAKE_FS_H__
 
 
-#include "list.h"
-
 #ifndef NULL
 #define NULL        (void*)0
 #endif
@@ -28,6 +26,8 @@ typedef unsigned long  uint64;
 typedef unsigned char  bool;
 typedef unsigned long  pde_t;
 typedef unsigned long  size_t;
+
+#include "list.h"
 
 
 

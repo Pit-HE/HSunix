@@ -4,6 +4,7 @@
  * 1、允许在虚拟文件系统内挂载多个实体对象
  * 2、允许在上一个 ramfs 的文件路径中挂载新的 ramfs
  */
+#include "types.h"
 #include "fs_ramfs.h"
 #include "defs.h"
 #include "fcntl.h"

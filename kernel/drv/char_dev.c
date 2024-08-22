@@ -1,9 +1,12 @@
 /*
  * 字符设备管理模块
  */
-#include "char_dev.h"
 #include "kobject.h"
+#include "device.h"
+#include "file.h"
 #include "defs.h"
+#include "kobj_map.h"
+#include "char_dev.h"
 
 
 /* 字符设备模块共用的内核对象哈希散列管理表 */
@@ -25,10 +28,8 @@ static struct char_device_struct
     char                        *name;
     /* 所管理的字符设备对象 */
     struct cdev                 *cdev;
-};
-/* 管理设备号描述符的指针数组 */
-struct char_device_struct *chardevs[MAX_PROBE_HASH];
 
+} *chardevs[MAX_PROBE_HASH];/* 管理设备号描述符的指针数组 */
 
 
 /*  
@@ -76,7 +77,7 @@ static struct char_device_struct *__register_chrdev_region(unsigned int major,
             continue;
         if (curr->major > major)
             break;
-        if (curr->baseminor + curr->minor <= baseminor)
+        if (curr->baseminor + curr->minorct <= baseminor)
             continue;
         if (curr->baseminor > baseminor)
             break;
@@ -145,7 +146,7 @@ static struct char_device_struct *__unregister_chrdev_region(
 /* 对外接口：注册新的静态设备号管理对象 */
 int register_chrdev_region (dev_t from, unsigned count, char *name)
 {
-    struct char_device_struc *cd;
+    struct char_device_struct *cd;
     dev_t max = from + count;
     dev_t n, next;
 
@@ -213,7 +214,7 @@ static struct kobject *cdev_probe(dev_t dev, int *part, void *data)
     return NULL;
 }
 /* 初始化整个字符设备模块 */
-int init_chrdev (void)
+void init_chrdev (void)
 {
     cdev_map = kobj_map_init(cdev_probe);
 }
@@ -239,7 +240,7 @@ struct FileOperation def_cdev_fops =
 int chrdev_open (struct File *filp)
 {
     int index, ret;
-    struct inode *inode;
+    struct Inode *inode;
     struct kobject *kobj;
     struct cdev *cd, *new;
 
@@ -339,7 +340,7 @@ int register_chrdev (unsigned int major, char *name, struct FileOperation *fops)
 }
 
 /* 注销字符设备 */
-void register_chrdev (unsigned int major, char *name)
+void unregister_chrdev (unsigned int major, char *name)
 {
     struct char_device_struct *cd;
 
@@ -424,7 +425,7 @@ int cdev_add (struct cdev *p, dev_t dev, unsigned count)
     if (retval < 0)
         return -1;
 
-    kobject_get(&p->kobj.parent);
+    kobject_get(p->kobj.parent);
     return 0;
 }
 
@@ -452,17 +453,17 @@ struct kobject *cdev_get (struct cdev *p)
 void cdev_put (struct cdev *p)
 {
     if (p == NULL)
-        return NULL;
+        return;
 
     return kobject_put(&p->kobj);
 } 
 
 /* 设置字符设备的父类 */
-void cdev_set_parent (struct cdev *p, struct device *parent)
+void cdev_set_parent (struct cdev *p, struct kobject *kobj)
 {
-    if ((p == NULL) || (parent == NULL))
+    if ((p == NULL) || (kobj == NULL))
         return;
-    p->kobj.parent = parent;
+    p->kobj.parent = kobj;
 }
 
 /* 将字符设备以及其父设备添加到系统内核 */
@@ -471,7 +472,7 @@ int cdev_device_add (struct cdev *cdev, struct device *dev)
     if ((cdev == NULL) || (dev == NULL))
         return -1;
 
-    cdev_set_parent(cdev, dev);
+    cdev_set_parent(cdev, &dev->kobj);
     cdev_add(cdev, cdev->dev, 1);
     device_add(dev);
     return 0;

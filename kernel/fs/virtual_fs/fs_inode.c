@@ -2,6 +2,9 @@
 #include "defs.h"
 #include "file.h"
 #include "fcntl.h"
+#include "device.h"
+#include "kobject.h"
+#include "char_dev.h"
 
 
 /*
@@ -112,7 +115,7 @@ struct Inode *inode_getcdev (struct cdev *cdev, uint flag, uint mode)
 {
     struct Inode *inode = NULL;
 
-    if (pipe == NULL)
+    if (cdev == NULL)
         return NULL;
     
     inode = inode_alloc();
@@ -130,7 +133,7 @@ struct Inode *inode_getcdev (struct cdev *cdev, uint flag, uint mode)
     extern struct FileOperation def_cdev_fops;
     inode->i_cdev = cdev;
     inode->fops  = &def_cdev_fops;
-    list_add_after(&inode->i_device, &cdev->list);
+    list_add_after(&inode->i_devices, &cdev->list);
 
     inode->type  = INODE_CHRDEV;
 
