@@ -14,6 +14,7 @@ static ListEntry_t kSleepList;
 void init_timer (void)
 {
     list_init (&kSleepList);
+	kprintf ("init_timer complete !\r\n");
 }
 
 /* 添加软件定时器模块 */

@@ -433,8 +433,11 @@ void init_kvm (void)
 
     uvm_alloc(kernel_pgtab, TRAPFRAME, TRAPFRAME+PGSIZE, PTE_R|PTE_W);
 
+	kprintf ("init_kvm complete !\r\n");
+
     // Open vritual protect
     sfence_vma();
     w_satp(MAKE_SATP(kernel_pgtab));
     sfence_vma();
+	kprintf ("w_satp start !\r\n");
 }

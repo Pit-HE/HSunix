@@ -3,7 +3,6 @@
  */
 #include "libc.h"
 #include "shell.h"
-#include "fs.h"
 
 
 int main (int argc, char *argv[])

@@ -22,6 +22,7 @@ void init_trap(void)
 {
     /* 设置特权模式下发生中断时的函数入口 */
     w_stvec((uint64)kernelvec);
+	kprintf ("init_trap complete !\r\n");
 }
 
 

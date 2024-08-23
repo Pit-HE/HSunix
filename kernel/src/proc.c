@@ -477,12 +477,15 @@ void init_proc (void)
     kInitPCB = create_kthread("init", init_main);
     vfs_pcbInit(kInitPCB, "/");
     proc_wakeup(kInitPCB);
+	kprintf ("'init' kernel thread create complete !\r\n");
 
     /* Idle 进程 */
     kIdlePCB = create_kthread("idle", idle_main);
     vfs_pcbInit(kIdlePCB, "/");
     proc_wakeup(kIdlePCB);
+	kprintf ("'idle' kernel thread create complete !\r\n");
 
     /* 设置当前 CPU 的默认进程 */
     setCpuCB(kIdlePCB);
+	kprintf ("init_proc complete !\r\n");
 }

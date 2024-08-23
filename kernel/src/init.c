@@ -3,6 +3,8 @@
  */
 #include "defs.h"
 #include "fcntl.h"
+#include "fs.h"
+
 
 /* init 的内核线程 */
 void init_main (void)
@@ -32,6 +34,8 @@ void init_main (void)
 /* 内核空闲进程 */
 void idle_main (void)
 {
+	kprintf ("idle process start !\r\n");
+	
     /* 开启中断管理模块 */
     k_enable_all_interrupt();
 

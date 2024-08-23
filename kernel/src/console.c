@@ -143,6 +143,7 @@ void init_console (void)
     }
 
     init_printf(NULL, console_wChar);
+	kprintf ("init_console complete !\r\n");
 }
 
 

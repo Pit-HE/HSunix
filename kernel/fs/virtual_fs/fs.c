@@ -23,6 +23,8 @@ void init_vfs (void)
     /* 初始化实体文件系统: dfs */
     void init_dfs (void);
     init_dfs();
+
+	kprintf ("init_vfs complete !\r\n");
 }
 
 /* 文件系统对外接口：打开指定路径的文件 */

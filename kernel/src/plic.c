@@ -16,6 +16,8 @@ void init_plic (void)
     *(uint32*)(PLIC + UART0_IRQ*4) = 1;
     // 使能虚拟磁盘中断
     *(uint32*)(PLIC + VIRTIO0_IRQ*4) = 1; 
+
+	kprintf ("init_plic complete !\r\n");
 }
 
 /* 初始化 plic 模块中管理的指定外设的中断功能 */
