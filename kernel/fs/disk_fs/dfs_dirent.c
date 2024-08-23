@@ -4,6 +4,7 @@
  */
 #include "defs.h"
 #include "dfs_priv.h"
+#include "kstring.h"
 
 
 /* 读取节点中指定名字的目录项信息 */

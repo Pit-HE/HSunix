@@ -5,7 +5,9 @@
 #include "riscv.h"
 #include "defs.h"
 #include "proc.h"
-
+#include "file.h"
+#include "pcb.h"
+#include "timer.h"
 
 /****************************************/
 uint64 Systicks;

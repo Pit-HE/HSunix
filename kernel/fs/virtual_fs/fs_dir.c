@@ -4,7 +4,7 @@
 #include "defs.h"
 #include "file.h"
 #include "fcntl.h"
-
+#include "kstring.h"
 
 
 /* 定义存放目录项的哈希数组 */

@@ -3,6 +3,7 @@
 #define __FS_H__
 
 #include "proc.h"
+#include "file.h"
 
 
 /* 记录用户可以读取到的文件系统信息

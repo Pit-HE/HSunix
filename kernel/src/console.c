@@ -7,6 +7,11 @@
 #include "memlayout.h"
 #include "riscv.h"
 #include "defs.h"
+#include "kstring.h"
+#include "ringbuff.h"
+#include "proc.h"
+#include "file.h"
+#include "pcb.h"
 
 
 #define console_putc    uartputc_sync

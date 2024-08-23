@@ -5,6 +5,9 @@
 #include "param.h"
 #include "memlayout.h"
 #include "proc.h"
+#include "kstring.h"
+#include "pcb.h"
+
 
 /* 作为指针，指向 trampoline.S 里的代码 */
 extern char trampoline[];

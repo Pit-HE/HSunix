@@ -5,6 +5,9 @@
  */
 #include "defs.h"
 #include "dfs_priv.h"
+#include "kstring.h"
+#include "file.h"
+
 
 struct disk_sb *superblock = NULL;
 struct disk_inode *root_node = NULL;

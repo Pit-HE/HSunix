@@ -5,6 +5,8 @@
 #include "syscall.h"
 #include "defs.h"
 #include "proc.h"
+#include "pcb.h"
+#include "msg.h"
 
 
 uint64 sys_exit (void)

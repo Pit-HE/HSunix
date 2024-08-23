@@ -4,6 +4,8 @@
  */
 #include "kobject.h"
 #include <stdarg.h>
+#include "kstring.h"
+
 
 /*
  ***********************************************************

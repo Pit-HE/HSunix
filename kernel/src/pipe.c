@@ -5,6 +5,8 @@
 #include "fcntl.h"
 #include "file.h"
 #include "pipe.h"
+#include "proc.h"
+#include "pcb.h"
 
 
 /* 管道的数据读取接口 */

@@ -4,6 +4,11 @@
 #include "defs.h"
 #include "param.h"
 #include "memlayout.h"
+#include "timer.h"
+#include "fs.h"
+#include "pcb.h"
+#include "proc.h"
+#include "kstring.h"
 
 
 /**********************************************/

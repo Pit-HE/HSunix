@@ -5,7 +5,8 @@
 #include "file.h"
 #include "fcntl.h"
 #include "proc.h"
-
+#include "pcb.h"
+#include "kstring.h"
 
 /* 解析路径中第一个节点的名字, 并返回剩下的路径内容
  *

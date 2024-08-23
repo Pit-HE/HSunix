@@ -12,6 +12,9 @@
 #include "defs.h"
 #include "memlayout.h"
 #include "dfs_virtio.h"
+#include "kstring.h"
+#include "proc.h"
+
 
 // the address of virtio mmio register r.
 #define R(r) ((volatile uint32 *)(VIRTIO0 + (r)))

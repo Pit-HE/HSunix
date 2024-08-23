@@ -7,6 +7,7 @@
 #include "dirent.h"
 #include "dfs_fs.h"
 #include "proc.h"
+#include "kstring.h"
 
 
 /* 初始化虚拟文件系统 */

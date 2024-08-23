@@ -22,4 +22,7 @@ struct pipe_t
 };
 
 
+int pipealloc (struct File *rfile, struct File *wfile);
+
+
 #endif

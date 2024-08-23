@@ -6,6 +6,7 @@
  */
 #include "defs.h"
 #include "device.h"
+#include "kstring.h"
 
 
 static void device_create_release (struct device *dev)

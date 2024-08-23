@@ -4,6 +4,9 @@
 #include "riscv.h"
 #include "defs.h"
 #include "list.h"
+#include "timer.h"
+#include "msg.h"
+#include "fs.h"
 
 
 void main (void)

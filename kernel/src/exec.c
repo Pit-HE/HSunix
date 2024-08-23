@@ -8,6 +8,8 @@
 #include "proc.h"
 #include "fcntl.h"
 #include "memlayout.h"
+#include "kstring.h"
+#include "pcb.h"
 
 
 extern char     etext[];

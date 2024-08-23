@@ -8,6 +8,8 @@
 #include "memlayout.h"
 #include "riscv.h"
 #include "defs.h"
+#include "kstring.h"
+
 
 extern char end[];
 #ifndef ALIGN

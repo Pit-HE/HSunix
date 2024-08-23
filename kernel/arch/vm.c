@@ -7,6 +7,9 @@
 #include "elf.h"
 #include "riscv.h"
 #include "defs.h"
+#include "proc.h"
+#include "kstring.h"
+#include "pcb.h"
 
 
 pgtab_t        *kernel_pgtab;

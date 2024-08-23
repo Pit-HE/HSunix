@@ -3,7 +3,8 @@
  * ( 目前用于实现进程休眠指定时长 )
  */
 #include "defs.h"
-#include "time.h"
+#include "proc.h"
+#include "timer.h"
 
 
 #define TIMER_MAGIC  0x5AA5

@@ -4,6 +4,9 @@
 #include "fcntl.h"
 #include "defs.h"
 #include "proc.h"
+#include "file.h"
+#include "pcb.h"
+#include "kstring.h"
 
 
 /* 用于进程申请默认的文件描述符表

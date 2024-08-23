@@ -5,7 +5,6 @@
 
 #include "list.h"
 #include "defs.h"
-#include "file.h"
 
 
 #define DEVICE_MAGIC    0xDE5A
@@ -21,6 +20,14 @@ struct Device
     uint                    ref;    /* 设备的引用计数 */
 };
 
+
+void init_dev (void);
+void dev_free (struct Device *dev);
+void dev_register (struct Device *dev);
+void dev_unregister (struct Device *dev);
+void dev_put (struct Device *dev);
+struct Device *dev_alloc (const char *name);
+struct Device *dev_get (const char *name);
 
 
 #endif

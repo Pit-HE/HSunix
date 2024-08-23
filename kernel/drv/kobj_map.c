@@ -3,6 +3,7 @@
  */
 #include "defs.h"
 #include "kobj_map.h"
+#include "kstring.h"
 
 
 #define DEF_RANGE_VALUE     0xFFFF

@@ -4,6 +4,7 @@
  */
 #include "defs.h"
 #include "dfs_priv.h"
+#include "kstring.h"
 
 
 /* 记录还未与磁盘建立联系的缓存区 */

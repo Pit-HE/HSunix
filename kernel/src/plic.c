@@ -6,6 +6,8 @@
 #include "memlayout.h"
 #include "riscv.h"
 #include "defs.h"
+#include "proc.h"
+
 
 /* 初始化 riscv64 架构中的 plic 模块 */
 void init_plic (void)

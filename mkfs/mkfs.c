@@ -1,16 +1,13 @@
+/*
+ * 文件系统镜像制作工具
+ */
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 #include <assert.h>
-
-// #include "dfs_priv.h"
-// #include "dfs_virtio.h"
-// #include "param.h"
-// #include "types.h"
 #include "mkfs.h"
-
 
 
 #ifndef static_assert

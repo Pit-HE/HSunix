@@ -3,6 +3,11 @@
  */
 #include "defs.h"
 #include "fcntl.h"
+#include "list.h"
+#include "ringbuff.h"
+#include "proc.h"
+#include "pcb.h"
+
 
 /* 消息内容节点，记录消息的类型与内容
  * ( 用于数据的检索 )

@@ -7,6 +7,8 @@
 #include "defs.h"
 #include "file.h"
 #include "fs.h"
+#include "pcb.h"
+#include "kstring.h"
 
 
 uint64 sys_open (void)

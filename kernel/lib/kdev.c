@@ -5,6 +5,8 @@
  */
 #include "defs.h"
 #include "kdev.h"
+#include "kstring.h"
+#include "file.h"
 
 
 /* 以链表的形式记录登记到系统中的所有设备 */

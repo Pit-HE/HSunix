@@ -4,6 +4,8 @@
 #include "defs.h"
 #include "fcntl.h"
 #include "dfs_priv.h"
+#include "kstring.h"
+#include "fs.h"
 
 
 /****************************************************

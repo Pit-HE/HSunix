@@ -2,6 +2,8 @@
  * 内核错误处理模块，打印错误信息
  */
 #include "defs.h"
+#include "proc.h"
+#include "pcb.h"
 
 
 void ErrPrint (char *fmt, ...)

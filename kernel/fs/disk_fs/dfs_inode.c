@@ -4,6 +4,8 @@
  */
 #include "defs.h"
 #include "dfs_priv.h"
+#include "kstring.h"
+
 
 extern struct disk_sb *superblock;
 extern struct disk_inode *root_node;

@@ -4,7 +4,7 @@
 
 #include "riscv.h"
 #include "list.h"
-#include "file.h"
+
 
 /* Process state */
 enum Procstate
@@ -120,6 +120,29 @@ struct CpuCB  //cpuControlBlock
   int intrOldState;         // Were interrupts enabled before push_off()?
 };
 
+
+int  proc_applypid  (void);
+void proc_wakeup    (struct ProcCB *pcb);
+int  proc_killstate (struct ProcCB *pcb);
+void do_scheduler (void);
+void do_defuncter (void);
+void do_switch    (void);
+void do_yield     (void);
+void do_suspend   (void *obj);
+void do_resume    (void *obj);
+int  do_fork      (void);
+int  do_wait      (int *code);
+void do_exit      (int state);
+int  do_kill      (int pid);
+int  do_sleep     (int ms);
+void init_proc    (void);
+struct CpuCB  *getCpuCB (void);
+void destroy_kthread (struct ProcCB *pcb);
+struct ProcCB *create_kthread (char *name, void(*entry)(void));
+#define getCpuID() r_tp()
+
+
+void kswitch_to (struct Context *old, struct Context *new);
 
 
 #endif

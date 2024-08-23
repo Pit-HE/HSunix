@@ -7,6 +7,7 @@
 #include "defs.h"
 #include "kobj_map.h"
 #include "char_dev.h"
+#include "kstring.h"
 
 
 /* 字符设备模块共用的内核对象哈希散列管理表 */

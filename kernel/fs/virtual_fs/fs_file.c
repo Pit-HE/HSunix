@@ -5,6 +5,7 @@
 #include "defs.h"
 #include "file.h"
 #include "fcntl.h"
+#include "kstring.h"
 
 
 /* 申请一个文件描述符的内存空间

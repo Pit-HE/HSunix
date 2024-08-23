@@ -5,6 +5,7 @@
 #include "syscall.h"
 #include "defs.h"
 #include "proc.h"
+#include "pcb.h"
 
 
 /* 获取指定的系统调用的入参 */

@@ -1,6 +1,9 @@
-
+/*
+ * 主要实现循环缓冲区的管理功能
+ */
 #include "defs.h"
 #include "ringbuff.h"
+#include "kstring.h"
 
 
 /* 初始化缓冲区对象 */

@@ -6,6 +6,8 @@
 #include "defs.h"
 #include "file.h"
 #include "fcntl.h"
+#include "kstring.h"
+
 
 /* 用于记录注册的文件系统信息 */
 struct FsObject

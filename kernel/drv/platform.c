@@ -3,6 +3,7 @@
  * ( 目前未添加硬件资源的解析功能 )
  */
 #include "platform.h"
+#include "kstring.h"
 
 
 /*

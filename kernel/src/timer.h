@@ -5,7 +5,6 @@
 
 #include "types.h"
 #include "list.h"
-#include "proc.h"
 
 
 struct Timer
@@ -20,6 +19,11 @@ struct Timer
     struct ProcCB  *pcb;
 };
 
+
+void init_timer (void);
+void timer_del  (struct Timer *timer);
+void timer_run  (void);
+struct Timer *timer_add (struct ProcCB *pcb, int expires);
 
 
 #endif

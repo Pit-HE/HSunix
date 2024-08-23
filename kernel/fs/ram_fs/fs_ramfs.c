@@ -9,6 +9,7 @@
 #include "defs.h"
 #include "fcntl.h"
 #include "fs.h"
+#include "kstring.h"
 
 
 /****************************************************

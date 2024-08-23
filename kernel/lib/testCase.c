@@ -6,6 +6,8 @@
 #include "list.h"
 #include "fcntl.h"
 #include "fs.h"
+#include "timer.h"
+#include "kstring.h"
 
 
 /* 测试虚拟内存管理模块是否正常 */
