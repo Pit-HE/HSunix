@@ -76,7 +76,7 @@ clean:
 
 # 清除所有不属于项目源码的生成文件
 remove: clean
-	rm -rf fs.img
+	rm -rf mkfs/fs.img
 	cd kernel && make remove
 	cd mkfs && make remove
 	cd user && make remove

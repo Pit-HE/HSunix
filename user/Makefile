@@ -50,7 +50,7 @@ build_ld: $(BIN_OBJ)
 
 # 创建用于挂载到 qemu 的磁盘文件：fs.img
 fs_img:
-	../mkfs/mkfs ../fs.img $(UPROGS)
+	../mkfs/mkfs ../mkfs/fs.img $(UPROGS)
 
 
 

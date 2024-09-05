@@ -60,7 +60,7 @@ $(S_OBJ):%.o:%.S
 # qemu 的参数
 QEMUOPTS := -machine virt -bios none -kernel HSunix -m 128M -smp $(CPUS) -nographic
 QEMUOPTS += -global virtio-mmio.force-legacy=false
-QEMUOPTS += -drive file=../fs.img,if=none,format=raw,id=x0
+QEMUOPTS += -drive file=../mkfs/fs.img,if=none,format=raw,id=x0
 QEMUOPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 
 #  qemu 加载 HSunix 系统的可执行文件并进入调试模式

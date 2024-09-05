@@ -5,7 +5,7 @@
 // driver for qemu's virtio disk device.
 // uses qemu's mmio interface to virtio.
 //
-// qemu ... -drive file=fs.img,if=none,format=raw,id=x0 -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
+// qemu ... -drive file=mkfs/fs.img,if=none,format=raw,id=x0 -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 //
 
 #include "param.h"

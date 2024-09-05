@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
 
   if (argc < 2)
   {
-    fprintf(stderr, "Usage: mkfs fs.img files...\n");
+    fprintf(stderr, "Usage: mkfs mkfs/fs.img files...\n");
     exit(1);
   }
 
