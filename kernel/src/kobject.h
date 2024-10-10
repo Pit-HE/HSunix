@@ -37,7 +37,9 @@ struct kset
 {
     /* 记录挂载到 kset 的所有 kobject */
     ListEntry_t              list;
-    /* 内嵌的 kobject 属性 */
+    /* 内嵌的 kobject 属性
+       (可以通过该属性挂载到另一个 kset 之下)
+    */
     struct kobject           kobj;
     /* 用于发送 kset 内 kobject 变动的通知 */
     struct kset_uevent_ops  *uevent_opt;
@@ -58,8 +60,7 @@ struct kset_uevent_ops
 {
 	int (*filter)(struct kset *kset, struct kobject *kobj);
 	char *(*name)(struct kset *kset, struct kobject *kobj);
-	int (* uevent)(struct kset *kset, struct kobject *kobj,
-		      char *buffer);
+	int (* uevent)(struct kset *kset, struct kobject *kobj, char *buffer);
 };
 
 /* 内核对象可能发生的事件集 */
@@ -78,17 +79,17 @@ enum kobj_action
 
 
 
-void kobject_put (struct kobject *obj);
-void kobject_init (struct kobject *kobj, struct kobj_type *ktype);
-void kobject_cleanup (struct kobject *obj);
-void kobject_release (struct kref *kref);
-int  kobject_setname (struct kobject *obj, const char *fmt, ...);
-int  kobject_rename (struct kobject *obj, char *new_name);
+void  kobject_put (struct kobject *obj);
+void  kobject_init (struct kobject *kobj, struct kobj_type *ktype);
+void  kobject_cleanup (struct kobject *obj);
+void  kobject_release (struct kref *kref);
+int   kobject_setname (struct kobject *obj, const char *fmt, ...);
+int   kobject_rename (struct kobject *obj, char *new_name);
 char *kobject_getname (struct kobject *obj);
-int  kobject_add (struct kobject *obj);
-void kobject_del (struct kobject *obj);
-int  kobject_register (struct kobject *obj);
-void kobject_unregister (struct kobject *obj);
+int   kobject_add (struct kobject *obj);
+void  kobject_del (struct kobject *obj);
+int   kobject_register (struct kobject *obj);
+void  kobject_unregister (struct kobject *obj);
 struct kobject *kobject_get (struct kobject *obj);
 struct kset *kset_create (char *name,
                 struct kset_uevent_ops *uevent_ops,

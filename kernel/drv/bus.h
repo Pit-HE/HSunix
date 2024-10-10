@@ -3,11 +3,12 @@
 #define __BUS_H__
 
 
-#include"defs.h"
+#include "defs.h"
 #include "list.h"
 #include "kobject.h"
 
 
+struct class;
 struct device;
 struct device_driver;
 
@@ -41,8 +42,11 @@ struct device
     ListEntry_t                 child_list;
     /* 用于挂载到父设备的 child_list 链表中 */
     ListEntry_t                 broth_list;
+    /* 用于挂载到所属类对象的管理链表 */
+    ListEntry_t                 class_list;
     /* 记录设备所属对象的信息 */
     struct device               *parent;
+    struct class                *class;
     struct bus_type             *bus;
     struct device_driver        *drv;
     /* 私有数据域 */

@@ -7,6 +7,7 @@
 #include "defs.h"
 #include "device.h"
 #include "kstring.h"
+#include "class.h"
 
 
 static void device_create_release (struct device *dev)
@@ -74,6 +75,9 @@ int  device_add  (struct device *dev)
         kPortEnableInterrupt();
     }
 
+    /* 将设备添加到所属父 class 的管理链表中 */
+    class_device_add(dev);
+
 err_bus_add_device:
     kobject_del(&dev->kobj);
 err_kobject_add:
@@ -106,6 +110,9 @@ void device_del  (struct device *dev)
 
     /* 将设备对象从所属 kset 中移除 */
     kobject_del(&dev->kobj);
+
+    /* 将设备从所属 class 中移除 */
+    class_device_del(dev);
 }
 
 /* 注册设备对象 */

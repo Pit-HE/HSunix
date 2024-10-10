@@ -69,7 +69,7 @@ debug:
 
 # qemu 加载 HSunix 系统内核的可执行文件
 qemu:
-	$(QEMU)  $(QEMUOPTS)
+	$(QEMU) $(QEMUOPTS)
 
 # 清除当前内核目录下生成的中间文件
 clean:
