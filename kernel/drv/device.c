@@ -23,6 +23,8 @@ static void device_release (struct kobject *kobj)
     dev = container_of(kobj, struct device, kobj);
     if (dev->release)
         dev->release(dev);
+    else if (dev->class && dev->class->dev_release)
+        dev->class->dev_release(dev);
 }
 struct kobj_type device_ktype = 
 {

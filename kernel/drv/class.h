@@ -13,6 +13,10 @@ struct class
     ListEntry_t     klist_devices;
     /* 记录挂载的操作接口 */
     ListEntry_t     interface;
+    /* 由用户注册的回调函数，该类对象被释放时调用 */
+    void (*class_release)(struct class *class);
+    /* 由用户注册的回调函数，类管理的设备被释放时调用 */
+    void (*dev_release)(struct device *dev);
 };
 
 

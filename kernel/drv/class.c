@@ -3,9 +3,6 @@
  * 主要提供内核设备分类管理的功能
  * (参考了linux2.6.11.12 和 linux5.10.120 的 class 源码)
  */
-#include "defs.h"
-#include "list.h"
-#include "kobject.h"
 #include "bus.h"
 #include "class.h"
 
@@ -32,10 +29,16 @@ void class_release (struct kobject *kobj)
 
     if (kobj == NULL)
         return;
+
     /* 获取 class 对象的结构体首地址 */
     cls = container_of(kobj, struct class, subsys.kobj);
     if (cls == NULL)
         return;
+
+    /* 执行用户注册的回调函数 */
+    if (cls->class_release)
+        cls->class_release(cls);
+
     /* 释放 class 成员占用的内存空间 */
     kfree(cls);
 }

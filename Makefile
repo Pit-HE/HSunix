@@ -33,12 +33,18 @@ export CPUS ROOT_DIR
 
 # 默认清空工程重新编译并运行 HSunix
 all: remove build app
+	@echo
+	@echo Hsunix compile success !!!
+	@echo
 
 # 重新构建内核与用户代码
 build:
 	make -C kernel
 	make app
 	cd user && make fs_img
+	@echo
+	@echo Hsunix compile success !!!
+	@echo
 
 # 生成创建可挂载的磁盘文件 fs.img 的工具
 mkfs:
