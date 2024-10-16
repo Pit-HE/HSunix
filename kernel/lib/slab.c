@@ -27,7 +27,7 @@
 
 /* 获取物理内存页对应的控制块 */
 #define get_memusage(slab, addr)    \
-    (&(slab->memusage[((unsigned long)addr - slab->heap_start)/SLAB_PAGE_SIZE]))
+    (&(slab->memusage[((unsigned long)(addr) - slab->heap_start)/SLAB_PAGE_SIZE]))
 
 
 
@@ -285,8 +285,6 @@ struct slab *slab_init (void *begin_addr, unsigned long size)
 	slab->memusage = slab_page_alloc(slab, temp / SLAB_PAGE_SIZE);
 
 	return slab;
-
-    return NULL;
 }
 
 void *slab_alloc (struct slab *slab, unsigned long size)
@@ -418,6 +416,10 @@ void slab_free (struct slab *slab, void *ptr)
 
 	if ((slab == NULL) || (ptr == NULL))
 		return;
+	if ((unsigned long)ptr < (unsigned long)(slab->heap_start))
+		return;
+	if ((unsigned long)ptr > (unsigned long)(slab->heap_end))
+		return;
 	
 	mcb = get_memusage(slab, ptr);
 	/*
@@ -435,20 +437,19 @@ void slab_free (struct slab *slab, void *ptr)
 	else
 	{
 		/* 获取该内存地址所属的 zone 和 chunk 信息 */
-		chunk = (struct slab_chunk*)ptr;
 		zone = (struct slab_zone*)(((unsigned long)ptr & ~(SLAB_PAGE_SIZE-1)) - \
 				mcb->size * SLAB_PAGE_SIZE);
+		chunk = (struct slab_chunk*)ptr;
 		
 		/* 格式化 chunk 信息，并将其添加到 zone 中 */
 		chunk->next = zone->freechunk;
 		zone->freechunk = chunk;
 
 		/*  更新 zone 的信息，判断是否需要添加到所属 slab 的管理数组中 */
-		if (zone->free == 0)
+		if (zone->free++ == 0)
 		{
-			zone->free += 1;
 			zone->next = slab->zone_array[zone->index];
-			slab->zone_array[zone->index] = zone->next;
+			slab->zone_array[zone->index] = zone;
 		}
 	}
 
@@ -456,13 +457,14 @@ void slab_free (struct slab *slab, void *ptr)
 	if ((zone->free == zone->max) && ((zone->next) || 
 		(slab->zone_array[zone->index] != zone)))
 	{
-		struct slab_zone *pz;
+		struct slab_zone **pz;
 
 		/* 找到 zone 所在链表的前一个 zone */
-		for (pz = slab->zone_array[zone->index]; pz->next != zone;
-			 pz = pz->next);
+		for (pz = &slab->zone_array[zone->index]; *pz != zone;
+			 pz = &((*pz)->next));
+
 		/* 将当前 zone 从链表中移除 */
-		pz->next = zone->next;
+		*pz = zone->next;
 
 		zone->magic = 0;
 
@@ -504,7 +506,12 @@ void *slab_realloc (struct slab *slab, void *ptr, unsigned long size)
 	struct slab_memusage *mcb = NULL;
 
 	if (slab == NULL)
-		return NULL;	
+		return NULL;
+	if ((unsigned long)ptr < (unsigned long)(slab->heap_start))
+		return NULL;
+	if ((unsigned long)ptr > (unsigned long)(slab->heap_end))
+		return NULL;
+
 	if (ptr == NULL)
 		return slab_alloc(slab, size);
 	
@@ -515,7 +522,7 @@ void *slab_realloc (struct slab *slab, void *ptr, unsigned long size)
 	}
 
 	/* 获取物理地址所对应的内存页控制块 */
-	mcb = get_memusage(slab, ((unsigned long)ptr & ~(SLAB_PAGE_SIZE - 1)));
+	mcb = get_memusage(slab, (void*)((unsigned long)ptr & ~(SLAB_PAGE_SIZE - 1)));
 
 	/* 处理大内存块的情况 */
 	if (mcb->type == SLAB_TYPE_LARGE)
@@ -530,10 +537,10 @@ void *slab_realloc (struct slab *slab, void *ptr, unsigned long size)
 
 		/*  执行数据搬运和释放 */
 		kmemcpy (nptr, ptr, (size > nsize) ? nsize : size);
-		slab_free(slab, ptr);
+		slab_free (slab, ptr);
 	}
 	/* 处理小内存块的情况 */
-	else
+	else if (mcb->type == SLAB_TYPE_SMALL)
 	{
 		/* 获取内春地址所属的 zone */
 		zone = (struct slab_zone*)(((unsigned long)ptr & ~(SLAB_PAGE_SIZE - 1)) - 

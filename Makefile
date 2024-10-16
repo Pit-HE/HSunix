@@ -32,7 +32,7 @@ export CPUS ROOT_DIR
 
 
 # 默认清空工程重新编译并运行 HSunix
-all: remove build app
+all: remove build
 	@echo
 	@echo Hsunix compile success !!!
 	@echo
