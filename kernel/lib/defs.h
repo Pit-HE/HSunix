@@ -34,9 +34,9 @@ int  console_rChar   (void);
 /******************** alloc_page ********************/
 void *alloc_page (void);
 void  free_page  (void *pa);
-void *kalloc        (int size);
-void  kfree         (void *obj);
-void  init_kmem     (void);
+void *kalloc     (unsigned long size);
+void  kfree      (void *obj);
+void  init_slab  (void);
 
 
 /******************** vm ********************/

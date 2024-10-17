@@ -57,7 +57,7 @@ static int mappages (pgtab_t *pgtab, uint64 vAddr, uint64 pAddr, uint64 size, in
     pte_t   *pte = NULL;
 
     if (size == 0)
-        ErrPrint("mappages: Invalid memory size !\r\n");
+        ErrPrint("mappages(): Invalid memory size !\r\n");
 
     start = PGROUNDDOWN(vAddr);
     end   = PGROUNDDOWN(vAddr + size - 1);
@@ -68,7 +68,7 @@ static int mappages (pgtab_t *pgtab, uint64 vAddr, uint64 pAddr, uint64 size, in
         if (pte == 0)
             return -1;
         if (*pte & PTE_V)
-            ErrPrint("mappages: Invalid PTE object !\r\n");
+            ErrPrint("mappages(): Invalid PTE object !\r\n");
 
         *pte = PA2PTE(pAddr) | flag | PTE_V;
 

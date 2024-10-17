@@ -49,7 +49,7 @@ static ksm_node smallMemFreeHeader;
 
 
 /* 处理有效区间物理内存的申请功能 */
-void *alloc_page (void)
+void *old_alloc_page (void)
 {
     kpm_node *p;
 
@@ -68,7 +68,7 @@ void *alloc_page (void)
 }
 
 /* 处理有效区间物理内存的释放功能 */
-void free_page (void *pa)
+void old_free_page (void *pa)
 {
     kpm_node *p;
 
@@ -110,7 +110,7 @@ static void phyPageFormat (void *pa_start, void *pa_end)
 }
 
 
-void kfree (void *obj)
+void old_kfree (void *obj)
 {
     ksm_node *objHear = (ksm_node *)obj;
     ksm_node *curHear = NULL;
@@ -236,7 +236,7 @@ exit_kfree:
 }
 
 /* 只能用于申请小于 4096 大小的内存块 */
-void *kalloc (int size)
+void *old_kalloc (int size)
 {
     int  objsize = 0;
     char *ptr = NULL;

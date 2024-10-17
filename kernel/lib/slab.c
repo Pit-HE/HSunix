@@ -1,6 +1,7 @@
 
 #include "defs.h"
 #include "kstring.h"
+#include "memlayout.h"
 #include "slab.h"
 
 
@@ -241,6 +242,7 @@ void slab_page_init (struct slab *slab, void *addr, unsigned npages)
 	slab_page_free(slab, addr, npages);
 }
 
+/* 初始化 slab  对象 */
 struct slab *slab_init (void *begin_addr, unsigned long size)
 {
 	struct slab *slab;
@@ -287,6 +289,7 @@ struct slab *slab_init (void *begin_addr, unsigned long size)
 	return slab;
 }
 
+/* 从指定的 slab 对象中申请新的内存块 */
 void *slab_alloc (struct slab *slab, unsigned long size)
 {
 	unsigned long npages, index;
@@ -345,10 +348,9 @@ void *slab_alloc (struct slab *slab, unsigned long size)
 		else
 		{
 			/* 已无未分配的 chunk，则从已释放的空闲链表中获取 */
-			if (zone->freechunk == NULL)
-				chunk = NULL;
 			chunk = zone->freechunk;
-			zone->freechunk = zone->freechunk->next;
+			if (chunk != NULL)
+				zone->freechunk = zone->freechunk->next;
 		}
 	}
 	/* 处理 zone 为空的情况，获取新的 zone 并初始化 */
@@ -384,9 +386,14 @@ void *slab_alloc (struct slab *slab, unsigned long size)
 		kmemset (zone, 0, sizeof(struct slab_zone));
 
 		/* 判断 zone 的头信息占用多少个 chunk */
-		off = sizeof(struct slab_zone) / size;
-		if (off == 0) off = 1;
-		off += ((sizeof(struct slab_zone) % size) != 0) ? 1:0;
+		unsigned int hsize = sizeof(struct slab_zone);
+		if (hsize < size)
+			off = 1;
+		else
+		{
+			off  = hsize / size;
+			off += ((hsize % size) != 0) ? 1:0;
+		}
 
 		/* 初始化 zone 的头信息 */
 		zone->magic = SLAB_ZONE_MAGIC;
@@ -408,6 +415,7 @@ void *slab_alloc (struct slab *slab, unsigned long size)
 	return chunk;
 }
 
+/* 向指定的 slab 对象释放空闲的内存块 */
 void slab_free (struct slab *slab, void *ptr)
 {
 	struct slab_zone *zone = NULL;
@@ -498,11 +506,11 @@ void slab_free (struct slab *slab, void *ptr)
 	}
 }
 
+/* 扩展内存块的大小 */
 void *slab_realloc (struct slab *slab, void *ptr, unsigned long size)
 {
 	void *nptr = NULL;
 	struct slab_zone *zone = NULL;
-	//struct slab_chunk *chunk = NULL;
 	struct slab_memusage *mcb = NULL;
 
 	if (slab == NULL)
@@ -535,7 +543,7 @@ void *slab_realloc (struct slab *slab, void *ptr, unsigned long size)
 		if (nptr == NULL)
 			return NULL;
 
-		/*  执行数据搬运和释放 */
+		/*  执行数据搬运和内存释放 */
 		kmemcpy (nptr, ptr, (size > nsize) ? nsize : size);
 		slab_free (slab, ptr);
 	}
@@ -558,6 +566,7 @@ void *slab_realloc (struct slab *slab, void *ptr, unsigned long size)
 		if (nptr == NULL)
 			return NULL;
 
+		/*  执行数据搬运和内存释放 */
 		kmemcpy(nptr, ptr, 
 			(size > zone->chunksize) ? zone->chunksize:size);
 		slab_free (slab, ptr);
@@ -567,39 +576,35 @@ void *slab_realloc (struct slab *slab, void *ptr, unsigned long size)
 }
 
 
-
 /*
 *****************************
 *       封装的对外接口
 *****************************
 */
-// static struct slab *g_slab;
+static struct slab *g_slab;
+extern char end[];
 
 void init_slab (void)
 {
-
+	g_slab = slab_init(end, (PHYSTOP - (unsigned long)end));
 }
 
-// void *alloc_page (void)
-// {
-//     return slab_alloc(g_slab, PGSIZE);
-// }
-
-// void free_page (void *pa)
-// {
-//     slab_free(g_slab, pa);
-// }
-
-// void kfree (void *addr)
-// {
-//     slab_free(g_slab, addr);
-// }
-
-// void *kalloc (unsigned long size)
-// {
-//     return slab_alloc(g_slab, size);
-// }
-
+void *alloc_page (void)
+{
+	return slab_page_alloc(g_slab, PGSIZE / SLAB_PAGE_SIZE);
+}
+void free_page (void *pa)
+{
+	slab_page_free(g_slab, pa, PGSIZE / SLAB_PAGE_SIZE);
+}
+void *kalloc (unsigned long size)
+{
+    return slab_alloc(g_slab, size);
+}
+void kfree (void *addr)
+{
+    slab_free(g_slab, addr);
+}
 
 
 

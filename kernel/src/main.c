@@ -11,7 +11,7 @@
 
 void main (void)
 {
-    init_kmem();
+    init_slab();
     init_dev();
     init_console();
     init_kvm();
